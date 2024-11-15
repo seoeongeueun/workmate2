@@ -1,101 +1,41 @@
-import Image from "next/image";
-
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+	return (
+		<div className="App font-cursyger">
+			<div className="gameboy-body">
+				<div className="position-center w-[32rem] h-[26rem] rounded-outer bg-black" style={{left: "41%"}}></div>
+				<div className="w-fit">
+					{/* 상단 테두리 */}
+					<div className="relative w-[42.6rem] h-[14rem] overflow-hidden top-[35.58rem] ml-[-8.4rem]">
+						<div className="absolute bg-frame w-full h-full top-[91%] z-20" style={{borderRadius: "60%"}}></div>
+					</div>
+					<div className="relative w-[27rem] h-[19rem] overflow-hidden top-[18.2rem] ml-[-0.6rem]">
+						<div className="absolute bg-frame w-full h-full top-[91%]" style={{borderRadius: "8%"}}></div>
+					</div>
+					{/* 오른쪽 테두리 */}
+					<div className="relative w-[3rem] h-[19rem] overflow-hidden left-[24.7rem] top-[17.4rem] [transform:rotateY(180deg)]">
+						<div className="absolute bg-frame w-[3rem] h-full right-0" style={{borderTopLeftRadius: "60% 100%", borderBottomLeftRadius: "40% 10%"}}></div>
+					</div>
+					{/* 화면 영역 */}
+					<div className="bg-frame p-spacing-8 w-fit">
+						<div className="w-96 h-64">
+							{/* <PlaylistProvider initialTitle="My Playlist">
+                <MusicPlayer />
+              </PlaylistProvider> */}
+						</div>
+					</div>
+					{/* 왼쪽 테두리 */}
+					<div className="relative w-[3rem] h-[19rem] overflow-hidden right-[1.8rem] bottom-[19.4rem]">
+						<div className="absolute bg-frame w-[3rem] h-full right-0" style={{borderTopLeftRadius: "60% 100%", borderBottomLeftRadius: "40% 10%"}}></div>
+					</div>
+					{/* 하단 테두리 */}
+					<div className="relative w-[29.3rem] h-[25rem] overflow-hidden bottom-[20.2rem] ml-[-1.67rem] [transform:rotateX(180deg)]">
+						<div className="absolute bg-frame w-full h-full top-[91%] z-20" style={{borderRadius: "10%"}}></div>
+					</div>
+					<div className="relative w-[39.2rem] h-[18rem] overflow-hidden bottom-[43.08rem] ml-[-6.7rem] scale-y-[-1]">
+						<div className="absolute bg-frame w-full h-full top-[91%] z-20" style={{borderRadius: "45%"}}></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 }
