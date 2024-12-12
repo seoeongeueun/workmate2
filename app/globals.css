@@ -1,8 +1,8 @@
+@import url("https://fastly.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url("https://fastly.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css");
 
 @font-face {
 	font-family: "DungGeunMo";
@@ -96,15 +96,15 @@ code {
 }
 
 .gameboy-body {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 }
 
 .position-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 }
