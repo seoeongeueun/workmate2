@@ -28,11 +28,15 @@ export default {
 				"spacing-32": "3.2rem",
 				"spacing-36": "3.6rem",
 				"spacing-40": "4rem",
+				"screen-w": "32rem",
 			},
 			fontFamily: {
 				cursyger: ["Cursyger", "sans-serif"],
+				galmuri: ["Galmuri9", "sans-serif"],
+				dunggeunmo: ["DungGeunMo", "sans-serif"],
 			},
 			fontSize: {
+				xxxs: ["1rem", "1.2rem"],
 				xxs: ["1.1rem", "1.6rem"],
 				xs: ["1.2rem", "2.08rem"],
 				s: ["1.3rem", "2.24rem"],
@@ -42,20 +46,33 @@ export default {
 				xxl: ["2rem", "3rem"],
 			},
 			backgroundColor: {
+				"gray-1": "#d3d3d3",
 				"gray-2": "#A8A8A8",
 				"gray-3": "#615E61",
 				"gray-4": "#696969",
-				body: "#46518a",
-				"body-shadow": "#2e3d6e",
-				"body-light": "#9698be",
+				body: "var(--body)",
+				"body-shadow": "var(--body-shadow)",
+				"body-light": "var(--body-light)",
 				button: "#b8bcc2",
 				"button-light": "#cbd0d2",
 				frame: "#242b29",
 				"frame-shadow": "#030b08",
 			},
-      borderRadius: {
-        "outer": "5rem",
-      }
+			backgroundImage: {
+				"off-screen": "linear-gradient(130deg, #858383, #3f3c3c)",
+			},
+			keyframes: {
+				fadeIn: {
+					"0%": {opacity: "0%"},
+					"100%": {opacity: "100%"},
+				},
+			},
+			animation: {
+				fadeIn: "fadeIn 2s ease-in-out",
+				bounceSlow: "bounce 3s ease-in-out infinite 0.3s",
+				wobble: "wobble 5s ease-in-out infinite",
+				slide: "slide 3s ease-in-out",
+			},
 		},
 	},
 	variants: {
