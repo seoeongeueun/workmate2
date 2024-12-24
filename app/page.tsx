@@ -1,6 +1,6 @@
 "use client";
 import {useState, useEffect} from "react";
-import audioControls from "./modules/audioControls";
+import audioControls from "./lib/audioControls";
 import LoginScreen from "./components/loginScreen";
 import {PlaylistProvider} from "./context/playlistContext";
 import {MusicalNoteIcon} from "@heroicons/react/24/solid";
