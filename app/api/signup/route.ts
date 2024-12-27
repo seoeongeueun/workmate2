@@ -3,6 +3,8 @@ import dbConnect from "@/app/lib/dbConnect";
 import {User} from "@/app/models/User";
 import {Playlist} from "@/app/models/Playlist";
 import bcrypt from "bcrypt";
+import {getIronSession} from "iron-session";
+import {sessionOptions} from "@/app/lib/session";
 
 export async function POST(request: Request) {
 	try {
@@ -30,13 +32,24 @@ export async function POST(request: Request) {
 
 		const hashed = await bcrypt.hash(password, 10);
 
-		await User.create({
+		const user = await User.create({
 			username,
 			password: hashed,
 			playlistIds: [playlist._id],
 		});
 
-		return NextResponse.json({success: true}, {status: 201});
+		//유저 생성 후 바로 로그인 처리
+		const response = NextResponse.json({success: true}, {status: 201});
+		const session = await getIronSession<{user?: {id: string; username: string}}>(request, response, sessionOptions);
+
+		session.user = {
+			id: user._id.toString(),
+			username: user.username,
+		};
+
+		await session.save();
+
+		return response;
 	} catch (error: any) {
 		return NextResponse.json({error: error?.message}, {status: 500});
 	}

@@ -2,6 +2,7 @@
 import {useState, useEffect} from "react";
 import audioControls from "./lib/audioControls";
 import LoginScreen from "./components/loginScreen";
+import MusicPlayer from "./components/musicPlayer";
 import {PlaylistProvider} from "./context/playlistContext";
 import {MusicalNoteIcon} from "@heroicons/react/24/solid";
 import "./global.scss";
@@ -9,6 +10,7 @@ import "./global.scss";
 export default function Home() {
 	const [power, setPower] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
+	const [isLogin, setIsLogin] = useState<boolean>(false);
 
 	useEffect(() => {
 		if (loading) {
@@ -126,8 +128,11 @@ export default function Home() {
 						<div className="w-[32rem] h-[20rem] bg-off-screen">
 							<PlaylistProvider initialTitle="My Playlist">
 								{power ? (
-									//<MusicPlayer />
-									<LoginScreen />
+									isLogin ? (
+										<MusicPlayer />
+									) : (
+										<LoginScreen setIsLogin={setIsLogin} />
+									)
 								) : (
 									<div className={`w-full h-full flex flex-col justify-center items-center ${loading ? "bg-gray-2 animate-fadeIn" : ""}`}>
 										{loading && (
