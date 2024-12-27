@@ -6,11 +6,26 @@ import MusicPlayer from "./components/musicPlayer";
 import {PlaylistProvider} from "./context/playlistContext";
 import {MusicalNoteIcon} from "@heroicons/react/24/solid";
 import "./global.scss";
+import {apiRequest} from "./lib/tools";
 
 export default function Home() {
 	const [power, setPower] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [isLogin, setIsLogin] = useState<boolean>(false);
+
+	const checkSession = async () => {
+		try {
+			const response = await apiRequest("/api/auth", "GET");
+			setIsLogin(response.isValid);
+		} catch (error) {
+			console.error("Error checking session:", error);
+			setIsLogin(false);
+		}
+	};
+
+	useEffect(() => {
+		checkSession();
+	}, []);
 
 	useEffect(() => {
 		if (loading) {
