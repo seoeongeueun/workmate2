@@ -5,6 +5,6 @@ export const sessionOptions: SessionOptions = {
 	cookieName: "workmate-session",
 	cookieOptions: {
 		secure: process.env.NODE_ENV === "production",
-		maxAge: 60 * 60 * 24 * 2,
+		maxAge: 60 * 60 * 24 * 2, //이틀
 	},
 };
