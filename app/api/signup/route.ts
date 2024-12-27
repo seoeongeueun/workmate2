@@ -17,15 +17,15 @@ export async function POST(request: Request) {
 
 		await dbConnect();
 
-		//중복 이름 확인
-		const exists = await User.findOne({username});
+		//중복 이름 확인 (대소문자 무시)
+		const exists = await User.findOne({username: {$regex: new RegExp(`^${username}$`, "i")}}).lean();
 		if (exists) {
 			return NextResponse.json({error: "Username taken"}, {status: 409});
 		}
 
 		//플레이리스트 먼저 생성
 		const playlist = await Playlist.create({
-			name: `${username}'s Playlist`,
+			title: `${username}'s Playlist`,
 		});
 
 		const hashed = await bcrypt.hash(password, 10);
@@ -38,6 +38,11 @@ export async function POST(request: Request) {
 
 		return NextResponse.json({success: true}, {status: 201});
 	} catch (error: any) {
-		return NextResponse.json({error: error}, {status: 500});
+		return NextResponse.json({error: error?.message}, {status: 500});
 	}
+}
+
+export async function GET(request: Request) {
+	try {
+	} catch (error: any) {}
 }
