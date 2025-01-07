@@ -12,7 +12,7 @@ export default function Home() {
 	const [power, setPower] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [isLogin, setIsLogin] = useState<boolean>(false);
-	const [buttonPressed, setButtonPressed] = useState<String | undefined>(undefined);
+	const [buttonPressed, setButtonPressed] = useState<string | undefined>(undefined);
 
 	const checkSession = async () => {
 		try {

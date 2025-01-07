@@ -1,18 +1,19 @@
 interface Track {
 	readonly id: string; //videoId를 기반으로 지정된 곡 전용 id
 	url: string;
-	order: number;
 	title?: string;
 }
 export default class Playlist {
 	title?: string;
 	tracks: Track[];
+	backup: Track[]; //플레이리스트 셔플시 원본 플레이리스트 저장용
 	currentTrack: Track | undefined = undefined;
 	nextTrack: Track | undefined = undefined;
 
 	constructor(title: string) {
 		this.title = title;
 		this.tracks = [];
+		this.backup = [];
 	}
 
 	extractVideoId = (url: string) => {
@@ -21,9 +22,9 @@ export default class Playlist {
 	};
 
 	addTrack(url: string, title?: string) {
-		const order = this.tracks.length; // 신규 트랙 추가시 항상 플레이리스트의 마지막에 추가
+		// 신규 트랙 추가시 항상 플레이리스트의 마지막에 추가
 		const id = this.extractVideoId(url) + this.tracks.length; //동영상 아이디를 기반으로 아이디 생성
-		const track: Track = {id, url, order, title};
+		const track: Track = {id, url, title};
 		this.tracks.push(track);
 		if (!this.currentTrack) {
 			this.currentTrack = track;
@@ -53,8 +54,12 @@ export default class Playlist {
 	playNext() {
 		if (!this.tracks.length) return;
 		if (this.currentTrack) {
-			const currentOrder = this.currentTrack.order;
-			this.currentTrack = this.tracks.find(track => track.order === currentOrder + 1);
+			const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
+
+			//현재 트랙이 마지막 트랙이 아닌 경우 다음 트랙을 현재 트랙으로 지정
+			if (currentIndex >= 0 && currentIndex < this.tracks.length - 1) {
+				this.currentTrack = this.tracks[currentIndex + 1];
+			}
 		} else {
 			this.currentTrack = this.tracks[0]; //currentTrack이 없는 경우 플레이리스트 실행 전인 것으로 판단, 리스트의 첫 번째 곡을 현재 곡으로 지정
 			this.nextTrack = undefined;
@@ -68,8 +73,10 @@ export default class Playlist {
 		if (!this.tracks.length) return;
 		if (this.currentTrack) {
 			this.nextTrack = this.currentTrack; //현재 곡을 다음 곡으로 지정
-			const currentOrder = this.currentTrack.order;
-			this.currentTrack = this.tracks.find(track => track.order === currentOrder - 1);
+			const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
+			if (currentIndex > 0) {
+				this.currentTrack = this.tracks[currentIndex - 1];
+			}
 		} else {
 			this.currentTrack = this.tracks[0];
 			this.nextTrack = undefined;
@@ -91,8 +98,8 @@ export default class Playlist {
 		if (!this.tracks.length) return;
 		if (this.nextTrack?.url) return this.extractVideoId(this.nextTrack.url);
 		if (this.currentTrack) {
-			const currentOrder = this.currentTrack.order;
-			const nextTrack = this.tracks.find(track => track.order === currentOrder + 1);
+			const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
+			const nextTrack = this.tracks[currentIndex + 1];
 			if (nextTrack?.url) {
 				return this.extractVideoId(nextTrack.url);
 			}
@@ -106,5 +113,29 @@ export default class Playlist {
 			track.title = title;
 			console.log(this.tracks);
 		}
+	}
+
+	shuffleTracks() {
+		this.backup = [...this.tracks];
+		//Fisher-Yates 셔플
+		for (let i = this.tracks.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
+		}
+	}
+
+	unshuffleTracks() {
+		this.tracks = [...this.backup];
+	}
+
+	getRemainingTracks() {
+		//현재 트랙 기준으로 남은 트랙 개수
+		const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
+		return this.tracks.length - currentIndex - 1;
+	}
+
+	getTrackIndex() {
+		const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
+		return `${currentIndex + 1} out of ${this.tracks.length}`;
 	}
 }

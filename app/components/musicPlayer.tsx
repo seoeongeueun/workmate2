@@ -18,10 +18,10 @@ export default function MusicPlayer({buttonPressed}: MusicPlayerProps) {
 	const [currentTrack, setCurrentTrack] = useState(playlist.getCurrentTrack());
 	const [isEmpty, setIsEmpty] = useState<boolean>(true);
 	const [isPlay, setIsPlay] = useState<boolean>(false);
-	const [totalTracks, setTotalTracks] = useState<number>(0);
 	const [progressTime, setProgressTime] = useState<number>(0);
 	const [currentTime, setCurrentTime] = useState<Date>(new Date());
 	const [showPopup, setShowPopup] = useState<boolean>(false);
+	const [trackIndex, setTrackIndex] = useState<string>("0");
 	const playerRef = useRef<any>(null);
 
 	const defaultIconSize = "size-6";
@@ -42,9 +42,9 @@ export default function MusicPlayer({buttonPressed}: MusicPlayerProps) {
 		(id: string) => {
 			if (!playerRef.current) return;
 			playerRef.current.cueVideoById(id); //yt api의 method
-			setTotalTracks(totalTracks - 1 >= 0 ? totalTracks - 1 : 0);
+			setTrackIndex(playlist.getTrackIndex());
 		},
-		[playerRef, totalTracks]
+		[playerRef]
 	);
 
 	const handleAddSong = (): void => {
@@ -53,7 +53,7 @@ export default function MusicPlayer({buttonPressed}: MusicPlayerProps) {
 		if (url) {
 			playlist.addTrack(url);
 			songToAdd.value = "Music Added!";
-			setTotalTracks(playlist.tracks.length);
+			setTrackIndex(playlist.getTrackIndex());
 			if (!currentTrack) {
 				setCurrentTrack(playlist.getCurrentTrack());
 				setIsEmpty(false);
@@ -237,9 +237,7 @@ export default function MusicPlayer({buttonPressed}: MusicPlayerProps) {
 				<div id="player"></div>
 				<p className="text-xs line-clamp-2">{currentTrack?.title}</p>
 			</div>
-			<span className="text-xxs mt-auto">
-				{totalTracks ? totalTracks - 1 : 0} more track{totalTracks > 2 && "s"}
-			</span>
+			<span className="text-xxs mt-auto">track {trackIndex}</span>
 			<div className="flex flex-row w-full justify-between items-center">
 				<button onClick={handlePlayPrev}>
 					<BackwardIcon className={defaultIconSize} />
