@@ -12,6 +12,7 @@ export default function Home() {
 	const [power, setPower] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [isLogin, setIsLogin] = useState<boolean>(false);
+	const [buttonPressed, setButtonPressed] = useState<String | undefined>(undefined);
 
 	const checkSession = async () => {
 		try {
@@ -48,6 +49,24 @@ export default function Home() {
 		}
 	};
 
+	const handleButtonClick = (type: "select" | "a" | "b") => {
+		// 트랙 삭제 팝업이 켜진 상태에서 a, b를 누르는 경우는 a,b를 지정
+		// 그 외는 a, b 클릭을 무시
+		if (type === "select") {
+			setButtonPressed(type);
+		} else if (buttonPressed === "select") {
+			setButtonPressed(type);
+		}
+	};
+
+	// useEffect(() => {
+	// 	if (buttonPressed) {
+	// 		setTimeout(() => {
+	// 			setButtonPressed(undefined);
+	// 		}, 1000);
+	// 	}
+	// }, [buttonPressed]);
+
 	return (
 		<div className="font-galmuri font-semibold">
 			<div className="gameboy-body">
@@ -81,7 +100,7 @@ export default function Home() {
 								<span>START</span>
 							</div>
 							<div className="border">
-								<div className="select"></div>
+								<div className="select" onClick={() => handleButtonClick("select")}></div>
 								<span>SELECT</span>
 							</div>
 						</div>
@@ -110,10 +129,10 @@ export default function Home() {
 							<span>POWER</span>
 						</div>
 						<div className="ab-buttons">
-							<div className="b-button">
+							<div className="b-button" onClick={() => handleButtonClick("b")}>
 								<span>B</span>
 							</div>
-							<div className="a-button">
+							<div className="a-button" onClick={() => handleButtonClick("a")}>
 								<span>A</span>
 							</div>
 						</div>
@@ -144,7 +163,7 @@ export default function Home() {
 							<PlaylistProvider initialTitle="My Playlist">
 								{power ? (
 									isLogin ? (
-										<MusicPlayer />
+										<MusicPlayer buttonPressed={buttonPressed} />
 									) : (
 										<LoginScreen setIsLogin={setIsLogin} />
 									)

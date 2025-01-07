@@ -30,6 +30,26 @@ export default class Playlist {
 		}
 	}
 
+	removeTrack(id: string) {
+		//TODO: 로직 수정 필요
+		const currentIndex = this.tracks.findIndex(x => x.id === id);
+		//this.tracks = this.tracks.filter(x => x.id !== id);
+
+		// 현재 트랙 삭제 후 전 트랙으로 이동
+		if (this.currentTrack?.id === id) {
+			const prevIndex = currentIndex - 1;
+			//전 트랙이 있다면 전 트랙으로 이동 | 없다면 재생 중지
+			if (prevIndex >= 0) {
+				this.currentTrack = this.tracks[prevIndex];
+			} else {
+				this.currentTrack = undefined;
+			}
+		}
+		// if (this.nextTrack?.id === id) {
+		// 	this.nextTrack = undefined;
+		// }
+	}
+
 	playNext() {
 		if (!this.tracks.length) return;
 		if (this.currentTrack) {

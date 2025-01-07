@@ -50,7 +50,7 @@ export async function GET(request: Request) {
 	const response = new Response();
 	const session = await getIronSession<{user?: {id: string; username: string}}>(request, response, sessionOptions);
 
-	if (session?.user) {
+	if (session?.user?.username) {
 		return NextResponse.json({isValid: true});
 	} else {
 		return NextResponse.json({isValid: false});

@@ -9,7 +9,11 @@ declare global {
 	}
 }
 
-export default function MusicPlayer() {
+type MusicPlayerProps = {
+	buttonPressed: string | undefined;
+};
+
+export default function MusicPlayer({buttonPressed}: MusicPlayerProps) {
 	const {playlist} = usePlaylistContext();
 	const [currentTrack, setCurrentTrack] = useState(playlist.getCurrentTrack());
 	const [isEmpty, setIsEmpty] = useState<boolean>(true);
@@ -17,6 +21,7 @@ export default function MusicPlayer() {
 	const [totalTracks, setTotalTracks] = useState<number>(0);
 	const [progressTime, setProgressTime] = useState<number>(0);
 	const [currentTime, setCurrentTime] = useState<Date>(new Date());
+	const [showPopup, setShowPopup] = useState<boolean>(false);
 	const playerRef = useRef<any>(null);
 
 	const defaultIconSize = "size-6";
@@ -176,8 +181,47 @@ export default function MusicPlayer() {
 		setCurrentTrack(playlist.getCurrentTrack());
 	}, [playlist, playlist.currentTrack]);
 
+	useEffect(() => {
+		if (buttonPressed === "select") {
+			setShowPopup(true);
+		}
+	}, [buttonPressed]);
+
+	useEffect(() => {
+		console.log(buttonPressed);
+		if (showPopup && (buttonPressed === "a" || buttonPressed === "b")) {
+			handleRemoveTrack(buttonPressed);
+		}
+	}, [buttonPressed, showPopup]);
+
+	const handleRemoveTrack = (type: string) => {
+		if (type === "a" && currentTrack) {
+			playlist.removeTrack(currentTrack?.id);
+		}
+		setShowPopup(false);
+		playerRef.current.cueVideoById("");
+	};
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.code === "KeyA") {
+				handleRemoveTrack("a");
+			} else if (event.code === "KeyB") {
+				handleRemoveTrack("b");
+			}
+		};
+
+		if (showPopup) {
+			window.addEventListener("keydown", handleKeyDown);
+		}
+
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [showPopup]);
+
 	return (
-		<div className="flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black">
+		<div className="flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black relative">
 			<div className="flex flex-row w-full justify-end items-center gap-2">
 				<span className="mr-auto">{formatDate(currentTime)}</span>
 				<span>{formatTime(currentTime)}</span>
@@ -208,6 +252,24 @@ export default function MusicPlayer() {
 			<div className="w-full p-px border border-px rounded-[1px] border-black">
 				<div className="bg-black h-px" style={{width: progressTime.toFixed(2) + "%"}} />
 			</div>
+
+			{showPopup && (
+				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
+					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] text-center p-spacing-16 py-spacing-24 bg-gray-2 flex flex-col justify-between items-center">
+						<span className="tracking-wider leading-8">REMOVE CURRENT TRACK FROM PLAYLIST?</span>
+						<div className="w-full flex flex-row items-center justify-between">
+							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack("a")}>
+								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">A</span>
+								<span>YES</span>
+							</div>
+							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack("b")}>
+								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">B</span>
+								<span>NO</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
