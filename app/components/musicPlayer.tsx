@@ -21,7 +21,7 @@ export default function MusicPlayer({buttonPressed}: MusicPlayerProps) {
 	const [progressTime, setProgressTime] = useState<number>(0);
 	const [currentTime, setCurrentTime] = useState<Date>(new Date());
 	const [showPopup, setShowPopup] = useState<boolean>(false);
-	const [trackIndex, setTrackIndex] = useState<string>("0");
+	const [trackIndex, setTrackIndex] = useState<string>("0 out of 0");
 	const playerRef = useRef<any>(null);
 
 	const defaultIconSize = "size-6";
@@ -196,10 +196,15 @@ export default function MusicPlayer({buttonPressed}: MusicPlayerProps) {
 
 	const handleRemoveTrack = (type: string) => {
 		if (type === "a" && currentTrack) {
-			playlist.removeTrack(currentTrack?.id);
+			const nextTrack = playlist.removeTrack(currentTrack?.id);
+			if (nextTrack) {
+				playerRef.current.cueVideoById(nextTrack);
+			} else {
+				playerRef.current.destroy();
+			}
 		}
+		setTrackIndex(playlist.getTrackIndex());
 		setShowPopup(false);
-		playerRef.current.cueVideoById("");
 	};
 
 	useEffect(() => {
@@ -254,15 +259,15 @@ export default function MusicPlayer({buttonPressed}: MusicPlayerProps) {
 			{showPopup && (
 				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
 					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] text-center p-spacing-16 py-spacing-24 bg-gray-2 flex flex-col justify-between items-center">
-						<span className="tracking-wider leading-8">REMOVE CURRENT TRACK FROM PLAYLIST?</span>
+						<span className="tracking-wider leading-8">Remove current track from playlist?</span>
 						<div className="w-full flex flex-row items-center justify-between">
 							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack("a")}>
 								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">A</span>
-								<span>YES</span>
+								<span>yes</span>
 							</div>
 							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack("b")}>
 								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">B</span>
-								<span>NO</span>
+								<span>no</span>
 							</div>
 						</div>
 					</div>

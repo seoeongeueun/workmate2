@@ -32,23 +32,22 @@ export default class Playlist {
 	}
 
 	removeTrack(id: string) {
-		//TODO: 로직 수정 필요
 		const currentIndex = this.tracks.findIndex(x => x.id === id);
-		//this.tracks = this.tracks.filter(x => x.id !== id);
 
 		// 현재 트랙 삭제 후 전 트랙으로 이동
 		if (this.currentTrack?.id === id) {
-			const prevIndex = currentIndex - 1;
-			//전 트랙이 있다면 전 트랙으로 이동 | 없다면 재생 중지
-			if (prevIndex >= 0) {
-				this.currentTrack = this.tracks[prevIndex];
+			//전 트랙이 있다면 다음 트랙으로 이동 | 없다면 재생 중지
+			if (currentIndex < this.tracks.length - 1) {
+				this.currentTrack = this.tracks[currentIndex + 1];
 			} else {
 				this.currentTrack = undefined;
 			}
 		}
-		// if (this.nextTrack?.id === id) {
-		// 	this.nextTrack = undefined;
-		// }
+		if (this.nextTrack?.id === id) {
+			this.nextTrack = undefined;
+		}
+		this.tracks.splice(currentIndex, 1);
+		return this.extractVideoId(this.currentTrack?.url ?? "");
 	}
 
 	playNext() {
@@ -126,12 +125,6 @@ export default class Playlist {
 
 	unshuffleTracks() {
 		this.tracks = [...this.backup];
-	}
-
-	getRemainingTracks() {
-		//현재 트랙 기준으로 남은 트랙 개수
-		const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
-		return this.tracks.length - currentIndex - 1;
 	}
 
 	getTrackIndex() {
