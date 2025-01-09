@@ -5,12 +5,64 @@ import LoginScreen from "./components/loginScreen";
 import MusicPlayer from "./components/musicPlayer";
 import {PlaylistProvider} from "./context/playlistContext";
 import "./global.scss";
-import {apiRequest} from "./lib/tools";
+
+type ButtonValue = "a" | "b" | "up" | "down" | "left" | "right" | "select" | "power";
+
+interface Triggers {
+	prev: ButtonValue | undefined;
+	current: ButtonValue | undefined;
+}
+
+const keyToButtonValue: Record<string, ButtonValue> = {
+	KeyA: "a",
+	KeyB: "b",
+	ArrowUp: "up",
+	ArrowDown: "down",
+	ArrowLeft: "left",
+	ArrowRight: "right",
+};
 
 export default function Home() {
 	const [power, setPower] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [buttonPressed, setButtonPressed] = useState<string | undefined>(undefined);
+	const [triggers, setTriggers] = useState<Triggers>({prev: undefined, current: undefined});
+
+	const handleGlobalClick = (event: MouseEvent) => {
+		const target = event.target as HTMLElement;
+
+		if (target.classList.contains("trigger")) {
+			const buttonValue = target.getAttribute("data-button-type") as ButtonValue | undefined;
+			console.log("Button clicked:", buttonValue);
+
+			if (buttonValue) {
+				setTriggers(prevState => ({
+					prev: prevState.current,
+					current: buttonValue,
+				}));
+			}
+		}
+	};
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			const buttonValue = keyToButtonValue[event.code];
+			if (buttonValue) {
+				setTriggers(prevState => ({
+					prev: prevState.current,
+					current: buttonValue,
+				}));
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		document.addEventListener("click", handleGlobalClick);
+
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+			document.removeEventListener("click", handleGlobalClick);
+		};
+	}, []);
 
 	// useEffect(() => {
 	// 	if (loading) {
@@ -75,22 +127,22 @@ export default function Home() {
 						</div>
 						<div className="move-button">
 							<div className="vertical">
-								<div className="tip"></div>
+								<div className="tip trigger" data-button-type="up"></div>
 								{/* <div className="tip"></div> */}
 							</div>
 							<div className="horizontal">
-								<div className="tip"></div>
-								<div className="tip"></div>
+								<div className="tip trigger" data-button-type="left"></div>
+								<div className="tip trigger" data-button-type="right"></div>
 							</div>
 							<div className="rect"></div>
 						</div>
 						<div className="start-buttons">
 							<div className="border">
-								<div className="start" onClick={handlePowerOn}></div>
+								<div className="start trigger" data-button-type="start"></div>
 								<span>START</span>
 							</div>
 							<div className="border">
-								<div className="select" onClick={() => handleButtonClick("select")}></div>
+								<div className="select trigger" data-button-type="select"></div>
 								<span>SELECT</span>
 							</div>
 						</div>
@@ -119,10 +171,10 @@ export default function Home() {
 							<span>POWER</span>
 						</div>
 						<div className="ab-buttons">
-							<div className="b-button" onClick={() => handleButtonClick("b")}>
+							<div className="b-button trigger" data-button-type="b">
 								<span>B</span>
 							</div>
-							<div className="a-button" onClick={() => handleButtonClick("a")}>
+							<div className="a-button trigger" data-button-type="a">
 								<span>A</span>
 							</div>
 						</div>
