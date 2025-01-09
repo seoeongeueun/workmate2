@@ -4,49 +4,39 @@ import audioControls from "./lib/audioControls";
 import LoginScreen from "./components/loginScreen";
 import MusicPlayer from "./components/musicPlayer";
 import {PlaylistProvider} from "./context/playlistContext";
-import {MusicalNoteIcon} from "@heroicons/react/24/solid";
 import "./global.scss";
 import {apiRequest} from "./lib/tools";
 
 export default function Home() {
 	const [power, setPower] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
-	const [isLogin, setIsLogin] = useState<boolean>(false);
 	const [buttonPressed, setButtonPressed] = useState<string | undefined>(undefined);
 
-	const checkSession = async () => {
-		try {
-			const response = await apiRequest("/api/auth", "GET");
-			setIsLogin(response.isValid);
-		} catch (error) {
-			console.error("Error checking session:", error);
-			setIsLogin(false);
-		}
-	};
+	// useEffect(() => {
+	// 	if (loading) {
+	// 		const t = setTimeout(() => {
+	// 			setPower(true);
+	// 			setLoading(false);
+	// 		}, 4000);
 
-	useEffect(() => {
-		checkSession();
-	}, []);
+	// 		return () => clearTimeout(t);
+	// 	}
+	// }, [loading]);
 
-	useEffect(() => {
-		if (loading) {
-			const t = setTimeout(() => {
-				setPower(true);
-				setLoading(false);
-			}, 4000);
-
-			return () => clearTimeout(t);
-		}
-	}, [loading]);
+	// const handlePowerOn = () => {
+	// 	if (power) {
+	// 		setPower(false);
+	// 		setLoading(false);
+	// 	} else {
+	// 		audioControls.play("power");
+	// 		setLoading(true);
+	// 	}
+	// };
 
 	const handlePowerOn = () => {
-		if (power) {
-			setPower(false);
-			setLoading(false);
-		} else {
-			audioControls.play("power");
-			setLoading(true);
-		}
+		if (!power) audioControls.play("power");
+		setPower(!power);
+		setLoading(!loading);
 	};
 
 	const handleButtonClick = (type: "select" | "a" | "b") => {
@@ -161,7 +151,10 @@ export default function Home() {
 					<div className="pointer-events-auto bg-black border border-black px-spacing-4 py-spacing-8 w-fit z-30">
 						<div className="w-[32rem] h-[20rem] bg-off-screen">
 							<PlaylistProvider initialTitle="My Playlist">
-								{power ? (
+								<div className={`w-full h-full flex flex-col justify-center items-center ${loading ? "bg-gray-2 animate-fadeIn" : ""}`}>
+									<MusicPlayer />
+								</div>
+								{/* {power ? (
 									isLogin ? (
 										<MusicPlayer buttonPressed={buttonPressed} />
 									) : (
@@ -180,7 +173,7 @@ export default function Home() {
 											</div>
 										)}
 									</div>
-								)}
+								)} */}
 							</PlaylistProvider>
 						</div>
 					</div>

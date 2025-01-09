@@ -5,6 +5,7 @@ import {Playlist} from "@/app/models/Playlist";
 import bcrypt from "bcrypt";
 import {getIronSession} from "iron-session";
 import {sessionOptions} from "@/app/lib/session";
+import mongoose from "mongoose";
 
 export async function POST(request: Request) {
 	try {
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
 		//플레이리스트 먼저 생성
 		const playlist = await Playlist.create({
 			title: `${username}'s Playlist`,
+			tracks: [],
 		});
 
 		const hashed = await bcrypt.hash(password, 10);
@@ -40,11 +42,13 @@ export async function POST(request: Request) {
 
 		//유저 생성 후 바로 로그인 처리
 		const response = NextResponse.json({success: true}, {status: 201});
-		const session = await getIronSession<{user?: {id: string; username: string}}>(request, response, sessionOptions);
+		const session = await getIronSession<{user?: {id: string; username: string; playlistId: mongoose.Types.ObjectId}}>(request, response, sessionOptions);
 
+		//대표 플레이리스트의 object id를 같이 저장
 		session.user = {
 			id: user._id.toString(),
 			username: user.username,
+			playlistId: playlist._id,
 		};
 
 		await session.save();

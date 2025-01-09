@@ -4,6 +4,7 @@ import {User} from "@/app/models/User";
 import bcrypt from "bcrypt";
 import {getIronSession} from "iron-session";
 import {sessionOptions} from "@/app/lib/session";
+import mongoose from "mongoose";
 
 export async function POST(request: Request, response: Response) {
 	try {
@@ -30,11 +31,12 @@ export async function POST(request: Request, response: Response) {
 		}
 
 		const response = NextResponse.json({success: true});
-		const session = await getIronSession<{user?: {id: string; username: string}}>(request, response, sessionOptions);
+		const session = await getIronSession<{user?: {id: string; username: string; playlistId: mongoose.Types.ObjectId}}>(request, response, sessionOptions);
 
 		session.user = {
 			id: user._id.toString(),
 			username: user.username,
+			playlistId: user.playlistIds[0],
 		};
 
 		await session.save();
@@ -48,10 +50,10 @@ export async function POST(request: Request, response: Response) {
 
 export async function GET(request: Request) {
 	const response = new Response();
-	const session = await getIronSession<{user?: {id: string; username: string}}>(request, response, sessionOptions);
+	const session = await getIronSession<{user?: {id: string; username: string; playlistId: mongoose.Types.ObjectId}}>(request, response, sessionOptions);
 
-	if (session?.user?.username) {
-		return NextResponse.json({isValid: true});
+	if (session?.user?.username && session?.user?.playlistId) {
+		return NextResponse.json({isValid: true, playlistId: session.user.playlistId});
 	} else {
 		return NextResponse.json({isValid: false});
 	}

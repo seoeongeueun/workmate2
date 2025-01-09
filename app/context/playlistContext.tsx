@@ -2,15 +2,16 @@ import {createContext, useState, useContext, ReactNode} from "react";
 import Playlist from "../classes/Playlist";
 
 interface PlaylistContextType {
-	playlist: Playlist;
+	playlist: Playlist | undefined;
+	setPlaylist: (playlist: Playlist | undefined) => void;
 }
 
 const PlaylistContext = createContext<PlaylistContextType | undefined>(undefined);
 
 export const PlaylistProvider: React.FC<{children: ReactNode; initialTitle: string}> = ({children, initialTitle}) => {
-	const [playlist] = useState(new Playlist(initialTitle));
+	const [playlist, setPlaylist] = useState(new Playlist(initialTitle));
 
-	return <PlaylistContext.Provider value={{playlist}}>{children}</PlaylistContext.Provider>;
+	return <PlaylistContext.Provider value={{playlist, setPlaylist}}>{children}</PlaylistContext.Provider>;
 };
 
 export const usePlaylistContext = () => {
