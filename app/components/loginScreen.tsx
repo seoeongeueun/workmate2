@@ -12,7 +12,7 @@ enum ErrorCodes {
 }
 
 interface LoginScreenProps {
-	setIsLogin: React.Dispatch<React.SetStateAction<boolean>>;
+	setIsLogin: React.Dispatch<React.SetStateAction<boolean | undefined>>;
 }
 
 export default function LoginScreen({setIsLogin}: LoginScreenProps) {
@@ -117,7 +117,7 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 	};
 
 	return (
-		<div className="font-galmuri animate-fadeIn flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black">
+		<div className="font-galmuri flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black">
 			<div className="flex flex-row w-full justify-end items-center gap-2">
 				<Battery100Icon className="mb-px size-8" />
 			</div>

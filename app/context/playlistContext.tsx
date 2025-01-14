@@ -9,7 +9,7 @@ interface PlaylistContextType {
 const PlaylistContext = createContext<PlaylistContextType | undefined>(undefined);
 
 export const PlaylistProvider: React.FC<{children: ReactNode; initialTitle: string}> = ({children, initialTitle}) => {
-	const [playlist, setPlaylist] = useState<Playlist | undefined>(new Playlist(initialTitle));
+	const [playlist, setPlaylist] = useState<Playlist | undefined>(new Playlist(initialTitle, ""));
 
 	return <PlaylistContext.Provider value={{playlist, setPlaylist}}>{children}</PlaylistContext.Provider>;
 };

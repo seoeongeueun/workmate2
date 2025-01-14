@@ -1,19 +1,25 @@
-interface Track {
+export interface Track {
 	readonly id: string; //videoId를 기반으로 지정된 곡 전용 id
 	url: string;
 	title?: string;
 }
 export default class Playlist {
+	objectId?: string;
 	title?: string;
 	tracks: Track[];
 	backup: Track[]; //플레이리스트 셔플시 원본 플레이리스트 저장용
 	currentTrack: Track | undefined = undefined;
 	nextTrack: Track | undefined = undefined;
 
-	constructor(title: string) {
+	constructor(title: string, objectId: string, tracks: Track[] = []) {
 		this.title = title;
-		this.tracks = [];
-		this.backup = [];
+		this.objectId = objectId;
+		this.tracks = tracks;
+		this.backup = tracks;
+	}
+
+	getObjectId() {
+		return this.objectId;
 	}
 
 	extractVideoId = (url: string) => {
@@ -29,6 +35,7 @@ export default class Playlist {
 		if (!this.currentTrack) {
 			this.currentTrack = track;
 		}
+		return track;
 	}
 
 	removeTrack(id: string) {

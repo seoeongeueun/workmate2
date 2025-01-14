@@ -1,14 +1,13 @@
 "use client";
 import {useState, useEffect} from "react";
 import audioControls from "./lib/audioControls";
-import LoginScreen from "./components/loginScreen";
 import MusicPlayer from "./components/musicPlayer";
 import {PlaylistProvider} from "./context/playlistContext";
 import "./global.scss";
 
 type ButtonValue = "a" | "b" | "up" | "down" | "left" | "right" | "select" | "power";
 
-interface Triggers {
+export interface Triggers {
 	prev: ButtonValue | undefined;
 	current: ButtonValue | undefined;
 }
@@ -25,7 +24,6 @@ const keyToButtonValue: Record<string, ButtonValue> = {
 export default function Home() {
 	const [power, setPower] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
-	const [buttonPressed, setButtonPressed] = useState<string | undefined>(undefined);
 	const [triggers, setTriggers] = useState<Triggers>({prev: undefined, current: undefined});
 
 	const handleGlobalClick = (event: MouseEvent) => {
@@ -37,7 +35,7 @@ export default function Home() {
 
 			if (buttonValue) {
 				setTriggers(prevState => ({
-					prev: prevState.current,
+					prev: prevState.prev === "select" && buttonValue !== "b" ? "select" : prevState.current,
 					current: buttonValue,
 				}));
 			}
@@ -49,7 +47,7 @@ export default function Home() {
 			const buttonValue = keyToButtonValue[event.code];
 			if (buttonValue) {
 				setTriggers(prevState => ({
-					prev: prevState.current,
+					prev: prevState.prev === "select" && buttonValue !== "b" ? "select" : prevState.current,
 					current: buttonValue,
 				}));
 			}
@@ -64,50 +62,17 @@ export default function Home() {
 		};
 	}, []);
 
-	// useEffect(() => {
-	// 	if (loading) {
-	// 		const t = setTimeout(() => {
-	// 			setPower(true);
-	// 			setLoading(false);
-	// 		}, 4000);
-
-	// 		return () => clearTimeout(t);
-	// 	}
-	// }, [loading]);
-
-	// const handlePowerOn = () => {
-	// 	if (power) {
-	// 		setPower(false);
-	// 		setLoading(false);
-	// 	} else {
-	// 		audioControls.play("power");
-	// 		setLoading(true);
-	// 	}
-	// };
-
-	const handlePowerOn = () => {
-		if (!power) audioControls.play("power");
-		setPower(!power);
-		setLoading(!loading);
-	};
-
-	const handleButtonClick = (type: "select" | "a" | "b") => {
-		// 트랙 삭제 팝업이 켜진 상태에서 a, b를 누르는 경우는 a,b를 지정
-		// 그 외는 a, b 클릭을 무시
-		if (type === "select") {
-			setButtonPressed(type);
-		} else if (buttonPressed === "select") {
-			setButtonPressed(type);
+	useEffect(() => {
+		const current = triggers.current;
+		if (current === "power") {
+			setPower(prev => !prev);
+			setLoading(!power);
 		}
-	};
+	}, [triggers]);
 
-	// useEffect(() => {
-	// 	if (buttonPressed) {
-	// 		setTimeout(() => {
-	// 			setButtonPressed(undefined);
-	// 		}, 1000);
-	// 	}
-	// }, [buttonPressed]);
+	useEffect(() => {
+		if (power) audioControls.play("power");
+	}, [power]);
 
 	return (
 		<div className="font-galmuri font-semibold">
@@ -138,7 +103,7 @@ export default function Home() {
 						</div>
 						<div className="start-buttons">
 							<div className="border">
-								<div className="start trigger" data-button-type="start"></div>
+								<div className="start trigger" data-button-type="power"></div>
 								<span>START</span>
 							</div>
 							<div className="border">
@@ -204,7 +169,7 @@ export default function Home() {
 						<div className="w-[32rem] h-[20rem] bg-off-screen">
 							<PlaylistProvider initialTitle="My Playlist">
 								<div className={`w-full h-full flex flex-col justify-center items-center ${loading ? "bg-gray-2 animate-fadeIn" : ""}`}>
-									<MusicPlayer />
+									{power && <MusicPlayer triggers={triggers} />}
 								</div>
 								{/* {power ? (
 									isLogin ? (

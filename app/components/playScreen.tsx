@@ -2,6 +2,9 @@ import React, {useState, useEffect, useRef, useCallback} from "react";
 import {usePlaylistContext} from "../context/playlistContext";
 import {Battery100Icon} from "@heroicons/react/24/solid";
 import {PlayIcon, PauseCircleIcon, BackwardIcon, ForwardIcon, PlusCircleIcon} from "@heroicons/react/16/solid";
+import Playlist from "../classes/Playlist";
+import {apiRequest} from "../lib/tools";
+import {isReadable} from "stream";
 
 declare global {
 	interface Window {
@@ -10,11 +13,10 @@ declare global {
 }
 
 type PlayScreenProps = {
-	buttonPressed: string | undefined;
+	playlist: Playlist;
 };
 
-export default function PlayScreen({buttonPressed}: PlayScreenProps) {
-	const {playlist} = usePlaylistContext();
+export default function PlayScreen({playlist}: PlayScreenProps) {
 	const [currentTrack, setCurrentTrack] = useState(playlist.getCurrentTrack());
 	const [isEmpty, setIsEmpty] = useState<boolean>(true);
 	const [isPlay, setIsPlay] = useState<boolean>(false);
@@ -22,6 +24,7 @@ export default function PlayScreen({buttonPressed}: PlayScreenProps) {
 	const [currentTime, setCurrentTime] = useState<Date>(new Date());
 	const [showPopup, setShowPopup] = useState<boolean>(false);
 	const [trackIndex, setTrackIndex] = useState<string>("0 out of 0");
+	const [shuffleMode, setShuffleMode] = useState<boolean>(false);
 	const playerRef = useRef<any>(null);
 
 	const defaultIconSize = "size-6";
@@ -47,16 +50,26 @@ export default function PlayScreen({buttonPressed}: PlayScreenProps) {
 		[playerRef]
 	);
 
-	const handleAddSong = (): void => {
+	const handleAddSong = async (): Promise<void> => {
 		const songToAdd = document.getElementById("newSong") as HTMLInputElement;
 		const url = songToAdd.value;
 		if (url) {
-			playlist.addTrack(url);
+			const newTrack = playlist.addTrack(url);
 			songToAdd.value = "Music Added!";
 			setTrackIndex(playlist.getTrackIndex());
 			if (!currentTrack) {
 				setCurrentTrack(playlist.getCurrentTrack());
 				setIsEmpty(false);
+			}
+
+			const response = await apiRequest("/api/playlist", "POST", {
+				id: playlist.getObjectId(),
+				track: newTrack,
+				isRemove: false,
+			});
+			if (response?.error) {
+				console.error("Failed to update playlist:", response.error);
+				songToAdd.value = "Error saving changes";
 			}
 		} else {
 			songToAdd.value = "Enter a valid URL";
@@ -181,26 +194,38 @@ export default function PlayScreen({buttonPressed}: PlayScreenProps) {
 		setCurrentTrack(playlist.getCurrentTrack());
 	}, [playlist, playlist.currentTrack]);
 
-	useEffect(() => {
-		if (buttonPressed === "select") {
-			setShowPopup(true);
-		}
-	}, [buttonPressed]);
+	// useEffect(() => {
+	// 	if (buttonPressed === "select") {
+	// 		setShowPopup(true);
+	// 	}
+	// }, [buttonPressed]);
 
-	useEffect(() => {
-		console.log(buttonPressed);
-		if (showPopup && (buttonPressed === "a" || buttonPressed === "b")) {
-			handleRemoveTrack(buttonPressed);
-		}
-	}, [buttonPressed, showPopup]);
+	// useEffect(() => {
+	// 	console.log(buttonPressed);
+	// 	if (showPopup && (buttonPressed === "a" || buttonPressed === "b")) {
+	// 		handleRemoveTrack(buttonPressed);
+	// 	}
+	// }, [buttonPressed, showPopup]);
 
-	const handleRemoveTrack = (type: string) => {
+	const handleRemoveTrack = async (type: string) => {
 		if (type === "a" && currentTrack) {
-			const nextTrack = playlist.removeTrack(currentTrack?.id);
-			if (nextTrack) {
-				playerRef.current.cueVideoById(nextTrack);
+			const response = await apiRequest("/api/playlist", "POST", {
+				id: playlist.getObjectId(),
+				track: playlist.getCurrentTrack(),
+				isRemove: true,
+			});
+
+			if (response?.error) {
+				const songToAdd = document.getElementById("newSong") as HTMLInputElement;
+				console.error("Failed to update playlist:", response.error);
+				songToAdd.value = "Error saving changes";
 			} else {
-				playerRef.current.destroy();
+				const nextTrack = playlist.removeTrack(currentTrack?.id);
+				if (nextTrack) {
+					playerRef.current.cueVideoById(nextTrack);
+				} else {
+					playerRef.current.destroy();
+				}
 			}
 		}
 		setTrackIndex(playlist.getTrackIndex());

@@ -1,29 +1,30 @@
 import {NextResponse} from "next/server";
-import {Playlist} from "@/app/models/Playlist";
+import {Playlist as PlaylistModel} from "@/app/models/Playlist";
 import mongoose from "mongoose";
+import Playlist, {Track} from "@/app/classes/Playlist";
 
-const handleAdd = async (id: string, trackUrl: string) => {
-	return await Playlist.findByIdAndUpdate(id, {$addToSet: {tracks: trackUrl}}, {new: true});
+const handleAdd = async (id: string, track: Track) => {
+	return await PlaylistModel.findByIdAndUpdate(id, {$addToSet: {tracks: track}}, {new: true});
 };
 
-const handleRemove = async (id: string, trackUrl: string) => {
-	return await Playlist.findByIdAndUpdate(id, {$pull: {tracks: trackUrl}}, {new: true});
+const handleRemove = async (id: string, trackId: string) => {
+	return await PlaylistModel.findByIdAndUpdate(id, {$pull: {tracks: {id: trackId}}}, {new: true});
 };
 
 export async function POST(request: Request) {
 	try {
-		const {id, trackUrl, isRemove} = (await request.json()) as {
+		const {id, track, isRemove} = (await request.json()) as {
 			id: string;
-			trackUrl: string;
+			track: Track;
 			isRemove: boolean;
 		};
 
 		let updatedPlaylist;
 
 		if (isRemove) {
-			updatedPlaylist = await handleRemove(id, trackUrl);
+			updatedPlaylist = await handleRemove(id, track.id);
 		} else {
-			updatedPlaylist = await handleAdd(id, trackUrl);
+			updatedPlaylist = await handleAdd(id, track);
 		}
 
 		if (!updatedPlaylist) {
@@ -46,12 +47,12 @@ export async function GET(request: Request) {
 			return NextResponse.json({error: "Playlist id is needed"}, {status: 400});
 		}
 
-		const playlist = await Playlist.findById(id);
+		const item = await PlaylistModel.findById(id);
 
-		if (!playlist || !mongoose.Types.ObjectId.isValid(id)) {
+		if (!item || !mongoose.Types.ObjectId.isValid(id)) {
 			return NextResponse.json({error: "No matching playlist was found"}, {status: 404});
 		}
-		return NextResponse.json(playlist);
+		return NextResponse.json({title: item.title, tracks: item.tracks});
 	} catch (error) {
 		console.error("Error fetching playlist:", error);
 		return NextResponse.json({error: "Internal server error"}, {status: 500});
