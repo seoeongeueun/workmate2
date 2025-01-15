@@ -2,9 +2,8 @@ import React, {useState, useEffect, useRef, useCallback} from "react";
 import {usePlaylistContext} from "../context/playlistContext";
 import {Battery100Icon} from "@heroicons/react/24/solid";
 import {PlayIcon, PauseCircleIcon, BackwardIcon, ForwardIcon, PlusCircleIcon} from "@heroicons/react/16/solid";
-import Playlist from "../classes/Playlist";
+import Playlist, {Track} from "../classes/Playlist";
 import {apiRequest} from "../lib/tools";
-import {isReadable} from "stream";
 
 declare global {
 	interface Window {
@@ -17,7 +16,7 @@ type PlayScreenProps = {
 };
 
 export default function PlayScreen({playlist}: PlayScreenProps) {
-	const [currentTrack, setCurrentTrack] = useState(playlist.getCurrentTrack());
+	const [currentTrack, setCurrentTrack] = useState<Track | undefined>(undefined);
 	const [isEmpty, setIsEmpty] = useState<boolean>(true);
 	const [isPlay, setIsPlay] = useState<boolean>(false);
 	const [progressTime, setProgressTime] = useState<number>(0);
@@ -29,7 +28,20 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 
 	const defaultIconSize = "size-6";
 
-	const playVideo = useCallback(() => {
+	//유저가 직접 재생/일시중지를 트리거 할 때만 사용
+	// const playVideo = useCallback(() => {
+	// 	if (!playerRef.current) {
+	// 		return;
+	// 	}
+	// 	if (!isPlay) {
+	// 		playerRef.current.playVideo();
+	// 	} else {
+	// 		playerRef.current.pauseVideo();
+	// 	}
+	// 	setIsPlay(!isPlay);
+	// }, [isPlay]);
+
+	const playVideo = () => {
 		if (!playerRef.current) {
 			return;
 		}
@@ -39,13 +51,27 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 			playerRef.current.pauseVideo();
 		}
 		setIsPlay(!isPlay);
-	}, [isPlay]);
+	};
 
+	// const playVideo = useCallback(() => {
+	// 	if (!playerRef.current) return;
+
+	// 	const playerState = playerRef.current.getPlayerState();
+	// 	if (playerState !== YT.PlayerState.PLAYING) {
+	// 		playerRef.current.playVideo();
+	// 		setIsPlay(true);
+	// 	} else {
+	// 		playerRef.current.pauseVideo();
+	// 		setIsPlay(false);
+	// 	}
+	// }, []);
+
+	/* cue 과정은 동영상의 제목을 가져오기 위해 거쳐가는 필수 단계
+	cue 상태만 트리거하고 여기서 재생에는 관여하지 않는다 */
 	const cueVideo = useCallback(
 		(id: string) => {
 			if (!playerRef.current) return;
-			playerRef.current.cueVideoById(id); //yt api의 method
-			setTrackIndex(playlist.getTrackIndex());
+			playerRef.current.cueVideoById(id); //yt api의 method를 통해 cued 상태로 전환
 		},
 		[playerRef]
 	);
@@ -130,7 +156,7 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 			}
 		};
 
-		if (!window.YT?.Player && !isEmpty) {
+		if (!window.YT?.Player && playlist.tracks?.length > 0) {
 			loadYTScript();
 		}
 
@@ -150,7 +176,7 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 							var videoData = event.target.getVideoData();
 							var title = videoData.title;
 							playlist.updateTrackTitle(initialVideoId, title);
-							if (currentTrack) playVideo();
+							playVideo();
 							intervalId = setInterval(() => {
 								if (playerRef.current) {
 									const duration = playerRef.current.getDuration();
@@ -166,6 +192,7 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 		}
 
 		const handlePlayerStateChange = (event: YT.OnStateChangeEvent) => {
+			//이전 곡 재생 완료 시 다음 곡 자동 재생
 			if (event.data === YT.PlayerState.ENDED) {
 				handlePlayNext();
 			} else if (event.data === YT.PlayerState.CUED) {
@@ -175,8 +202,9 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 				if (current?.url) {
 					playlist.updateTrackTitle(current.url, title);
 					setCurrentTrack({...current, title: title});
+					playerRef.current.playVideo();
+					console.log("ya");
 				}
-				playVideo();
 			}
 		};
 
@@ -188,10 +216,15 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 				playerRef.current = null;
 			}
 		};
-	}, [isEmpty]);
+	}, [playlist]);
 
 	useEffect(() => {
-		setCurrentTrack(playlist.getCurrentTrack());
+		const current = playlist.getCurrentTrack();
+		console.log(current);
+		if (current) {
+			setCurrentTrack(current);
+			setTrackIndex(playlist.getTrackIndex());
+		}
 	}, [playlist, playlist.currentTrack]);
 
 	// useEffect(() => {

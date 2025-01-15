@@ -16,6 +16,8 @@ export default class Playlist {
 		this.objectId = objectId;
 		this.tracks = tracks;
 		this.backup = tracks;
+		// *중요* 첫 곡은 무조건 첫번째 트랙으로 설정
+		if (tracks?.length > 0) this.currentTrack = tracks[0];
 	}
 
 	getObjectId() {
@@ -65,6 +67,8 @@ export default class Playlist {
 			//현재 트랙이 마지막 트랙이 아닌 경우 다음 트랙을 현재 트랙으로 지정
 			if (currentIndex >= 0 && currentIndex < this.tracks.length - 1) {
 				this.currentTrack = this.tracks[currentIndex + 1];
+			} else {
+				this.currentTrack = undefined;
 			}
 		} else {
 			this.currentTrack = this.tracks[0]; //currentTrack이 없는 경우 플레이리스트 실행 전인 것으로 판단, 리스트의 첫 번째 곡을 현재 곡으로 지정
@@ -114,7 +118,6 @@ export default class Playlist {
 
 	updateTrackTitle(videoId: string, title: string) {
 		const track = this.tracks.find(track => track.url.includes(videoId));
-
 		if (track) {
 			track.title = title;
 			console.log(this.tracks);

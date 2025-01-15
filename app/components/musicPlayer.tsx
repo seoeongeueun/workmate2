@@ -43,7 +43,7 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 	};
 
 	useEffect(() => {
-		checkSession();
+		if (isLogin === undefined) checkSession();
 	}, [isLogin]);
 
 	if (isLogin === false) return <LoginScreen setIsLogin={setIsLogin} />;
