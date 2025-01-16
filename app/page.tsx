@@ -5,6 +5,11 @@ import MusicPlayer from "./components/musicPlayer";
 import {PlaylistProvider} from "./context/playlistContext";
 import "./global.scss";
 
+/* 
+	a => 확인
+	b => 취소
+	select => 메뉴 / 액션
+*/
 type ButtonValue = "a" | "b" | "up" | "down" | "left" | "right" | "select" | "power";
 
 export interface Triggers {
@@ -117,9 +122,9 @@ export default function Home() {
 						<div className="body-bottom">
 							<div className="base absolute bg-body w-full h-full z-20"></div>
 						</div>
-						<div className="logo">
+						{/* <div className="logo">
 							<span>Workmate</span>
-						</div>
+						</div> */}
 					</div>
 					<div className="body-right">
 						<div className="body-side right">
@@ -200,7 +205,7 @@ export default function Home() {
 					<div className="frame-bottom">
 						<div className="base">
 							<div></div>
-							<span className="playlist-title text-nowrap">USER1</span>
+							<span className="playlist-title text-nowrap">WORKMATE</span>
 						</div>
 						<div className="top">
 							<div></div>

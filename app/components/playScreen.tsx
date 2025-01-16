@@ -4,6 +4,7 @@ import {Battery100Icon} from "@heroicons/react/24/solid";
 import {PlayIcon, PauseCircleIcon, BackwardIcon, ForwardIcon, PlusCircleIcon} from "@heroicons/react/16/solid";
 import Playlist, {Track} from "../classes/Playlist";
 import {apiRequest} from "../lib/tools";
+import {Triggers} from "../page";
 
 declare global {
 	interface Window {
@@ -13,9 +14,10 @@ declare global {
 
 type PlayScreenProps = {
 	playlist: Playlist;
+	triggers: Triggers;
 };
 
-export default function PlayScreen({playlist}: PlayScreenProps) {
+export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 	const [currentTrack, setCurrentTrack] = useState<Track | undefined>(undefined);
 	const [isEmpty, setIsEmpty] = useState<boolean>(true);
 	const [isPlay, setIsPlay] = useState<boolean>(false);
@@ -29,19 +31,7 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 	const defaultIconSize = "size-6";
 
 	//유저가 직접 재생/일시중지를 트리거 할 때만 사용
-	// const playVideo = useCallback(() => {
-	// 	if (!playerRef.current) {
-	// 		return;
-	// 	}
-	// 	if (!isPlay) {
-	// 		playerRef.current.playVideo();
-	// 	} else {
-	// 		playerRef.current.pauseVideo();
-	// 	}
-	// 	setIsPlay(!isPlay);
-	// }, [isPlay]);
-
-	const playVideo = () => {
+	const playVideo = useCallback(() => {
 		if (!playerRef.current) {
 			return;
 		}
@@ -51,20 +41,7 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 			playerRef.current.pauseVideo();
 		}
 		setIsPlay(!isPlay);
-	};
-
-	// const playVideo = useCallback(() => {
-	// 	if (!playerRef.current) return;
-
-	// 	const playerState = playerRef.current.getPlayerState();
-	// 	if (playerState !== YT.PlayerState.PLAYING) {
-	// 		playerRef.current.playVideo();
-	// 		setIsPlay(true);
-	// 	} else {
-	// 		playerRef.current.pauseVideo();
-	// 		setIsPlay(false);
-	// 	}
-	// }, []);
+	}, [isPlay]);
 
 	/* cue 과정은 동영상의 제목을 가져오기 위해 거쳐가는 필수 단계
 	cue 상태만 트리거하고 여기서 재생에는 관여하지 않는다 */
@@ -203,7 +180,6 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 					playlist.updateTrackTitle(current.url, title);
 					setCurrentTrack({...current, title: title});
 					playerRef.current.playVideo();
-					console.log("ya");
 				}
 			}
 		};
@@ -227,6 +203,16 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 		}
 	}, [playlist, playlist.currentTrack]);
 
+	useEffect(() => {
+		var current = triggers?.current;
+		if (triggers?.prev === "select" && (current === "a" || current === "b")) {
+			if (current === "a") handleRemoveTrack();
+			setShowPopup(false);
+		} else if (current === "select") {
+			setShowPopup(true);
+		}
+	}, [triggers]);
+
 	// useEffect(() => {
 	// 	if (buttonPressed === "select") {
 	// 		setShowPopup(true);
@@ -240,8 +226,8 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 	// 	}
 	// }, [buttonPressed, showPopup]);
 
-	const handleRemoveTrack = async (type: string) => {
-		if (type === "a" && currentTrack) {
+	const handleRemoveTrack = async (isRemove: boolean = true) => {
+		if (isRemove && currentTrack) {
 			const response = await apiRequest("/api/playlist", "POST", {
 				id: playlist.getObjectId(),
 				track: playlist.getCurrentTrack(),
@@ -265,23 +251,23 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 		setShowPopup(false);
 	};
 
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.code === "KeyA") {
-				handleRemoveTrack("a");
-			} else if (event.code === "KeyB") {
-				handleRemoveTrack("b");
-			}
-		};
+	// useEffect(() => {
+	// 	const handleKeyDown = (event: KeyboardEvent) => {
+	// 		if (event.code === "KeyA") {
+	// 			handleRemoveTrack("a");
+	// 		} else if (event.code === "KeyB") {
+	// 			handleRemoveTrack("b");
+	// 		}
+	// 	};
 
-		if (showPopup) {
-			window.addEventListener("keydown", handleKeyDown);
-		}
+	// 	if (showPopup) {
+	// 		window.addEventListener("keydown", handleKeyDown);
+	// 	}
 
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
-		};
-	}, [showPopup]);
+	// 	return () => {
+	// 		window.removeEventListener("keydown", handleKeyDown);
+	// 	};
+	// }, [showPopup]);
 
 	return (
 		<div className="flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black relative">
@@ -319,11 +305,11 @@ export default function PlayScreen({playlist}: PlayScreenProps) {
 					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] text-center p-spacing-16 py-spacing-24 bg-gray-2 flex flex-col justify-between items-center">
 						<span className="tracking-wider leading-8">Remove current track from playlist?</span>
 						<div className="w-full flex flex-row items-center justify-between">
-							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack("a")}>
+							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack()}>
 								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">A</span>
 								<span>yes</span>
 							</div>
-							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack("b")}>
+							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack(false)}>
 								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">B</span>
 								<span>no</span>
 							</div>

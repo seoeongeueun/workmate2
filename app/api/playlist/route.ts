@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {Playlist as PlaylistModel} from "@/app/models/Playlist";
 import mongoose from "mongoose";
 import Playlist, {Track} from "@/app/classes/Playlist";
+import dbConnect from "@/app/lib/dbConnect";
 
 const handleAdd = async (id: string, track: Track) => {
 	return await PlaylistModel.findByIdAndUpdate(id, {$addToSet: {tracks: track}}, {new: true});
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
 	try {
+		await dbConnect();
 		const {searchParams} = new URL(request.url);
 		const id = searchParams.get("id");
 
@@ -47,9 +49,13 @@ export async function GET(request: Request) {
 			return NextResponse.json({error: "Playlist id is needed"}, {status: 400});
 		}
 
+		if (!mongoose.Types.ObjectId.isValid(id)) {
+			return NextResponse.json({error: "Invalid playlist id"}, {status: 400});
+		}
+
 		const item = await PlaylistModel.findById(id);
 
-		if (!item || !mongoose.Types.ObjectId.isValid(id)) {
+		if (!item) {
 			return NextResponse.json({error: "No matching playlist was found"}, {status: 404});
 		}
 		return NextResponse.json({title: item.title, tracks: item.tracks});
