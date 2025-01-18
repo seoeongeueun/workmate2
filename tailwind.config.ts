@@ -62,12 +62,17 @@ const config: Config = {
 					"0%": {opacity: "0%"},
 					"100%": {opacity: "100%"},
 				},
+				flicker: {
+					"0%, 30%, 50%, 100%": {opacity: "1"},
+					"10%, 25%, 90%": {opacity: "0.8"},
+				},
 			},
 			animation: {
 				fadeIn: "fadeIn 2s ease-in-out",
 				bounceSlow: "bounce 3s ease-in-out infinite 0.3s",
 				wobble: "wobble 5s ease-in-out infinite",
 				slide: "slide 3s ease-in-out",
+				flicker: "flicker 3s ease-in-out infinite",
 			},
 		},
 	},

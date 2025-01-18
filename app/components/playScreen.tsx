@@ -96,6 +96,32 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 		}
 	};
 
+	const handleRemoveTrack = async (isRemove: boolean = true) => {
+		if (isRemove && currentTrack) {
+			const response = await apiRequest("/api/playlist", "POST", {
+				id: playlist.getObjectId(),
+				track: playlist.getCurrentTrack(),
+				isRemove: true,
+			});
+
+			if (response?.error) {
+				const songToAdd = document.getElementById("newSong") as HTMLInputElement;
+				console.error("Failed to update playlist:", response.error);
+				songToAdd.value = "Error saving changes";
+			} else {
+				const nextTrack = playlist.removeTrack(currentTrack?.id);
+				if (nextTrack) {
+					playerRef.current.cueVideoById(nextTrack);
+				} else {
+					playerRef.current.destroy();
+					setCurrentTrack(undefined);
+				}
+			}
+		}
+		setTrackIndex(playlist.getTrackIndex());
+		setShowPopup(false);
+	};
+
 	const formatDate = (date: Date): string => {
 		const options: Intl.DateTimeFormatOptions = {
 			month: "2-digit",
@@ -196,7 +222,6 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 
 	useEffect(() => {
 		const current = playlist.getCurrentTrack();
-		console.log(current);
 		if (current) {
 			setCurrentTrack(current);
 			setTrackIndex(playlist.getTrackIndex());
@@ -204,70 +229,38 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 	}, [playlist, playlist.currentTrack]);
 
 	useEffect(() => {
-		var current = triggers?.current;
-		if (triggers?.prev === "select" && (current === "a" || current === "b")) {
-			if (current === "a") handleRemoveTrack();
-			setShowPopup(false);
-		} else if (current === "select") {
+		const {prev, current} = triggers;
+		if (!current) return;
+		if (current === "select") {
 			setShowPopup(true);
+			return;
 		}
-	}, [triggers]);
 
-	// useEffect(() => {
-	// 	if (buttonPressed === "select") {
-	// 		setShowPopup(true);
-	// 	}
-	// }, [buttonPressed]);
-
-	// useEffect(() => {
-	// 	console.log(buttonPressed);
-	// 	if (showPopup && (buttonPressed === "a" || buttonPressed === "b")) {
-	// 		handleRemoveTrack(buttonPressed);
-	// 	}
-	// }, [buttonPressed, showPopup]);
-
-	const handleRemoveTrack = async (isRemove: boolean = true) => {
-		if (isRemove && currentTrack) {
-			const response = await apiRequest("/api/playlist", "POST", {
-				id: playlist.getObjectId(),
-				track: playlist.getCurrentTrack(),
-				isRemove: true,
-			});
-
-			if (response?.error) {
-				const songToAdd = document.getElementById("newSong") as HTMLInputElement;
-				console.error("Failed to update playlist:", response.error);
-				songToAdd.value = "Error saving changes";
-			} else {
-				const nextTrack = playlist.removeTrack(currentTrack?.id);
-				if (nextTrack) {
-					playerRef.current.cueVideoById(nextTrack);
-				} else {
-					playerRef.current.destroy();
-				}
+		//추후 다른 케이스 추가 가능성 있음
+		if (prev === "select") {
+			switch (current) {
+				case "a":
+					handleRemoveTrack();
+					break;
+				case "b":
+					setShowPopup(false);
+					break;
+				default:
+					break;
+			}
+		} else {
+			switch (current) {
+				case "right":
+					handlePlayNext();
+					break;
+				case "left":
+					handlePlayPrev();
+					break;
+				default:
+					break;
 			}
 		}
-		setTrackIndex(playlist.getTrackIndex());
-		setShowPopup(false);
-	};
-
-	// useEffect(() => {
-	// 	const handleKeyDown = (event: KeyboardEvent) => {
-	// 		if (event.code === "KeyA") {
-	// 			handleRemoveTrack("a");
-	// 		} else if (event.code === "KeyB") {
-	// 			handleRemoveTrack("b");
-	// 		}
-	// 	};
-
-	// 	if (showPopup) {
-	// 		window.addEventListener("keydown", handleKeyDown);
-	// 	}
-
-	// 	return () => {
-	// 		window.removeEventListener("keydown", handleKeyDown);
-	// 	};
-	// }, [showPopup]);
+	}, [triggers]);
 
 	return (
 		<div className="flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black relative">

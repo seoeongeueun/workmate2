@@ -137,7 +137,7 @@ export default function Home() {
 							<div className="corner"></div>
 						</div>
 						<div className="power-button">
-							<div className={`power ${power || loading ? "on" : ""}`}></div>
+							<div className={`power ${power || loading ? "on animate-flicker" : ""}`}></div>
 							<span>POWER</span>
 						</div>
 						<div className="ab-buttons">
