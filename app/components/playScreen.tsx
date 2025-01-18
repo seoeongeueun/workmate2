@@ -19,7 +19,6 @@ type PlayScreenProps = {
 
 export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 	const [currentTrack, setCurrentTrack] = useState<Track | undefined>(undefined);
-	const [isEmpty, setIsEmpty] = useState<boolean>(true);
 	const [isPlay, setIsPlay] = useState<boolean>(false);
 	const [progressTime, setProgressTime] = useState<number>(0);
 	const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -57,13 +56,13 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 		const songToAdd = document.getElementById("newSong") as HTMLInputElement;
 		const url = songToAdd.value;
 		if (url) {
-			const newTrack = playlist.addTrack(url);
 			songToAdd.value = "Music Added!";
+
+			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
+			if (playerRef?.current && !currentTrack) playerRef.current?.loadVideoById(playlist.extractVideoId(url));
+
+			const newTrack = playlist.addTrack(url);
 			setTrackIndex(playlist.getTrackIndex());
-			if (!currentTrack) {
-				setCurrentTrack(playlist.getCurrentTrack());
-				setIsEmpty(false);
-			}
 
 			const response = await apiRequest("/api/playlist", "POST", {
 				id: playlist.getObjectId(),
@@ -167,7 +166,7 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 
 		function onYouTubeIframeAPIReady() {
 			console.log("API Ready - Initializing player");
-			const initialVideoId = playlist.extractVideoId(playlist.tracks[0].url); // 첫번째 트랙의 동영상 id를 가져오기
+			const initialVideoId = playlist.extractVideoId(currentTrack?.url || playlist.tracks[0].url); // 첫번째 트랙의 동영상 id를 가져오기
 			if (initialVideoId) {
 				playerRef.current = new YT.Player("player", {
 					height: "50",
@@ -211,14 +210,7 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 		};
 
 		window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-
-		return () => {
-			if (playerRef.current) {
-				playerRef.current.destroy();
-				playerRef.current = null;
-			}
-		};
-	}, [playlist]);
+	}, [playlist, currentTrack === undefined]);
 
 	useEffect(() => {
 		const current = playlist.getCurrentTrack();
