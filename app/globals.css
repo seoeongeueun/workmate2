@@ -69,7 +69,7 @@ code {
 	transform: translate(-50%, -50%);
 }
 
-#newSong::placeholder {
+input::placeholder {
 	font-size: 1.1rem;
 }
 

@@ -8,7 +8,7 @@ export default function LoadingScreen() {
 				<img src="/icon/alien.gif" alt="alien" className="w-12 h-12" />
 				<img src="/icon/song.png" alt="song" className="w-3 h-3 mt-2 animate-bounce"></img>
 			</div>
-			<span className="text-xxxs text-black tracking-widest ml-1 mt-2">loading</span>
+			<span className="text-xxxs text-black tracking-wider ml-1 mt-2">l o a d i n g</span>
 		</div>
 	);
 }
