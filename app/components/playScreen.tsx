@@ -59,6 +59,7 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 			songToAdd.value = "Music Added!";
 
 			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
+			console.log(playlist.extractVideoId(url), currentTrack);
 			if (playerRef?.current && !currentTrack) playerRef.current?.loadVideoById(playlist.extractVideoId(url));
 
 			const newTrack = playlist.addTrack(url);
@@ -223,7 +224,7 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 	useEffect(() => {
 		const {prev, current} = triggers;
 		if (!current) return;
-		if (current === "select") {
+		if (current === "select" && currentTrack) {
 			setShowPopup(true);
 			return;
 		}

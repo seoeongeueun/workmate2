@@ -49,6 +49,9 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 	};
 
 	const handleLogin = async () => {
+		//login으로 화살표 이동
+		setSelectLogin(true);
+
 		const usernameInput = document.getElementById("username") as HTMLInputElement;
 		const passwordInput = document.getElementById("password") as HTMLInputElement;
 
@@ -82,6 +85,9 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 	};
 
 	const handleSignup = async () => {
+		// signup으로 화살표 이동
+		setSelectLogin(false);
+
 		const usernameInput = document.getElementById("username") as HTMLInputElement;
 		const passwordInput = document.getElementById("password") as HTMLInputElement;
 
@@ -126,8 +132,8 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 				{getErrorMessage(errorCode).toUpperCase()}
 			</div>
 			<div className="flex flex-col items-center w-full text-s gap-spacing-6 mb-1">
-				<input id="username" type="text" placeholder="Username" className="w-full text-xs bg-gray-2 border border-black rounded-[1px] px-3" />
-				<input id="password" type="password" minLength={6} placeholder="Password" className="w-full text-xs bg-gray-2 border border-black rounded-[1px] px-3" />
+				<input id="username" type="text" placeholder="Username" className="w-full text-xs bg-gray-1 border border-black rounded-[1px] px-3" />
+				<input id="password" type="password" minLength={6} placeholder="Password" className="w-full text-xs bg-gray-1 border border-black rounded-[1px] px-3" />
 				<div className="flex flex-row justify-center items-center mt-spacing-8 mr-4 gap-16">
 					<div className="flex flex-row items-center justify-end gap-2 w-32">
 						{selectLogin && <PlayIcon className="size-5 animate-blink"></PlayIcon>}
