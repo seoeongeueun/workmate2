@@ -44,12 +44,13 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 	};
 
 	useEffect(() => {
-		if (isLogin === undefined) checkSession();
+		// isLogin이 정확히 false라고 판단된 케이스 제외 세션 확인
+		if (isLogin !== false) checkSession();
 	}, [isLogin]);
 
 	if (isLogin === false) return <LoginScreen setIsLogin={setIsLogin} />;
 	else {
 		if (playlist) return <PlayScreen playlist={playlist} triggers={triggers} />;
-		else return <LoadingScreen />;
+		else return <LoadingScreen showLogo={isLogin} />;
 	}
 }

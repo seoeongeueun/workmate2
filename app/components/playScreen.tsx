@@ -289,7 +289,7 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 			{showPopup && (
 				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
 					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] text-center p-spacing-16 py-spacing-24 bg-gray-2 flex flex-col justify-between items-center">
-						<span className="tracking-wider leading-8">Remove current track from playlist?</span>
+						<span className="leading-8">Remove current track from playlist?</span>
 						<div className="w-full flex flex-row items-center justify-between">
 							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack()}>
 								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">A</span>
