@@ -131,9 +131,11 @@ export default function Home() {
 							<div className="inner"></div>
 							<div className="shadow"></div>
 							<div className="inner bottom"></div>
+							<div className="corner"></div>
 						</div>
 						<div className="body-wing right">
 							<div className="wing"></div>
+							<div className="shadow"></div>
 							<div className="corner"></div>
 						</div>
 						<div className="power-button">
