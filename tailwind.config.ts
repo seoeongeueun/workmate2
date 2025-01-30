@@ -77,7 +77,7 @@ const config: Config = {
 				wobble: "wobble 5s ease-in-out infinite",
 				slide: "slide 3s ease-in-out",
 				flicker: "flicker 3s ease-in-out infinite",
-				blink: "blink 1.5s linear infinite",
+				blink: "blink 1.2s linear infinite",
 			},
 		},
 	},

@@ -59,6 +59,11 @@ export default class Playlist {
 		return this.extractVideoId(this.currentTrack?.url ?? "");
 	}
 
+	empty() {
+		this.tracks = [];
+		this.backup = [];
+	}
+
 	playNext() {
 		if (!this.tracks.length) return;
 		if (this.currentTrack) {

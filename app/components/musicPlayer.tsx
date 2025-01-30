@@ -23,7 +23,7 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 				setIsLogin(response.isValid);
 				if (id) fetchPlaylist(id);
 				else setPlaylist(undefined);
-			}, 1500);
+			}, 2000);
 		} catch (error) {
 			console.error("Error checking session:", error);
 			setIsLogin(false);
@@ -51,6 +51,6 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 	if (isLogin === false) return <LoginScreen setIsLogin={setIsLogin} />;
 	else {
 		if (playlist) return <PlayScreen playlist={playlist} triggers={triggers} />;
-		else return <LoadingScreen showLogo={isLogin} />;
+		else return <LoadingScreen isLoading={isLogin} />;
 	}
 }

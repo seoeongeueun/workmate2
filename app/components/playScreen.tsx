@@ -1,5 +1,4 @@
 import React, {useState, useEffect, useRef, useCallback} from "react";
-import {usePlaylistContext} from "../context/playlistContext";
 import {Battery100Icon} from "@heroicons/react/24/solid";
 import {PlayIcon, PauseCircleIcon, BackwardIcon, ForwardIcon, PlusCircleIcon} from "@heroicons/react/16/solid";
 import Playlist, {Track} from "../classes/Playlist";
@@ -17,6 +16,17 @@ type PlayScreenProps = {
 	triggers: Triggers;
 };
 
+//세부 메뉴 선택지
+const modeValues: string[] = ["remove", "shuffle", "empty", "logout"];
+type ModeIndex = -1 | Extract<keyof typeof modeValues, number>;
+const messages: Partial<Record<(typeof modeValues)[number], string>> = {
+	remove: "Remove current track from playlist?",
+	empty: "Empty current playlist?",
+	logout: "Log out from current account?",
+	shuffle: "",
+	none: "Playlist is already empty",
+};
+
 export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 	const [currentTrack, setCurrentTrack] = useState<Track | undefined>(undefined);
 	const [isPlay, setIsPlay] = useState<boolean>(false);
@@ -25,6 +35,8 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 	const [showPopup, setShowPopup] = useState<boolean>(false);
 	const [trackIndex, setTrackIndex] = useState<string>("0 out of 0");
 	const [shuffleMode, setShuffleMode] = useState<boolean>(false);
+	const [mode, setMode] = useState<ModeIndex>(0);
+	const [popupType, setPopupType] = useState<ModeIndex>(-1);
 	const playerRef = useRef<any>(null);
 
 	const defaultIconSize = "size-6";
@@ -68,7 +80,7 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 			const response = await apiRequest("/api/playlist", "POST", {
 				id: playlist.getObjectId(),
 				track: newTrack,
-				isRemove: false,
+				mode: "add",
 			});
 			if (response?.error) {
 				console.error("Failed to update playlist:", response.error);
@@ -101,7 +113,7 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 			const response = await apiRequest("/api/playlist", "POST", {
 				id: playlist.getObjectId(),
 				track: playlist.getCurrentTrack(),
-				isRemove: true,
+				mode: "remove",
 			});
 
 			if (response?.error) {
@@ -221,39 +233,199 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 		}
 	}, [playlist, playlist.currentTrack]);
 
+	// useEffect(() => {
+	// 	const {prev, current} = triggers;
+	// 	if (!current) return;
+	// 	if (current === "select" && currentTrack) {
+	// 		setShowPopup(true);
+	// 		return;
+	// 	}
+
+	// 	//추후 다른 케이스 추가 가능성 있음
+	// 	// if (prev === "select") {
+	// 	// 	switch (current) {
+	// 	// 		case "a":
+	// 	// 			if (modeValues === "remove") handleRemoveTrack();
+	// 	// 			else if (mode === "shuffle") setShuffleMode(prev => !prev);
+	// 	// 			else if (mode === "empty") handleEmptyPlaylist();
+	// 	// 			else if (mode === "logout") handleLogout();
+	// 	// 			break;
+	// 	// 		case "b":
+	// 	// 			setShowPopup(false);
+	// 	// 			break;
+	// 	// 		default:
+	// 	// 			break;
+	// 	// 	}
+	// 	// } else {
+	// 	// 	switch (current) {
+	// 	// 		case "right":
+	// 	// 			handlePlayNext();
+	// 	// 			break;
+	// 	// 		case "left":
+	// 	// 			handlePlayPrev();
+	// 	// 			break;
+	// 	// 		default:
+	// 	// 			break;
+	// 	// 	}
+	// 	// }
+	// 	const isSecondPopup = mode === popupType;
+
+	// 	if (prev === "select") {
+	// 		if (current === "a") {
+	// 			//이미 상세 팝업이 떠있는 경우와 아직 기본 메뉴창인 경우로 분리
+	// 			if (!isSecondPopup) {
+	// 				if (modeValues[mode] === "shuffle") setShuffleMode(prev => !prev);
+	// 				else setPopupType(mode);
+	// 			} else {
+	// 				handlePopAction(current);
+	// 			}
+	// 		} else if (current === "b") {
+	// 			if (!isSecondPopup) {
+	// 				setShowPopup(false);
+	// 			} else setPopupType(-1);
+	// 		} else if (current === "down") {
+	// 			if (!isSecondPopup) setMode(mode === modeValues.length - 1 ? 0 : mode + 1);
+	// 		} else if (current === "up") {
+	// 			if (!isSecondPopup) setMode(mode === 0 ? modeValues.length - 1 : mode - 1);
+	// 		} else if (current === "right") {
+	// 			if (!showPopup) handlePlayNext();
+	// 		} else if (current === "left") {
+	// 			if (!showPopup) handlePlayPrev();
+	// 		}
+	// 	} else if (prev === "a" && isSecondPopup) {
+	// 		if (current == "a" || current === "b") handlePopAction(current);
+	// 	}
+	// }, [triggers]);
+
 	useEffect(() => {
 		const {prev, current} = triggers;
-		if (!current) return;
-		if (current === "select" && currentTrack) {
+
+		if (current === "select") {
 			setShowPopup(true);
 			return;
 		}
 
-		//추후 다른 케이스 추가 가능성 있음
-		if (prev === "select") {
+		const isSecondPopup = mode === popupType;
+		// 2dpeth 메뉴창이 켜진 경우
+		if (isSecondPopup) {
+			// 두번 째 메뉴창이 켜진 경우 a/b 버튼 외는 기능 없음
+			if (current === "a") handlePopAction(current);
+			else if (current === "b") setPopupType(-1);
+			return;
+			/* 1depth 기본 메뉴창이 켜진 경우
+			유효한 기능은 a => 2depth 메뉴 오픈 (셔플 모드 제외)
+			b => 메뉴창 닫기
+			up => 상단 선택지로 이동
+			down => 하단 선택지로 이동
+		*/
+		} else if (showPopup) {
 			switch (current) {
 				case "a":
-					handleRemoveTrack();
+					if (modeValues[mode] === "shuffle") setShuffleMode(prev => !prev);
+					else setPopupType(mode);
 					break;
 				case "b":
 					setShowPopup(false);
+					break;
+				case "up":
+					setMode(mode === 0 ? modeValues.length - 1 : mode - 1);
+					break;
+				case "down":
+					setMode(mode === modeValues.length - 1 ? 0 : mode + 1);
+					break;
+				default:
+					break;
+			}
+			return;
+		} else {
+			if (current === "left") handlePlayPrev();
+			else if (current === "right") handlePlayNext();
+		}
+	}, [showPopup, triggers]);
+
+	// const handleTriggers = (current: "a" | "b" | "up" | "down" | "left" | "right" | "select" | "power") => {
+	// 	const isSecondPopup = mode === popupType && popupType !== -1;
+	// 	switch (current) {
+	// 		case "a":
+	// 			if (isSecondPopup) handlePopAction(current);
+	// 			else setPopupType(mode);
+	// 			break;
+	// 		case "b":
+	// 			console.log("huh");
+	// 			if (isSecondPopup) handlePopAction(current);
+	// 			else setPopupType(-1);
+	// 			break;
+	// 		case "up":
+	// 			if (!isSecondPopup) setMode(mode === 0 ? modeValues.length - 1 : mode - 1);
+	// 			break;
+	// 		case "down":
+	// 			if (!isSecondPopup) setMode(mode === modeValues.length - 1 ? 0 : mode + 1);
+	// 			break;
+	// 		case "right":
+	// 			if (!showPopup) handlePlayNext();
+	// 			break;
+	// 		case "left":
+	// 			if (!showPopup) handlePlayPrev();
+	// 			break;
+	// 		default:
+	// 			break;
+	// 	}
+	// };
+
+	useEffect(() => {
+		//메뉴창이 닫히면 무조건 mode => 0, popuptype => -1로 지정
+		if (!showPopup) {
+			setMode(0);
+			setPopupType(-1);
+		}
+	}, [showPopup]);
+
+	useEffect(() => {
+		if (shuffleMode) playlist.shuffleTracks();
+		else playlist.unshuffleTracks();
+	}, [shuffleMode]);
+
+	const handleLogout = async () => {};
+
+	const handleEmptyPlaylist = async () => {
+		try {
+			const response = await apiRequest("/api/playlist", "POST", {
+				id: playlist.getObjectId(),
+				track: undefined,
+				mode: "empty",
+			});
+			if (response?.error) {
+				console.error("Failed to empty playlist:", response.error);
+			} else {
+				playlist.empty();
+				setCurrentTrack(undefined);
+				setShowPopup(false);
+				if (playerRef?.current) playerRef.current = null;
+			}
+		} catch (error) {
+			console.error("Failed to empty playlist:", error);
+		}
+	};
+
+	const handlePopAction = (type: "a" | "b") => {
+		if (type === "a") {
+			switch (modeValues[popupType]) {
+				case "remove":
+					handleRemoveTrack();
+					break;
+				case "empty":
+					handleEmptyPlaylist();
+					break;
+				case "logout":
+					handleLogout();
 					break;
 				default:
 					break;
 			}
 		} else {
-			switch (current) {
-				case "right":
-					handlePlayNext();
-					break;
-				case "left":
-					handlePlayPrev();
-					break;
-				default:
-					break;
-			}
+			setPopupType(-1);
 		}
-	}, [triggers]);
+	};
 
 	return (
 		<div className="flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black relative">
@@ -285,20 +457,61 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 			<div className="w-full p-px border border-px rounded-[1px] border-black">
 				<div className="bg-black h-px" style={{width: progressTime.toFixed(2) + "%"}} />
 			</div>
-
 			{showPopup && (
 				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
-					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] text-center p-spacing-16 py-spacing-24 bg-gray-2 flex flex-col justify-between items-center">
-						<span className="leading-8">Remove current track from playlist?</span>
+					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] p-spacing-16 bg-gray-2 flex flex-col justify-between items-center">
+						<div className="flex flex-col items-start justify-start">
+							<button className="leading-8 flex flex-row items-center gap-2">
+								<PlayIcon className={`size-5 animate-blink ${modeValues[mode] === "remove" ? "h-fit" : "h-0"}`} />
+								Remove
+							</button>
+							<button className="leading-8 flex flex-row items-center gap-2" onClick={() => setShuffleMode(prev => !prev)}>
+								<PlayIcon className={`size-5 animate-blink ${modeValues[mode] === "shuffle" ? "h-fit" : "h-0"}`} />
+								{`Shuffle <${shuffleMode ? "on" : "off"}>`}
+							</button>
+							<button className="leading-8 flex flex-row items-center gap-2">
+								<PlayIcon className={`size-5 animate-blink ${modeValues[mode] === "empty" ? "h-fit" : "h-0"}`} />
+								Empty
+							</button>
+							<button className="leading-8 flex flex-row items-center gap-2">
+								<PlayIcon className={`size-5 animate-blink ${modeValues[mode] === "logout" ? "h-fit" : "h-0"}`} />
+								Log out
+							</button>
+						</div>
 						<div className="w-full flex flex-row items-center justify-between">
-							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack()}>
-								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">A</span>
-								<span>yes</span>
+							<div className="flex flex-row items-center gap-spacing-4" onClick={() => setShowPopup(false)}>
+								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">B</span>
+								<span>close</span>
 							</div>
+							<div className="flex flex-row items-center gap-spacing-4" onClick={() => setPopupType(mode)}>
+								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">A</span>
+								<span>confirm</span>
+							</div>
+						</div>
+						{/* <div className="w-full flex flex-row items-center justify-between">
 							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack(false)}>
 								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">B</span>
-								<span>no</span>
+								<span>close</span>
 							</div>
+						</div> */}
+					</div>
+				</div>
+			)}
+			{showPopup && modeValues[popupType] && (
+				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
+					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] text-center p-spacing-16 py-spacing-24 bg-gray-2 flex flex-col justify-between items-center">
+						<span className="leading-8">{playlist.tracks?.length === 0 ? messages.none : messages[modeValues[popupType]]}</span>
+						<div className="w-full flex flex-row items-center justify-between">
+							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handlePopAction("b")}>
+								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">B</span>
+								<span>cancel</span>
+							</div>
+							{playlist.tracks?.length !== 0 && (
+								<div className="flex flex-row items-center gap-spacing-4" onClick={() => handlePopAction("a")}>
+									<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">A</span>
+									<span>confirm</span>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>

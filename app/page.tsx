@@ -113,7 +113,7 @@ export default function Home() {
 							</div>
 							<div className="border">
 								<div className="select trigger" data-button-type="select"></div>
-								<span>SELECT</span>
+								<span>MENU</span>
 							</div>
 						</div>
 					</div>
@@ -142,10 +142,10 @@ export default function Home() {
 						</div>
 						<div className="ab-buttons">
 							<div className="b-button trigger" data-button-type="b">
-								<span>B</span>
+								<span className="pointer-events-none">B</span>
 							</div>
 							<div className="a-button trigger" data-button-type="a">
-								<span>A</span>
+								<span className="pointer-events-none">A</span>
 							</div>
 						</div>
 						<div className="speaker">
