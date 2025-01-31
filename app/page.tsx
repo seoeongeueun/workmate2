@@ -98,13 +98,13 @@ export default function Home() {
 						<div className="move-button">
 							<div className="vertical">
 								<div className="tip trigger" data-button-type="up"></div>
-								{/* <div className="tip"></div> */}
+								<div className="tip trigger opacity-0" data-button-type="down"></div>
 							</div>
 							<div className="horizontal">
 								<div className="tip trigger" data-button-type="left"></div>
 								<div className="tip trigger" data-button-type="right"></div>
 							</div>
-							<div className="rect"></div>
+							<div className="rect pointer-events-none"></div>
 						</div>
 						<div className="start-buttons">
 							<div className="border">
