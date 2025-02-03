@@ -3,6 +3,7 @@ import {useState, useEffect} from "react";
 import audioControls from "./lib/audioControls";
 import MusicPlayer from "./components/musicPlayer";
 import {PlaylistProvider} from "./context/playlistContext";
+import {PaintBrushIcon} from "@heroicons/react/24/solid";
 import "./global.scss";
 
 /* 
@@ -26,10 +27,15 @@ const keyToButtonValue: Record<string, ButtonValue> = {
 	ArrowRight: "right",
 };
 
+const themeColors: string[] = ["rgb(79, 82, 147)", "rgb(83, 83, 83)", "rgb(236, 122, 147)"];
+const colorNames: string[] = ["blue", "gray", "pink"];
+type ColorIndex = Extract<keyof typeof themeColors, number>;
+
 export default function Home() {
 	const [power, setPower] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [triggers, setTriggers] = useState<Triggers>({prev: undefined, current: undefined});
+	const [colorIndex, setColorIndex] = useState<ColorIndex>(0);
 
 	const handleGlobalClick = (event: MouseEvent) => {
 		const target = event.target as HTMLElement;
@@ -79,10 +85,25 @@ export default function Home() {
 		if (power) audioControls.play("power");
 	}, [power]);
 
+	const handleColorChange = () => {
+		const newIndex = (colorIndex + 1) % themeColors.length;
+		setColorIndex(newIndex);
+		document.documentElement.setAttribute("data-theme", colorNames[newIndex]);
+	};
+
 	return (
 		<div className="font-galmuri font-semibold">
+			<div className="fixed right-4 top-4">
+				<button
+					className="transition-colors duration-300 border border-px border-white flex w-fit h-fit p-spacing-6 justify-center items-center rounded-full shadow-md shadow-gray-400"
+					onClick={handleColorChange}
+					style={{backgroundColor: themeColors[colorIndex]}}
+				>
+					<PaintBrushIcon className="size-6 fill-white"></PaintBrushIcon>
+				</button>
+			</div>
 			<div className="gameboy-body">
-				<div className="flex flex-row items-center position-center">
+				<div className="gameboy-frames flex flex-row items-center position-center">
 					<div className="body-left">
 						<div className="body-wing left">
 							<div className="wing"></div>

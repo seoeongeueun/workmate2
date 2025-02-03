@@ -1,3 +1,24 @@
+.gameboy-frames {
+	div,
+	div::before,
+	div::after,
+	span {
+		transition:
+			background-color 2s ease-in-out,
+			color 2s ease-in-out,
+			border-color 2s ease-in-out,
+			outline 2s ease-in-out,
+			box-shadow 2s ease-in-out,
+			text-shadow 2s ease-in-out;
+	}
+
+	.move-button div,
+	.start-buttons div,
+	.ab-buttons div {
+		transition: none !important;
+	}
+}
+
 .frame-top {
 	position: relative;
 	top: 24.5rem;
@@ -464,7 +485,7 @@
 				inset 0 -2px 1px 0px var(--button-dark),
 				inset 0 3px 1px 0 var(--button-light),
 				0 0px 1px 0px var(--button-dark),
-				0 0px 0px 4px var(--body-dark),
+				0 0px 0px 4px var(--button-hole),
 				0 0px 1px 4px var(--frame-dark),
 				3px 8px 4px 2px rgba(var(--body-dark-rgb), 0.7),
 				-1px 1px 0px 4px rgba(var(--body-light-rgb), 0.5);
@@ -498,7 +519,7 @@
 				inset -3px 0px 1px -1px var(--button-dark),
 				inset 3px 0px 1px -1px var(--button-light),
 				0 0px 1px 0px var(--body),
-				0 0px 0px 4px var(--body-dark),
+				0 0px 0px 4px var(--button-hole),
 				0 0px 1px 4px var(--frame-dark),
 				-1px 0px 0px 4px rgba(var(--body-light-rgb), 0.5),
 				8px 0px 4px 2px rgba(var(--body-dark-rgb), 0.7);
@@ -554,8 +575,8 @@
 				inset 0 -2px 1px 0px var(--button-dark),
 				inset 0 3px 1px 0 var(--button-light),
 				0 1px 1px 0px var(--button-dark),
-				0 -1px 0px 4px var(--body-dark),
-				0 -2px 1px 4px var(--frame-dark),
+				0 -1px 0px 4px var(--button-hole),
+				0 -2px 1px 4px var(--darkest-point),
 				3px 3px 4px 2px rgba(var(--body-dark-rgb), 0.7),
 				-1px 1px 0px 4px rgba(var(--body-light-rgb), 0.2);
 
@@ -564,8 +585,8 @@
 					inset -3px 0px 1px -1px var(--button-dark),
 					inset 3px 0px 1px -1px var(--button-light),
 					0 0px 0px 0px var(--body),
-					-2px 0px 1px 4px var(--body-dark),
-					-2px 0px 1px 4px var(--frame-dark),
+					-2px 0px 1px 4px var(--button-hole),
+					-2px 0px 1px 4px var(--darkest-point),
 					-3px 0px 0px 4px rgba(var(--body-light-rgb), 0.5),
 					3px 0px 4px 2px rgba(var(--body-dark-rgb), 0.7);
 			}
@@ -598,7 +619,7 @@
 			inset 1px 1px 5px 1px var(--body-dark),
 			1px 0px 1px 0px var(--body-light),
 			1px 2px 4px 0px rgba(var(--body-light-rgb), 0.3),
-			1px 1px 0px 0px rgba(var(--body-light-rgb), 0.8);
+			1px 1px 0px 0px rgba(var(--body-light-rgb), 0.6);
 		margin-bottom: 1.25rem;
 		display: flex;
 		flex-direction: row-reverse;
@@ -631,7 +652,7 @@
 					inset -1px -1px 0px 0px var(--button-dark),
 					2px 5px 3px 1px rgba(var(--body-dark-rgb), 0.6),
 					0 2px 2px var(--body-dark),
-					0px 0px 2px 2px var(--frame-dark);
+					0px 0px 2px 2px var(--darkest-point);
 			}
 		}
 
@@ -693,7 +714,7 @@
 			box-shadow:
 				inset 0px 0px 1px 2px var(--button-dark),
 				inset 0px 3px 0px 0px var(--button-light),
-				0px -1px 1px 1px var(--frame-dark),
+				0px -1px 1px 1px var(--darkest-point),
 				0px 4px 5px 0px rgba(var(--body-dark-rgb), 0.6);
 
 			&:first-child {
@@ -723,10 +744,10 @@
 		width: 7.5rem;
 		height: 0.5rem;
 		border-radius: 1rem;
-		border: 1px solid var(--frame-dark);
+		border: 1px solid var(--button-hole);
 		box-shadow:
 			inset 1px -1px 3px 2px var(--body-dark),
-			inset 0 -1px 0px 1px var(--frame-dark),
+			inset 0 -1px 0px 1px var(--darkest-point),
 			-1px 2px 0px -1px rgba(var(--body-light-rgb), 0.7);
 
 		// &:nth-child(4) {
@@ -766,14 +787,14 @@
 		background-color: var(--body);
 		box-shadow:
 			inset 0px 1px 3px 1px var(--body-dark),
-			0px 0px 2px 1px rgba(var(--body-light-rgb), 0.2);
+			0px 0px 2px 1px rgba(var(--body-light-rgb), 0.3);
 
 		&.on {
 			background-color: greenyellow;
 			box-shadow:
 				inset 0px 1px 2px 1px var(--body-dark),
 				inset 0px 0px 0px 1px rgba(var(--body-dark-rgb), 0.3),
-				0px 0px 2px 1px rgba(var(--body-light-rgb), 0.2),
+				0px 0px 2px 1px rgba(var(--body-light-rgb), 0.3),
 				1px 2px 2px -1px var(--body-light);
 		}
 	}
