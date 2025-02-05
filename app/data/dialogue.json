@@ -1,0 +1,10 @@
+{
+	"000": ["Hello, ${user}!", "What's the vibe today?"],
+	"001": ["Here’s an upbeat track to match\n your energy! ( •̀ω•́ )و✧"],
+	"002": ["I found a chill track for the\n night air (*´∪`)"],
+	"003": ["I'll play you a quiet song that\n won’t interrupt you...", "...but I hope your troubles\n fade away soon ˃̣̣̥ᯅ˂̣̣̥"],
+	"004": ["Oooh, aren’t you a mystery!", "I've got a random track\n just for you ( ✧≖ ͜ʖ≖)"],
+	"005": ["Can you believe it’s already ${month}?", "Let’s kick off the first day in style\n with a special track!", "Let's go! ヾ(´ε｀*)ゝ"],
+	"006": ["I love ${month}! Do you too?", "I’ve got the perfect theme song...", "...to kick off the month! ⸜(๑'ᵕ'๑)⸝"],
+	"007": ["Wait, it's ${month} already? ＼(°o°；）", "Let’s make it feel real with a theme song.", "Hit play! ☆ (>ᴗ0 )"]
+}

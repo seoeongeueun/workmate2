@@ -5,6 +5,7 @@ import {apiRequest} from "../lib/tools";
 import {useState, useEffect} from "react";
 import {Triggers} from "../page";
 import Playlist from "../classes/Playlist";
+import LuckyScreen from "./luckyScreen";
 
 interface MusicPlayerProps {
 	triggers: Triggers;
@@ -13,11 +14,13 @@ interface MusicPlayerProps {
 export default function MusicPlayer({triggers}: MusicPlayerProps) {
 	const [playlist, setPlaylist] = useState<Playlist | undefined>();
 	const [isLogin, setIsLogin] = useState<boolean | undefined>(undefined);
+	const [username, setUsername] = useState<string>("user");
 
 	const checkSession = async () => {
 		try {
 			const response = await apiRequest("/api/auth", "GET");
 			const id = response?.playlistId;
+			setUsername(response?.username);
 
 			setTimeout(() => {
 				setIsLogin(response.isValid);
@@ -47,6 +50,8 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 		// isLogin이 정확히 false라고 판단된 케이스 제외 세션 확인
 		if (isLogin !== false) checkSession();
 	}, [isLogin]);
+
+	return <LuckyScreen triggers={triggers} username={username} />;
 
 	if (isLogin === false) return <LoginScreen setIsLogin={setIsLogin} />;
 	else {

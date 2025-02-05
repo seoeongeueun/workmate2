@@ -53,7 +53,7 @@ export async function GET(request: Request) {
 	const session = await getIronSession<{user?: {id: string; username: string; playlistId: mongoose.Types.ObjectId}}>(request, response, sessionOptions);
 
 	if (session?.user?.username && session?.user?.playlistId) {
-		return NextResponse.json({isValid: true, playlistId: session.user.playlistId});
+		return NextResponse.json({isValid: true, playlistId: session.user.playlistId, username: session.user.username});
 	} else {
 		return NextResponse.json({isValid: false});
 	}

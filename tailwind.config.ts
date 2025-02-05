@@ -70,6 +70,10 @@ const config: Config = {
 					"0%, 50%": {opacity: "100%"},
 					"50.01%, 100%": {opacity: "0%"},
 				},
+				typing: {
+					"0%": {clipPath: "inset(0 100% 0 0)"},
+					"100%": {clipPath: "inset(0 0 0 0)"},
+				}
 			},
 			animation: {
 				fadeIn: "fadeIn 2s ease-in-out",
@@ -78,6 +82,7 @@ const config: Config = {
 				slide: "slide 3s ease-in-out",
 				flicker: "flicker 3s ease-in-out infinite",
 				blink: "blink 1.2s linear infinite",
+				typing: "typing 2s steps(28, end) forwards"
 			},
 		},
 	},
