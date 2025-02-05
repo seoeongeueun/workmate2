@@ -36,6 +36,7 @@
 	--body-dark: rgb(42, 40, 80);
 	--body-dark-rgb: 42, 40, 80;
 	--darkest-point: rgb(3, 11, 8);
+	--darkest-point-rgb: 3, 11, 8;
 }
 
 :root[data-theme="blue"] {
@@ -55,6 +56,7 @@
 	--button-hole: rgb(34, 34, 34);
 	--button-hole-rgb: 34, 34, 34;
 	--darkest-point: rgb(3, 11, 8);
+	--darkest-point-rgb: 3, 11, 8;
 }
 
 :root[data-theme="gray"] {
@@ -74,6 +76,7 @@
 	--button-hole: rgb(34, 34, 34);
 	--button-hole-rgb: 34, 34, 34;
 	--darkest-point: rgb(3, 11, 8);
+	--darkest-point-rgb: 3, 11, 8;
 }
 
 :root[data-theme="pink"] {
@@ -93,6 +96,7 @@
 	--button-hole: rgb(145, 64, 77);
 	--button-hole-rgb: 145, 64, 77;
 	--darkest-point: rgb(48, 14, 14);
+	--darkest-point-rgb: 48, 14, 14;
 }
 
 body {
