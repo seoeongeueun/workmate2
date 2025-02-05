@@ -15,6 +15,8 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 	const [playlist, setPlaylist] = useState<Playlist | undefined>();
 	const [isLogin, setIsLogin] = useState<boolean | undefined>(undefined);
 	const [username, setUsername] = useState<string>("user");
+	const [chosenTrack, setChosenTrack] = useState<string>("");
+	const [showLucky, setShowLucky] = useState<boolean>(true);
 
 	const checkSession = async () => {
 		try {
@@ -51,11 +53,12 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 		if (isLogin !== false) checkSession();
 	}, [isLogin]);
 
-	return <LuckyScreen triggers={triggers} username={username} />;
+	//return <LuckyScreen triggers={triggers} username={username} setChosenTrack={setChosenTrack} />;
 
 	if (isLogin === false) return <LoginScreen setIsLogin={setIsLogin} />;
 	else {
-		if (playlist) return <PlayScreen playlist={playlist} triggers={triggers} />;
+		if (showLucky) return <LuckyScreen triggers={triggers} username={username} setChosenTrack={setChosenTrack} setOpen={setShowLucky} />;
+		else if (playlist) return <PlayScreen playlist={playlist} triggers={triggers} chosenTrack={chosenTrack} />;
 		else return <LoadingScreen isLoading={isLogin} />;
 	}
 }

@@ -14,6 +14,7 @@ declare global {
 type PlayScreenProps = {
 	playlist: Playlist;
 	triggers: Triggers;
+	chosenTrack: string;
 };
 
 //세부 메뉴 선택지
@@ -27,7 +28,7 @@ const messages: Partial<Record<(typeof modeValues)[number], string>> = {
 	none: "Playlist is already empty",
 };
 
-export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
+export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreenProps) {
 	const [currentTrack, setCurrentTrack] = useState<Track | undefined>(undefined);
 	const [isPlay, setIsPlay] = useState<boolean>(false);
 	const [progressTime, setProgressTime] = useState<number>(0);
@@ -384,6 +385,12 @@ export default function PlayScreen({playlist, triggers}: PlayScreenProps) {
 		if (shuffleMode) playlist.shuffleTracks();
 		else playlist.unshuffleTracks();
 	}, [shuffleMode]);
+
+	useEffect(() => {
+		if (chosenTrack) {
+			cueVideo(playlist.extractVideoId(chosenTrack));
+		}
+	}, [chosenTrack])
 
 	const handleLogout = async () => {};
 

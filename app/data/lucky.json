@@ -20,16 +20,16 @@
 		"https://www.youtube.com/watch?v=ZzX63LqGpOE",
 		"https://www.youtube.com/watch?v=u-WTfP3WJc4"
 	],
-	"jan": ["https://www.youtube.com/watch?v=l3pIWpdzs2A"],
-	"feb": ["https://www.youtube.com/watch?v=k5IwNLLHPvg"],
+	"january": ["https://www.youtube.com/watch?v=l3pIWpdzs2A"],
+	"february": ["https://www.youtube.com/watch?v=k5IwNLLHPvg"],
 	"march": ["https://www.youtube.com/watch?v=7ECaSHO8gcc"],
 	"april": ["https://www.youtube.com/watch?v=PYD-DIggB2k"],
 	"may": ["https://www.youtube.com/watch?v=e5f4ok0ddqc"],
 	"june": ["https://www.youtube.com/watch?v=KIIouZLowGQ"],
 	"july": ["https://www.youtube.com/watch?v=YOrwjY3Kn4U"],
 	"august": ["https://www.youtube.com/watch?v=z2Hlzill9mI"],
-	"sep": ["https://www.youtube.com/watch?v=Gs069dndIYk"],
-	"oct": ["https://www.youtube.com/watch?v=iggmiF7DNoM"],
-	"nov": ["https://www.youtube.com/watch?v=RnqddKPfmA4"],
-	"dec": ["https://www.youtube.com/watch?v=FpIsc2N0CNw"]
+	"september": ["https://www.youtube.com/watch?v=Gs069dndIYk"],
+	"october": ["https://www.youtube.com/watch?v=iggmiF7DNoM"],
+	"november": ["https://www.youtube.com/watch?v=RnqddKPfmA4"],
+	"december": ["https://www.youtube.com/watch?v=FpIsc2N0CNw"]
 }

@@ -1,7 +1,7 @@
 import {PlayIcon} from "@heroicons/react/24/solid";
 import {use, useEffect, useState} from "react";
 import {Triggers} from "../page";
-import lucky from "../data/lucky.json" assert {type: "json"};
+import songs from "../data/lucky.json" assert {type: "json"};
 import dialogue from "../data/dialogue.json" assert {type: "json"};
 
 const choice1 = ["💖", "❤️‍🔥", "🪄", "🍀"];
@@ -10,17 +10,27 @@ const choice3 = ["🥀", "❤️‍🩹", "🩹", "🪫"];
 const choice4 = ["🎰", "🎲", "🧩", "🪤"];
 
 type DialogueKeys = keyof typeof dialogue;
-type LuckyKeys = keyof typeof lucky;
+type SongsKeys = keyof typeof songs;
 
-export default function LuckyScreen({triggers, username}: {triggers: Triggers; username: string}) {
+export default function LuckyScreen({
+	triggers,
+	username,
+	setChosenTrack,
+	setOpen,
+}: {
+	triggers: Triggers;
+	username: string;
+	setChosenTrack: React.Dispatch<React.SetStateAction<string>>;
+	setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
 	const [choices, setChoices] = useState<string[]>([]);
 	const [selectedIndex, setSelectedIndex] = useState<number>(0);
 	const [currentLine, setCurrentLine] = useState<DialogueKeys>("000");
 	const [nextLine, setNextLine] = useState<DialogueKeys | undefined>("000");
 	const [lineIndex, setLineIndex] = useState<number>(0);
 	const [displayText, setDisplayText] = useState<string>("");
-	const [isFirstDay, setIsFirstDay] = useState<boolean>(false);
 	const [showChoices, setShowChoices] = useState<boolean>(false);
+	const [showChoices2, setShowChoices2] = useState<boolean>(false);
 	const [month, setMonth] = useState<string>("");
 
 	useEffect(() => {
@@ -31,17 +41,18 @@ export default function LuckyScreen({triggers, username}: {triggers: Triggers; u
 			choice4[Math.floor(Math.random() * choice4.length)],
 		];
 		setChoices(randomSelection);
-		setMonth(new Date().toLocaleString("en-US", {month: "long"}));
+		const monthInEng = new Date().toLocaleString("en-US", {month: "long"});
+		setMonth(monthInEng);
 
-		//const isFirstDay = new Date().getDate() === 1;
-		const firstday = true;
-		setIsFirstDay(firstday);
-		if (firstday) {
-			//새로운 month의 첫 날인 경우 005 - 007까지의 랜덤한 텍스트를 지정
+		const isFirstDay = new Date().getDate() === 1;
+		if (isFirstDay) {
+			//새로운 month의 첫 날인 경우 005 - 007까지의 랜덤한 텍스트를 지정 & month 테마곡을 선택곡으로 지정
 			const jsonKeys = Object.keys(dialogue) as DialogueKeys[];
-			const randomNum = Math.floor(Math.random() * (jsonKeys?.length - 1 - 5 + 1)) + 5;
+			const randomNum = Math.floor(Math.random() * (jsonKeys?.length - 1 - 6 + 1)) + 6;
 			const formatted = jsonKeys.find(key => key === String(randomNum).padStart(3, "0")) as DialogueKeys;
 			setNextLine(formatted);
+			const list = songs[monthInEng.toLowerCase() as SongsKeys];
+			setChosenTrack(list[0]);
 		}
 	}, []);
 
@@ -65,14 +76,13 @@ export default function LuckyScreen({triggers, username}: {triggers: Triggers; u
 
 	useEffect(() => {
 		//다음 대사 줄이 존재하고 현재 대사 줄이 끝났을 때만만
-		const isMore = lineIndex < dialogue[currentLine].length - 1;
-		if (nextLine && !isMore) {
+		if (nextLine) {
 			setLineIndex(0);
 			setDisplayText("");
 			setCurrentLine(nextLine);
 			setShowChoices(false);
 		}
-	}, [nextLine, isFirstDay]);
+	}, [nextLine]);
 
 	useEffect(() => {
 		const rawLine = dialogue[currentLine][lineIndex] ?? "";
@@ -114,6 +124,14 @@ export default function LuckyScreen({triggers, username}: {triggers: Triggers; u
 		};
 	}, [currentLine, lineIndex]);
 
+	useEffect(() => {
+		if (showChoices2) {
+			//선택지는 둘 중 하나만 노출
+			setShowChoices(false);
+			setSelectedIndex(0);
+		}
+	}, [showChoices2]);
+
 	const handleFormat = (text: string) => {
 		const state: Record<string, string> = {
 			user: username,
@@ -124,6 +142,27 @@ export default function LuckyScreen({triggers, username}: {triggers: Triggers; u
 
 	const handleChoiceSelect = (index: number) => {
 		setNextLine(`00${index}` as DialogueKeys);
+
+		const songLists = songs[`00${index}` as SongsKeys];
+		console.log(songLists);
+		if (songLists?.length > 0) {
+			const randomIndex = Math.floor(Math.random() * songLists.length);
+			setChosenTrack(songLists[randomIndex]);
+		}
+
+		setTimeout(() => {
+			setShowChoices2(true);
+		}, 1000);
+	};
+
+	const handlePlayTrack = (isPlay: boolean) => {
+		if (!isPlay) {
+			setNextLine("005");
+			setChosenTrack("");
+		}
+		setTimeout(() => {
+			setOpen(false);
+		}, 1000);
 	};
 
 	return (
@@ -145,6 +184,18 @@ export default function LuckyScreen({triggers, username}: {triggers: Triggers; u
 								<p>{c}</p>
 							</button>
 						))}
+				</div>
+			)}
+			{showChoices2 && (
+				<div className="animate-fadeIn choices flex flex-row items-center justify-between w-[28rem] max-w-full text-xxxs p-spacing-10 h-20">
+					<button onClick={() => handlePlayTrack(false)} className="flex flex-row items-center gap-spacing-2">
+						<PlayIcon className={`size-5 animate-blink ${selectedIndex % 2 === 0 ? "h-8" : "h-0"}`}></PlayIcon>
+						<p className="tracking-widest">no</p>
+					</button>
+					<button onClick={() => handlePlayTrack(true)} className="flex flex-row items-center gap-spacing-2">
+						<PlayIcon className={`size-5 animate-blink ${selectedIndex % 2 === 1 ? "h-8" : "h-0"}`}></PlayIcon>
+						<p className="tracking-widest">play</p>
+					</button>
 				</div>
 			)}
 		</div>
