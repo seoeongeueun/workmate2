@@ -1,15 +1,17 @@
+$transition: 0.5s ease-in-out;
+
 .gameboy-frames {
 	div,
 	div::before,
 	div::after,
 	span {
 		transition:
-			background-color 2s ease-in-out,
-			color 2s ease-in-out,
-			border-color 2s ease-in-out,
-			outline 2s ease-in-out,
-			box-shadow 2s ease-in-out,
-			text-shadow 2s ease-in-out;
+			background-color $transition,
+			color $transition,
+			border-color $transition,
+			outline $transition,
+			box-shadow $transition,
+			text-shadow $transition;
 	}
 
 	.move-button div,
@@ -17,6 +19,11 @@
 	.ab-buttons div {
 		transition: none !important;
 	}
+}
+
+.frame-top .top div,
+.frame-bottom .top div {
+	transition: box-shadow $transition;
 }
 
 .frame-top {
@@ -125,7 +132,7 @@
 				box-shadow:
 					inset 0 1px 1px 0 rgba(169, 171, 197, 0.5),
 					0px -3px 2px -3px #ecedf3,
-					0px -2px 1px 2px var(--body) !important;
+					0px -2px 1px 2px var(--body);
 			}
 		}
 
