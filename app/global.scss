@@ -863,15 +863,15 @@ $transition: 0.5s ease-in-out;
 		transform: translateX(calc(-50% + 2.5px));
 	}
 
-	// p { 
-	// 	margin: 0px; 
-	// 	white-space: wrap; 
+	// p {
+	// 	margin: 0px;
+	// 	white-space: wrap;
 	// 	display: inlie-block;
-	// 	clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0); 
+	// 	clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0);
 	// 	// animation: typing 3s steps(28, end) forwards;
 	// }
 
-	p{
+	p {
 		white-space: pre-line;
 		line-height: 2rem;
 	}
@@ -892,6 +892,6 @@ $transition: 0.5s ease-in-out;
 	// }
 
 	p {
-		filter: hue-rotate(3deg) saturate(200%);
+		filter: hue-rotate(3deg) saturate(150%);
 	}
 }

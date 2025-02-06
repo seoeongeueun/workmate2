@@ -23,7 +23,7 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 		[ErrorCodes.MissingFields]: "All fields are required",
 		[ErrorCodes.UsernameTaken]: "Username is already in use",
 		[ErrorCodes.SignupFail]: "Failed to sign up, please try again later",
-		[ErrorCodes.LoginError]: "Login error, please try again",
+		[ErrorCodes.LoginError]: "Log in failed, please check the fields again",
 		[ErrorCodes.PasswordLength]: "Password should be at least 6 characters long",
 	};
 

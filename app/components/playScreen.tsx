@@ -38,6 +38,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 	const [shuffleMode, setShuffleMode] = useState<boolean>(false);
 	const [mode, setMode] = useState<ModeIndex>(0);
 	const [popupType, setPopupType] = useState<ModeIndex>(-1);
+	const [isSpecialTrack, setIsSpecialTrack] = useState<boolean>(false);
 	const playerRef = useRef<any>(null);
 
 	const defaultIconSize = "size-6";
@@ -180,7 +181,8 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 
 		function onYouTubeIframeAPIReady() {
 			console.log("API Ready - Initializing player");
-			const initialVideoId = playlist.extractVideoId(currentTrack?.url || playlist.tracks[0].url); // 첫번째 트랙의 동영상 id를 가져오기
+			const initialVideoId = playlist.extractVideoId(chosenTrack || currentTrack?.url || playlist.tracks[0].url); // 첫번째 트랙의 동영상 id를 가져오기
+			if (chosenTrack) setIsSpecialTrack(true);
 			if (initialVideoId) {
 				playerRef.current = new YT.Player("player", {
 					height: "50",
@@ -210,7 +212,11 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 		const handlePlayerStateChange = (event: YT.OnStateChangeEvent) => {
 			//이전 곡 재생 완료 시 다음 곡 자동 재생
 			if (event.data === YT.PlayerState.ENDED) {
-				handlePlayNext();
+				//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
+				if (event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack)) {
+					setIsSpecialTrack(false);
+					cueVideo(playlist.extractVideoId(playlist.tracks[0].url));
+				} else handlePlayNext();
 			} else if (event.data === YT.PlayerState.CUED) {
 				var videoData = event.target.getVideoData();
 				var title = videoData.title;
@@ -224,7 +230,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 		};
 
 		window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-	}, [playlist, currentTrack === undefined]);
+	}, [playlist, currentTrack === undefined, chosenTrack]);
 
 	useEffect(() => {
 		const current = playlist.getCurrentTrack();
@@ -386,12 +392,6 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 		else playlist.unshuffleTracks();
 	}, [shuffleMode]);
 
-	useEffect(() => {
-		if (chosenTrack) {
-			cueVideo(playlist.extractVideoId(chosenTrack));
-		}
-	}, [chosenTrack])
-
 	const handleLogout = async () => {};
 
 	const handleEmptyPlaylist = async () => {
@@ -451,7 +451,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 				<div id="player"></div>
 				<p className="text-xs line-clamp-2">{currentTrack?.title}</p>
 			</div>
-			<span className="text-xxs mt-auto">track {trackIndex}</span>
+			<span className="text-xxs mt-auto">{isSpecialTrack ? "special track" : `track ${trackIndex}`}</span>
 			<div className="flex flex-row w-full justify-between items-center">
 				<button onClick={handlePlayPrev}>
 					<BackwardIcon className={defaultIconSize} />

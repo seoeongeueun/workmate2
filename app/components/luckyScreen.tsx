@@ -6,7 +6,7 @@ import dialogue from "../data/dialogue.json" assert {type: "json"};
 
 const choice1 = ["💖", "❤️‍🔥", "🪄", "🍀"];
 const choice2 = ["🌃", "🌙", "🛸", "🌉"];
-const choice3 = ["🥀", "❤️‍🩹", "🩹", "🪫"];
+const choice3 = ["🥀", "❤️‍🩹", "🕳️", "🪫"];
 const choice4 = ["🎰", "🎲", "🧩", "🪤"];
 
 type DialogueKeys = keyof typeof dialogue;
@@ -97,6 +97,8 @@ export default function LuckyScreen({
 				setTimeout(() => {
 					setLineIndex(prev => Math.min(prev + 1, dialogue[currentLine].length - 1));
 					if (currentLine === "000") setShowChoices(true);
+					//거절 대사인 경우 창 닫기
+					if (currentLine === "005" && dialogue[currentLine].length - 1 === lineIndex) setOpen(false);
 				}, 800);
 				return;
 			}
@@ -144,7 +146,6 @@ export default function LuckyScreen({
 		setNextLine(`00${index}` as DialogueKeys);
 
 		const songLists = songs[`00${index}` as SongsKeys];
-		console.log(songLists);
 		if (songLists?.length > 0) {
 			const randomIndex = Math.floor(Math.random() * songLists.length);
 			setChosenTrack(songLists[randomIndex]);
@@ -160,9 +161,6 @@ export default function LuckyScreen({
 			setNextLine("005");
 			setChosenTrack("");
 		}
-		setTimeout(() => {
-			setOpen(false);
-		}, 1000);
 	};
 
 	return (
