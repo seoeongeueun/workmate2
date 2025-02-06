@@ -38,7 +38,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 	const [shuffleMode, setShuffleMode] = useState<boolean>(false);
 	const [mode, setMode] = useState<ModeIndex>(0);
 	const [popupType, setPopupType] = useState<ModeIndex>(-1);
-	const [isSpecialTrack, setIsSpecialTrack] = useState<boolean>(false);
+	const [specialTrackInfo, setSpecialTrackInfo] = useState<string>("");
 	const playerRef = useRef<any>(null);
 
 	const defaultIconSize = "size-6";
@@ -182,7 +182,6 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 		function onYouTubeIframeAPIReady() {
 			console.log("API Ready - Initializing player");
 			const initialVideoId = playlist.extractVideoId(chosenTrack || currentTrack?.url || playlist.tracks[0].url); // 첫번째 트랙의 동영상 id를 가져오기
-			if (chosenTrack) setIsSpecialTrack(true);
 			if (initialVideoId) {
 				playerRef.current = new YT.Player("player", {
 					height: "50",
@@ -193,7 +192,14 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 							console.log("Player Ready");
 							var videoData = event.target.getVideoData();
 							var title = videoData.title;
-							playlist.updateTrackTitle(initialVideoId, title);
+							if (!chosenTrack) {
+								playlist.updateTrackTitle(initialVideoId, title);
+								setCurrentTrack(playlist.getCurrentTrack());
+								setTrackIndex(playlist.getTrackIndex());
+							} else {
+								// 이벤트 곡의 타이틀을 별도로 저장
+								setSpecialTrackInfo(title);
+							}
 							playVideo();
 							intervalId = setInterval(() => {
 								if (playerRef.current) {
@@ -214,7 +220,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 			if (event.data === YT.PlayerState.ENDED) {
 				//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
 				if (event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack)) {
-					setIsSpecialTrack(false);
+					setSpecialTrackInfo("");
 					cueVideo(playlist.extractVideoId(playlist.tracks[0].url));
 				} else handlePlayNext();
 			} else if (event.data === YT.PlayerState.CUED) {
@@ -224,6 +230,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 				if (current?.url) {
 					playlist.updateTrackTitle(current.url, title);
 					setCurrentTrack({...current, title: title});
+					setTrackIndex(playlist.getTrackIndex());
 					playerRef.current.playVideo();
 				}
 			}
@@ -232,13 +239,14 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 		window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 	}, [playlist, currentTrack === undefined, chosenTrack]);
 
-	useEffect(() => {
-		const current = playlist.getCurrentTrack();
-		if (current) {
-			setCurrentTrack(current);
-			setTrackIndex(playlist.getTrackIndex());
-		}
-	}, [playlist, playlist.currentTrack]);
+	// useEffect(() => {
+	// 	const current = playlist.getCurrentTrack();
+	// 	console.log("current: ", current?.title);
+	// 	if (current) {
+	// 		setCurrentTrack(current);
+	// 		setTrackIndex(playlist.getTrackIndex());
+	// 	}
+	// }, [playlist, playlist.currentTrack]);
 
 	// useEffect(() => {
 	// 	const {prev, current} = triggers;
@@ -449,9 +457,9 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 			</div>
 			<div className="track-info flex flex-row w-full items-center justify-start gap-spacing-10">
 				<div id="player"></div>
-				<p className="text-xs line-clamp-2">{currentTrack?.title}</p>
+				<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrack?.title}</p>
 			</div>
-			<span className="text-xxs mt-auto">{isSpecialTrack ? "special track" : `track ${trackIndex}`}</span>
+			<span className="text-xxs mt-auto">{specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>
 			<div className="flex flex-row w-full justify-between items-center">
 				<button onClick={handlePlayPrev}>
 					<BackwardIcon className={defaultIconSize} />

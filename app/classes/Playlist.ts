@@ -125,7 +125,6 @@ export default class Playlist {
 		const track = this.tracks.find(track => track.url.includes(videoId));
 		if (track) {
 			track.title = title;
-			console.log(this.tracks);
 		}
 	}
 

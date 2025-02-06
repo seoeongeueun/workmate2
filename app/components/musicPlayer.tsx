@@ -16,7 +16,12 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 	const [isLogin, setIsLogin] = useState<boolean | undefined>(undefined);
 	const [username, setUsername] = useState<string>("user");
 	const [chosenTrack, setChosenTrack] = useState<string>("");
-	const [showLucky, setShowLucky] = useState<boolean>(true);
+	const [showLucky, setShowLucky] = useState<boolean>(false);
+
+	useEffect(() => {
+		const isOver = localStorage.getItem("interactionOver");
+		setShowLucky(isOver !== "true");
+	}, []);
 
 	const checkSession = async () => {
 		try {

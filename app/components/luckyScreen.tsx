@@ -12,6 +12,17 @@ const choice4 = ["🎰", "🎲", "🧩", "🪤"];
 type DialogueKeys = keyof typeof dialogue;
 type SongsKeys = keyof typeof songs;
 
+/*
+	Dialogue 설명
+	000: 기본 인사말
+	001 - 004: 선택지에 대한 대사
+	005: 거절에 대한 반응
+	006 - 009: 새로운 달의 첫 날을 위한 대사
+	010: 발렌타인 데이
+	011: 크리스마스
+	012: 새해 전날
+*/
+
 export default function LuckyScreen({
 	triggers,
 	username,
@@ -143,6 +154,9 @@ export default function LuckyScreen({
 	};
 
 	const handleChoiceSelect = (index: number) => {
+		//유저가 선택지를 고르면 이벤트가 끝난 것으로 로컬 스토리지에 저장
+		localStorage.setItem("interactionOver", "true");
+
 		setNextLine(`00${index}` as DialogueKeys);
 
 		const songLists = songs[`00${index}` as SongsKeys];
@@ -160,6 +174,8 @@ export default function LuckyScreen({
 		if (!isPlay) {
 			setNextLine("005");
 			setChosenTrack("");
+		} else {
+			setOpen(false);
 		}
 	};
 
