@@ -22,12 +22,6 @@
 	--frame: #242b29;
 	--frame-dark: rgb(3, 11, 8);
 
-	--button: #c7cace;
-	--button-light: #dfe4e6;
-	--button-dark: rgb(146, 140, 137);
-	--button-dark-rgb: 126, 119, 115;
-	--button-shadow: rgb(151, 154, 172);
-	--button-shadow-rgb: 151, 154, 172;
 	--body: rgb(79, 82, 147);
 	--body-shadow: rgb(117, 122, 179);
 	--body-shadow-rgb: 117, 122, 179;
@@ -35,6 +29,16 @@
 	--body-light-rgb: 215, 218, 226;
 	--body-dark: rgb(42, 40, 80);
 	--body-dark-rgb: 42, 40, 80;
+
+	--button: #c7cace;
+	--button-light: #dfe4e6;
+	--button-dark: rgb(146, 140, 137);
+	--button-dark-rgb: 146, 140, 137;
+	--button-shadow: rgb(151, 154, 172);
+	--button-shadow-rgb: 151, 154, 172;
+	--button-hole: rgb(34, 34, 34);
+	--button-hole-rgb: 34, 34, 34;
+
 	--darkest-point: rgb(3, 11, 8);
 	--darkest-point-rgb: 3, 11, 8;
 }
@@ -105,8 +109,8 @@ body {
 	overflow: hidden;
 	letter-spacing: 0.025em;
 	-webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
 }
 
 html {
