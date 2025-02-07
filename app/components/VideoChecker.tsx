@@ -1,18 +1,15 @@
 "use client";
 
 import {useEffect, useState} from "react";
-import lucky from "../data/lucky.json";
 import {apiRequest} from "../lib/tools";
-
-const videoData: Record<string, string[]> = lucky;
-
-const categoryKeys = Object.keys(videoData);
 
 export default function VideoChecker() {
 	const [videoStatuses, setVideoStatuses] = useState<Record<string, Record<string, string>>>({});
 	const [apiLoaded, setApiLoaded] = useState(false);
 	const [currentRowIndex, setCurrentRowIndex] = useState(0);
 	const [message, setMessage] = useState<string>("");
+	const [videoData, setVideoData] = useState<Record<string, string[]>>({});
+	const [categoryKeys, setCategoryKeys] = useState<string[]>([]);
 
 	useEffect(() => {
 		const waitForYT = () => {
@@ -37,10 +34,28 @@ export default function VideoChecker() {
 		} else {
 			waitForYT();
 		}
+
+		fetchVideoData();
 	}, []);
 
+	const fetchVideoData = async () => {
+		try {
+			const response = await apiRequest("/api/lucky");
+			const data = response?.data;
+
+			if (data) {
+				setVideoData(data);
+
+				const validKeys = Object.keys(data).filter(k => Array.isArray(data[k]));
+				setCategoryKeys(validKeys);
+			}
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
 	const checkRow = (key: string) => {
-		if (!apiLoaded) return;
+		if (!apiLoaded || !videoData) return;
 
 		console.log("🚀 Checking video statuses...");
 
@@ -87,20 +102,23 @@ export default function VideoChecker() {
 	};
 
 	const handleNextRow = () => {
-		if (currentRowIndex < categoryKeys.length - 1) {
+		if (currentRowIndex < categoryKeys?.length - 1) {
 			setCurrentRowIndex(prev => prev + 1);
 			setMessage("");
 		}
 	};
 
 	useEffect(() => {
-		const currentKey = categoryKeys[currentRowIndex];
-		if (currentKey) {
-			checkRow(currentKey);
+		if (categoryKeys?.length > 0) {
+			const currentKey = categoryKeys[currentRowIndex];
+			if (currentKey) {
+				checkRow(currentKey);
+			}
 		}
-	}, [currentRowIndex, apiLoaded]);
+	}, [currentRowIndex, apiLoaded, categoryKeys]);
 
 	const handleRemove = async (categoryKey: string) => {
+		if (!videoData) return;
 		const unavailableVideos = Object.entries(videoStatuses[categoryKey] || {})
 			.filter(([_, status]) => status === "Unavailable")
 			.map(([videoId]) => {
@@ -138,32 +156,34 @@ export default function VideoChecker() {
 		<div className="w-full h-full p-8 gap-2 flex flex-col ">
 			<h1>YouTube Video Checker</h1>
 
-			{categoryKeys.map((key, index) =>
-				index === currentRowIndex ? (
-					<div key={key} className="flex flex-col justify-start items-start gap-4">
-						<h2 className="text-md font-semibold">Category {key}</h2>
-						<div className="flex flex-wrap gap-2">
-							{videoData[key].map(url => {
-								const videoId = extractVideoId(url);
-								return (
-									<div
-										key={videoId}
-										className={`flex flex-col min-w-[14rem] gap-4 ${videoStatuses[key]?.[videoId] === "Unavilable" ? "bg-gray-2" : "bg-gray-1"} rounded-px p-2 text-center`}
-									>
-										<div id={`player-${key}-${videoId}`} className="mx-auto"></div>
-										<p className="text-sm">
-											<a href={url} target="_blank" rel="noopener noreferrer">
-												{videoId}
-											</a>{" "}
-											- {videoStatuses[key]?.[videoId] || "Checking..."}
-										</p>
-									</div>
-								);
-							})}
+			{categoryKeys &&
+				categoryKeys.map((key, index) =>
+					index === currentRowIndex ? (
+						<div key={key} className="flex flex-col justify-start items-start gap-4">
+							<h2 className="text-md font-semibold">Category {key}</h2>
+							<div className="flex flex-wrap gap-2">
+								{videoData &&
+									videoData[key].map(url => {
+										const videoId = extractVideoId(url);
+										return (
+											<div
+												key={videoId}
+												className={`flex flex-col min-w-[14rem] gap-4 ${videoStatuses[key]?.[videoId] === "Unavilable" ? "bg-gray-2" : "bg-gray-1"} rounded-px p-2 text-center`}
+											>
+												<div id={`player-${key}-${videoId}`} className="mx-auto"></div>
+												<p className="text-sm">
+													<a href={url} target="_blank" rel="noopener noreferrer">
+														{videoId}
+													</a>{" "}
+													- {videoStatuses[key]?.[videoId] || "Checking..."}
+												</p>
+											</div>
+										);
+									})}
+							</div>
 						</div>
-					</div>
-				) : null
-			)}
+					) : null
+				)}
 			<div className="flex flex-row items-center gap-2">
 				{currentRowIndex < categoryKeys.length - 1 && (
 					<button className="mt-4 px-4 py-2 justify-center w-fit bg-gray-3 text-white rounded-px" onClick={handleNextRow}>
