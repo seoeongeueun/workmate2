@@ -97,16 +97,26 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 	};
 
 	const handlePlayNext = useCallback(() => {
-		const nextTrack = playlist.playNext();
-		if (nextTrack) {
-			cueVideo(nextTrack);
+		//스페셜 곡을 재생 중인 경우는 다음 곡을 재생하는게 아니라 플레이리스트의 첫 곡을 재생한다
+		if (specialTrackInfo) {
+			const next = playlist.getCurrentTrack();
+			if (next) cueVideo(playlist.extractVideoId(next.url));
+		} else {
+			const nextTrack = playlist.playNext();
+			if (nextTrack) {
+				cueVideo(nextTrack);
+			}
 		}
-	}, [playlist, cueVideo]);
+		// *중요*: 스페셜 곡은 하나기 때문에 다음 곡 재생인 경우 스페셜 곡 정보를 제거
+		setSpecialTrackInfo("");
+	}, [playlist, cueVideo, specialTrackInfo]);
 
 	const handlePlayPrev = () => {
-		const prevTrack = playlist.playPrevious();
-		if (prevTrack) {
-			cueVideo(prevTrack);
+		if (!specialTrackInfo) {
+			const prevTrack = playlist.playPrevious();
+			if (prevTrack) {
+				cueVideo(prevTrack);
+			}
 		}
 	};
 

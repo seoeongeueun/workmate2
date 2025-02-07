@@ -1,8 +1,8 @@
 import {PlayIcon} from "@heroicons/react/24/solid";
 import {use, useEffect, useState} from "react";
 import {Triggers} from "../page";
-import songs from "../data/lucky.json" assert {type: "json"};
 import dialogue from "../data/dialogue.json" assert {type: "json"};
+import {apiRequest} from "../lib/tools";
 
 const choice1 = ["💖", "❤️‍🔥", "🪄", "🍀"];
 const choice2 = ["🌃", "🌙", "🛸", "🌉"];
@@ -10,7 +10,7 @@ const choice3 = ["🥀", "❤️‍🩹", "🕳️", "🪫"];
 const choice4 = ["🎰", "🎲", "🧩", "🪤"];
 
 type DialogueKeys = keyof typeof dialogue;
-type SongsKeys = keyof typeof songs;
+//type SongsKeys = keyof typeof songs;
 
 /*
 	Dialogue 설명
@@ -18,9 +18,10 @@ type SongsKeys = keyof typeof songs;
 	001 - 004: 선택지에 대한 대사
 	005: 거절에 대한 반응
 	006 - 009: 새로운 달의 첫 날을 위한 대사
-	010: 발렌타인 데이
-	011: 크리스마스
-	012: 새해 전날
+	010: 에러 케이스 대사
+	011: 발렌타인 데이
+	012: 크리스마스
+	013: 새해 전날
 */
 
 export default function LuckyScreen({
@@ -42,7 +43,9 @@ export default function LuckyScreen({
 	const [displayText, setDisplayText] = useState<string>("");
 	const [showChoices, setShowChoices] = useState<boolean>(false);
 	const [showChoices2, setShowChoices2] = useState<boolean>(false);
+	const [videoData, setVideoData] = useState<Record<string, string[]>>({});
 	const [month, setMonth] = useState<string>("");
+	const [isFirstDay, setIsFirstDay] = useState<boolean>(false);
 
 	useEffect(() => {
 		const randomSelection = [
@@ -56,15 +59,16 @@ export default function LuckyScreen({
 		setMonth(monthInEng);
 
 		const isFirstDay = new Date().getDate() === 1;
+		setIsFirstDay(isFirstDay);
 		if (isFirstDay) {
-			//새로운 month의 첫 날인 경우 005 - 007까지의 랜덤한 텍스트를 지정 & month 테마곡을 선택곡으로 지정
+			//새로운 month의 첫 날인 경우 006 - 009까지의 랜덤한 텍스트를 지정 & month 테마곡을 선택곡으로 지정
 			const jsonKeys = Object.keys(dialogue) as DialogueKeys[];
-			const randomNum = Math.floor(Math.random() * (jsonKeys?.length - 1 - 6 + 1)) + 6;
+			const randomNum = Math.floor(Math.random() * (9 - 6 + 1)) + 6;
 			const formatted = jsonKeys.find(key => key === String(randomNum).padStart(3, "0")) as DialogueKeys;
 			setNextLine(formatted);
-			const list = songs[monthInEng.toLowerCase() as SongsKeys];
-			setChosenTrack(list[0]);
 		}
+
+		fetchVideoData();
 	}, []);
 
 	useEffect(() => {
@@ -105,12 +109,17 @@ export default function LuckyScreen({
 
 		function typeChar() {
 			if (i >= line.length) {
-				setTimeout(() => {
-					setLineIndex(prev => Math.min(prev + 1, dialogue[currentLine].length - 1));
-					if (currentLine === "000") setShowChoices(true);
-					//거절 대사인 경우 창 닫기
-					if (currentLine === "005" && dialogue[currentLine].length - 1 === lineIndex) setOpen(false);
-				}, 800);
+				setTimeout(
+					() => {
+						setLineIndex(prev => Math.min(prev + 1, dialogue[currentLine].length - 1));
+						if (currentLine === "000") setShowChoices(true);
+						//거절 대사인 경우 창 닫기
+						if (currentLine === "005" && dialogue[currentLine].length - 1 === lineIndex) setOpen(false);
+						// 첫째날인 경우는 choice1을 스킵하고 바로 choice2를 노출
+						if (isFirstDay) setShowChoices2(true);
+					},
+					isFirstDay ? 1200 : 800
+				);
 				return;
 			}
 
@@ -135,7 +144,7 @@ export default function LuckyScreen({
 		return () => {
 			if (timeoutId) clearTimeout(timeoutId);
 		};
-	}, [currentLine, lineIndex]);
+	}, [currentLine, lineIndex, isFirstDay]);
 
 	useEffect(() => {
 		if (showChoices2) {
@@ -144,6 +153,19 @@ export default function LuckyScreen({
 			setSelectedIndex(0);
 		}
 	}, [showChoices2]);
+
+	const fetchVideoData = async () => {
+		try {
+			const response = await apiRequest("/api/lucky");
+			const data = response?.data;
+
+			if (data) {
+				setVideoData(data);
+			}
+		} catch (error) {
+			console.log(error);
+		}
+	};
 
 	const handleFormat = (text: string) => {
 		const state: Record<string, string> = {
@@ -159,7 +181,9 @@ export default function LuckyScreen({
 
 		setNextLine(`00${index}` as DialogueKeys);
 
-		const songLists = songs[`00${index}` as SongsKeys];
+		if (!videoData) return;
+
+		const songLists = videoData[`00${index}`];
 		if (songLists?.length > 0) {
 			const randomIndex = Math.floor(Math.random() * songLists.length);
 			setChosenTrack(songLists[randomIndex]);
@@ -175,6 +199,12 @@ export default function LuckyScreen({
 			setNextLine("005");
 			setChosenTrack("");
 		} else {
+			if (isFirstDay) {
+				//month 특별 곡은 하나 뿐이기 때문에 [0]로 바로 지정
+				const song = videoData[month.toLowerCase()][0];
+				if (song) setChosenTrack(song);
+				else setNextLine("010");
+			}
 			setOpen(false);
 		}
 	};
