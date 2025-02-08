@@ -43,7 +43,8 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 
 	const defaultIconSize = "size-6";
 
-	//유저가 직접 재생/일시중지를 트리거 할 때만 사용
+	//유저가 직접 재생/일시중지를 트리거 할 때만 사용하지만
+	//player를 initialize할 때 자동 재생 효과를 주기 위해 예외로 사용
 	const playVideo = useCallback(() => {
 		if (!playerRef.current) {
 			return;
@@ -72,12 +73,16 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 		if (url) {
 			songToAdd.value = "Music Added!";
 
-			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
-			console.log(playlist.extractVideoId(url), currentTrack);
-			if (playerRef?.current && !currentTrack) playerRef.current?.loadVideoById(playlist.extractVideoId(url));
-
 			const newTrack = playlist.addTrack(url);
 			setTrackIndex(playlist.getTrackIndex());
+
+			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
+			console.log(playlist.extractVideoId(url), currentTrack, playerRef.current);
+			if (!currentTrack && !specialTrackInfo) {
+				console.log("load doesnt work?", playerRef.current);
+				if (playerRef.current) playerRef.current?.cueVideoById(playlist.extractVideoId(url));
+				else setCurrentTrack(newTrack); //player가 initialized 되지 않았으므로 트리거
+			}
 
 			const response = await apiRequest("/api/playlist", "POST", {
 				id: playlist.getObjectId(),
@@ -138,11 +143,12 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 					playerRef.current.cueVideoById(nextTrack);
 				} else {
 					playerRef.current.destroy();
+					playerRef.current = null;
+					setIsPlay(false);
 					setCurrentTrack(undefined);
 				}
 			}
 		}
-		setTrackIndex(playlist.getTrackIndex());
 		setShowPopup(false);
 	};
 
@@ -183,71 +189,147 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 			}
 		};
 
-		if (!window.YT?.Player && playlist.tracks?.length > 0) {
+		if ((!window.YT?.Player || !playerRef.current) && playlist) {
 			loadYTScript();
 		}
+
+		if (chosenTrack) console.log("🍀 Today's special track - ", chosenTrack);
 
 		let intervalId;
 
 		function onYouTubeIframeAPIReady() {
 			console.log("API Ready - Initializing player");
-			const initialVideoId = playlist.extractVideoId(chosenTrack || currentTrack?.url || playlist.tracks[0].url); // 첫번째 트랙의 동영상 id를 가져오기
-			if (initialVideoId) {
-				playerRef.current = new YT.Player("player", {
-					height: "50",
-					width: "50",
-					videoId: initialVideoId,
-					events: {
-						onReady: event => {
-							console.log("Player Ready");
-							var videoData = event.target.getVideoData();
-							var title = videoData.title;
-							if (!chosenTrack) {
-								playlist.updateTrackTitle(initialVideoId, title);
-								setCurrentTrack(playlist.getCurrentTrack());
-								setTrackIndex(playlist.getTrackIndex());
-							} else {
-								// 이벤트 곡의 타이틀을 별도로 저장
-								setSpecialTrackInfo(title);
-							}
-							playVideo();
-							intervalId = setInterval(() => {
-								if (playerRef.current) {
-									const duration = playerRef.current.getDuration();
-									const currentTime = playerRef.current.getCurrentTime();
-									setProgressTime(Math.min((currentTime / duration) * 100, 100));
-								}
-							}, 1000);
-						},
-						onStateChange: handlePlayerStateChange,
-					},
-				});
-			}
+			const track = chosenTrack || currentTrack?.url || playlist.tracks[0]?.url;
+			if (track) initializePlayer(playlist.extractVideoId(track));
+			// const initialVideoId = playlist.extractVideoId(track); // 첫번째 트랙의 동영상 id를 가져오기
+			// if (initialVideoId) {
+			// 	playerRef.current = new YT.Player("player", {
+			// 		height: "50",
+			// 		width: "50",
+			// 		videoId: initialVideoId,
+			// 		events: {
+			// 			onReady: event => {
+			// 				console.log("Player Ready");
+			// 				var videoData = event.target.getVideoData();
+			// 				var title = videoData.title;
+			// 				if (!chosenTrack) {
+			// 					playlist.updateTrackTitle(initialVideoId, title);
+			// 					setCurrentTrack(playlist.getCurrentTrack());
+			// 					setTrackIndex(playlist.getTrackIndex());
+			// 				} else {
+			// 					// 이벤트 곡의 타이틀을 별도로 저장
+			// 					setSpecialTrackInfo(title);
+			// 				}
+			// 				playVideo();
+			// 				intervalId = setInterval(() => {
+			// 					if (playerRef.current) {
+			// 						const duration = playerRef.current.getDuration();
+			// 						const currentTime = playerRef.current.getCurrentTime();
+			// 						setProgressTime(Math.min((currentTime / duration) * 100, 100));
+			// 					}
+			// 				}, 1000);
+			// 			},
+			// 			onError: event => {
+			// 				console.log("❌ Video unavailable");
+			// 				//스페셜 곡이 에러난 경우에만 삭제 처리
+			// 				if (chosenTrack.includes(initialVideoId)) playerRef.current.destroy();
+			// 			},
+			// 			onStateChange: handlePlayerStateChange,
+			// 		},
+			// 	});
+			//}
 		}
 
-		const handlePlayerStateChange = (event: YT.OnStateChangeEvent) => {
-			//이전 곡 재생 완료 시 다음 곡 자동 재생
-			if (event.data === YT.PlayerState.ENDED) {
-				//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
-				if (event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack)) {
-					setSpecialTrackInfo("");
-					cueVideo(playlist.extractVideoId(playlist.tracks[0].url));
-				} else handlePlayNext();
-			} else if (event.data === YT.PlayerState.CUED) {
-				var videoData = event.target.getVideoData();
-				var title = videoData.title;
-				const current = playlist.getCurrentTrack();
-				if (current?.url) {
-					playlist.updateTrackTitle(current.url, title);
-					setCurrentTrack({...current, title: title});
-					setTrackIndex(playlist.getTrackIndex());
-					playerRef.current.playVideo();
-				}
-			}
-		};
+		// const handlePlayerStateChange = (event: YT.OnStateChangeEvent) => {
+		// 	//이전 곡 재생 완료 시 다음 곡 자동 재생
+		// 	if (event.data === YT.PlayerState.ENDED) {
+		// 		console.log("video ended");
+		// 		//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
+		// 		if (event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack)) {
+		// 			setSpecialTrackInfo("");
+		// 			cueVideo(playlist.extractVideoId(playlist.tracks[0].url));
+		// 		} else handlePlayNext();
+		// 	} else if (event.data === YT.PlayerState.CUED) {
+		// 		console.log("video cued");
+		// 		var videoData = event.target.getVideoData();
+		// 		var title = videoData.title;
+		// 		const current = playlist.getCurrentTrack();
+		// 		console.log(playlist.getTrackIndex());
+		// 		if (current?.url) {
+		// 			playlist.updateTrackTitle(current.url, title);
+		// 			setCurrentTrack({...current, title: title});
+		// 			setTrackIndex(playlist.getTrackIndex());
+		// 			playerRef.current.playVideo();
+		// 		}
+		// 	}
+		// };
 
 		window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-	}, [playlist, currentTrack === undefined, chosenTrack]);
+	}, [playlist]);
+
+	useEffect(() => {
+		if (!playerRef.current && currentTrack) {
+			initializePlayer(playlist.extractVideoId(currentTrack.url));
+		}
+	}, [currentTrack, playerRef.current]);
+
+	const initializePlayer = (initialVideoId: string) => {
+		let intervalId;
+		playerRef.current = new YT.Player("player", {
+			height: "50",
+			width: "50",
+			videoId: initialVideoId,
+			events: {
+				onReady: event => {
+					console.log(`✅ Video ${initialVideoId} is Ready`);
+					var videoData = event.target.getVideoData();
+					var title = videoData.title;
+					if (!chosenTrack) {
+						playlist.updateTrackTitle(initialVideoId, title);
+						setCurrentTrack(playlist.getCurrentTrack());
+						setTrackIndex(playlist.getTrackIndex());
+					} else {
+						// 이벤트 곡의 타이틀을 별도로 저장
+						setSpecialTrackInfo(title);
+					}
+					playVideo();
+					intervalId = setInterval(() => {
+						if (playerRef.current) {
+							const duration = playerRef.current.getDuration();
+							const currentTime = playerRef.current.getCurrentTime();
+							setProgressTime(Math.min((currentTime / duration) * 100, 100));
+						}
+					}, 1000);
+				},
+				onError: event => {
+					console.log("❌ Video unavailable");
+					//스페셜 곡이 에러난 경우에만 삭제 처리
+					if (chosenTrack.includes(initialVideoId)) playerRef.current.destroy();
+				},
+				onStateChange: (event: YT.OnStateChangeEvent) => {
+					//이전 곡 재생 완료 시 다음 곡 자동 재생
+					if (event.data === YT.PlayerState.ENDED) {
+						//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
+						if (event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack)) {
+							setSpecialTrackInfo("");
+							cueVideo(playlist.extractVideoId(playlist.tracks[0].url));
+						} else handlePlayNext();
+					} else if (event.data === YT.PlayerState.CUED) {
+						var videoData = event.target.getVideoData();
+						var title = videoData.title;
+						const current = playlist.getCurrentTrack();
+						console.log(playlist.getTrackIndex());
+						if (current?.url) {
+							playlist.updateTrackTitle(current.url, title);
+							setCurrentTrack({...current, title: title});
+							setTrackIndex(playlist.getTrackIndex());
+							playerRef.current.playVideo();
+						}
+					}
+				},
+			},
+		});
+	};
 
 	// useEffect(() => {
 	// 	const current = playlist.getCurrentTrack();
@@ -425,7 +507,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 				playlist.empty();
 				setCurrentTrack(undefined);
 				setShowPopup(false);
-				if (playerRef?.current) playerRef.current = null;
+				if (playerRef?.current) playerRef.current.destroy();
 			}
 		} catch (error) {
 			console.error("Failed to empty playlist:", error);

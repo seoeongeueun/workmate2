@@ -1,7 +1,9 @@
-interface APIResponse<T> {
+interface APIResponse<T = any> {
 	error?: string;
 	data?: T;
+	[key: string]: any;
 }
+
 export async function apiRequest<T = any>(url: string, method: string = "GET", data?: unknown): Promise<APIResponse<T>> {
 	const options: RequestInit = {
 		method,

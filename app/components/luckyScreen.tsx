@@ -144,7 +144,7 @@ export default function LuckyScreen({
 		return () => {
 			if (timeoutId) clearTimeout(timeoutId);
 		};
-	}, [currentLine, lineIndex, isFirstDay]);
+	}, [currentLine, lineIndex, isFirstDay, username]);
 
 	useEffect(() => {
 		if (showChoices2) {
