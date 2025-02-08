@@ -84,7 +84,7 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 
 	if (isLogin === false) return <LoginScreen setIsLogin={setIsLogin} />;
 	else if (isLogin && showLucky && username)
-		return <LuckyScreen triggers={triggers} username={username} setChosenTrack={setChosenTrack} setOpen={setShowLucky} expiration={expiration} />;
+		return <LuckyScreen triggers={triggers} username={username} setChosenTrack={setChosenTrack} setOpen={setShowLucky} />;
 	else if (playlist) return <PlayScreen playlist={playlist} triggers={triggers} chosenTrack={chosenTrack} setIsLogin={setIsLogin} expiration={expiration} />;
 	else return <LoadingScreen />;
 
