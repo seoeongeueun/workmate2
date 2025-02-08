@@ -124,8 +124,13 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 
 	return (
 		<div className="font-galmuri flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black">
-			<div className="flex flex-row w-full justify-end items-center gap-2">
-				<Battery100Icon className="mb-px size-8" />
+			<div className="battery flex flex-row w-fit items-center ml-auto mb-px">
+				<div className="relative border border-px border-black w-[1.7rem] h-[0.9rem] bg-transparent rounded-[0.2rem]">
+					<div className="absolute rounded-xs max-w-[1.2rem] max-h-[0.4rem] w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+						<div className="h-full bg-black w-full"></div>
+					</div>
+				</div>
+				<div className="w-[0.15rem] h-[0.5rem] bg-black rounded-r-sm"></div>
 			</div>
 			<div className="flex flex-row items-center text-xxs">
 				{errorCode !== null && <ExclamationTriangleIcon className="size-5 mr-2" />}

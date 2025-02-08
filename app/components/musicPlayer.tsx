@@ -6,6 +6,7 @@ import {useState, useEffect} from "react";
 import {Triggers} from "../page";
 import Playlist from "../classes/Playlist";
 import LuckyScreen from "./luckyScreen";
+import {MAX_AGE} from "@/app/lib/session";
 
 interface MusicPlayerProps {
 	triggers: Triggers;
@@ -17,6 +18,7 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 	const [username, setUsername] = useState<string>("user");
 	const [chosenTrack, setChosenTrack] = useState<string>("");
 	const [showLucky, setShowLucky] = useState<boolean>(false);
+	const [expiration, setExpiration] = useState<string>("");
 
 	useEffect(() => {
 		const isOver = localStorage.getItem("interactionOver");
@@ -28,6 +30,10 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 			const response = await apiRequest("/api/auth", "GET");
 			const id = response?.playlistId;
 			setUsername(response?.username);
+
+			const expiration = await apiRequest("/api/logout");
+			const timeLeft = expiration?.timeLeft;
+			if (timeLeft) setExpiration(calcExpiration(timeLeft));
 
 			setTimeout(() => {
 				setIsLogin(response.isValid);
@@ -53,22 +59,38 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 		}
 	};
 
+	//재미 요소로 로그인 할때마다 남은 세션 타임을 계산해서 배터리 잔량으로 반영
+	const calcExpiration = (timeLeft: number) => {
+		return ((timeLeft / MAX_AGE) * 100).toFixed(2) + "%";
+	};
+
 	useEffect(() => {
-		console.log(isLogin);
-		// isLogin이 정확히 false라고 판단된 케이스 제외 세션 확인
-		if (isLogin !== false) checkSession();
-		else {
-			setShowLucky(false);
-			setPlaylist(undefined);
+		switch (isLogin) {
+			case true:
+				const isOver = localStorage.getItem("interactionOver");
+				setShowLucky(isOver !== "true");
+				checkSession();
+				break;
+			case undefined:
+				checkSession();
+				break;
+			case false:
+				setShowLucky(false);
+				setPlaylist(undefined);
+			default:
+				break;
 		}
 	}, [isLogin]);
 
-	//return <LuckyScreen triggers={triggers} username={username} setChosenTrack={setChosenTrack} />;
-
 	if (isLogin === false) return <LoginScreen setIsLogin={setIsLogin} />;
-	else {
-		if (showLucky) return <LuckyScreen triggers={triggers} username={username} setChosenTrack={setChosenTrack} setOpen={setShowLucky} />;
-		else if (playlist) return <PlayScreen playlist={playlist} triggers={triggers} chosenTrack={chosenTrack} setIsLogin={setIsLogin} />;
-		else return <LoadingScreen isLoading={isLogin} />;
-	}
+	else if (isLogin && showLucky && username)
+		return <LuckyScreen triggers={triggers} username={username} setChosenTrack={setChosenTrack} setOpen={setShowLucky} expiration={expiration} />;
+	else if (playlist) return <PlayScreen playlist={playlist} triggers={triggers} chosenTrack={chosenTrack} setIsLogin={setIsLogin} expiration={expiration} />;
+	else return <LoadingScreen />;
+
+	// if (isLogin === false) return <LoginScreen setIsLogin={setIsLogin} />;
+	// else {
+	// 	if (showLucky) return <LuckyScreen triggers={triggers} username={username} setChosenTrack={setChosenTrack} setOpen={setShowLucky} />;
+	// 	else if (playlist) return <PlayScreen playlist={playlist} triggers={triggers} chosenTrack={chosenTrack} setIsLogin={setIsLogin} />;
+	// }
 }

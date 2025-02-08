@@ -1,5 +1,4 @@
 import React, {useState, useEffect, useRef, useCallback} from "react";
-import {Battery100Icon} from "@heroicons/react/24/solid";
 import {PlayIcon, PauseCircleIcon, BackwardIcon, ForwardIcon, PlusCircleIcon} from "@heroicons/react/16/solid";
 import Playlist, {Track} from "../classes/Playlist";
 import {apiRequest} from "../lib/tools";
@@ -16,6 +15,7 @@ type PlayScreenProps = {
 	triggers: Triggers;
 	chosenTrack: string;
 	setIsLogin: React.Dispatch<React.SetStateAction<boolean | undefined>>;
+	expiration: string;
 };
 
 //세부 메뉴 선택지
@@ -30,7 +30,7 @@ const messages: Partial<Record<(typeof modeValues)[number], string>> = {
 	error: "There's was an error. Please try again.",
 };
 
-export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin}: PlayScreenProps) {
+export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin, expiration}: PlayScreenProps) {
 	const [currentTrack, setCurrentTrack] = useState<Track | undefined>(undefined);
 	const [isPlay, setIsPlay] = useState<boolean>(false);
 	const [progressTime, setProgressTime] = useState<number>(0);
@@ -198,8 +198,6 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin}
 
 		if (chosenTrack) console.log("🍀 Today's special track - ", chosenTrack);
 
-		let intervalId;
-
 		function onYouTubeIframeAPIReady() {
 			console.log("API Ready - Initializing player");
 			const track = chosenTrack || currentTrack?.url || playlist.tracks[0]?.url;
@@ -271,6 +269,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin}
 	}, [playlist]);
 
 	useEffect(() => {
+		console.log(currentTrack, playerRef.current);
 		if (!playerRef.current && currentTrack) {
 			initializePlayer(playlist.extractVideoId(currentTrack.url));
 		}
@@ -505,6 +504,8 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin}
 			if (response?.error) {
 				setIsError(true);
 			} else {
+				//로그아웃 성공시 스페셜 이벤트 기록을 초기화
+				localStorage.removeItem("interactionOver");
 				setIsLogin(false);
 			}
 		} catch (error) {
@@ -557,7 +558,14 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin}
 			<div className="flex flex-row w-full justify-end items-center gap-2">
 				<span className="mr-auto">{formatDate(currentTime)}</span>
 				<span>{formatTime(currentTime)}</span>
-				<Battery100Icon className="mb-px size-8" />
+				<div className="battery flex flex-row w-fit items-center mb-px">
+					<div className="relative border border-px border-black w-[1.7rem] h-[0.9rem] bg-transparent rounded-[0.2rem]">
+						<div className="absolute rounded-xs max-w-[1.2rem] max-h-[0.4rem] w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+							<div className="h-full bg-black" style={{width: expiration || "100%"}}></div>
+						</div>
+					</div>
+					<div className="w-[0.15rem] h-[0.5rem] bg-black rounded-r-sm"></div>
+				</div>
 			</div>
 			<div className="flex flex-row w-full text-s gap-spacing-4">
 				<input id="newSong" type="text" placeholder="Enter a Youtube Url" className="w-full text-xs bg-gray-1 border border-black rounded-[1px] px-3" />
@@ -613,12 +621,6 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin}
 								<span>confirm</span>
 							</div>
 						</div>
-						{/* <div className="w-full flex flex-row items-center justify-between">
-							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handleRemoveTrack(false)}>
-								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">B</span>
-								<span>close</span>
-							</div>
-						</div> */}
 					</div>
 				</div>
 			)}

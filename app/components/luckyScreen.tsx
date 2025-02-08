@@ -1,5 +1,5 @@
 import {PlayIcon} from "@heroicons/react/24/solid";
-import {use, useEffect, useState} from "react";
+import React, {use, useEffect, useState} from "react";
 import {Triggers} from "../page";
 import dialogue from "../data/dialogue.json" assert {type: "json"};
 import {apiRequest} from "../lib/tools";
@@ -24,17 +24,15 @@ type DialogueKeys = keyof typeof dialogue;
 	013: 새해 전날
 */
 
-export default function LuckyScreen({
-	triggers,
-	username,
-	setChosenTrack,
-	setOpen,
-}: {
+type LuckyProps = {
 	triggers: Triggers;
 	username: string;
 	setChosenTrack: React.Dispatch<React.SetStateAction<string>>;
 	setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}) {
+	expiration: string;
+};
+
+export default function LuckyScreen({triggers, username, setChosenTrack, setOpen, expiration}: LuckyProps) {
 	const [choices, setChoices] = useState<string[]>([]);
 	const [selectedIndex, setSelectedIndex] = useState<number>(0);
 	const [currentLine, setCurrentLine] = useState<DialogueKeys>("000");
@@ -211,6 +209,14 @@ export default function LuckyScreen({
 
 	return (
 		<div className="relative flex flex-col w-full h-full justify-end items-center">
+			<div className="battery flex flex-row w-fit items-center ml-auto mb-auto p-spacing-10">
+				<div className="relative border border-px border-black w-[1.7rem] h-[0.9rem] bg-transparent rounded-[0.2rem]">
+					<div className="absolute rounded-xs max-w-[1.2rem] max-h-[0.4rem] w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+						<div className="h-full bg-black" style={{width: expiration || "100%"}}></div>
+					</div>
+				</div>
+				<div className="w-[0.15rem] h-[0.5rem] bg-black rounded-r-sm"></div>
+			</div>
 			<div className="absolute top-1/2 -translate-y-1/2 max-h-full flex flex-col w-full justify-end items-center gap-4">
 				<div className="text-box relative w-fit max-w-[26rem] h-fit min-h-12 py-spacing-10 px-spacing-12 max-h-2/3 bg-black border border-px border-white rounded-md text-white flex flex-col items-start gap-spacing-4">
 					<p id="dialog" className="tracking-widest text-xxxs">
