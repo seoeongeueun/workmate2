@@ -77,9 +77,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 			setTrackIndex(playlist.getTrackIndex());
 
 			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
-			console.log(playlist.extractVideoId(url), currentTrack, playerRef.current);
 			if (!currentTrack && !specialTrackInfo) {
-				console.log("load doesnt work?", playerRef.current);
 				if (playerRef.current) playerRef.current?.cueVideoById(playlist.extractVideoId(url));
 				else setCurrentTrack(newTrack); //player가 initialized 되지 않았으므로 트리거
 			}
@@ -142,9 +140,11 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 				if (nextTrack) {
 					playerRef.current.cueVideoById(nextTrack);
 				} else {
+					// 남은 곡이 없는 경우: player 삭제 + 재생 상태 변경 + index를 0으로 재지정 + currenttrack 초기화
 					playerRef.current.destroy();
 					playerRef.current = null;
 					setIsPlay(false);
+					setTrackIndex("0 out of 0");
 					setCurrentTrack(undefined);
 				}
 			}
@@ -274,7 +274,6 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 	}, [currentTrack, playerRef.current]);
 
 	const initializePlayer = (initialVideoId: string) => {
-		let intervalId;
 		playerRef.current = new YT.Player("player", {
 			height: "50",
 			width: "50",
@@ -293,13 +292,6 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 						setSpecialTrackInfo(title);
 					}
 					playVideo();
-					intervalId = setInterval(() => {
-						if (playerRef.current) {
-							const duration = playerRef.current.getDuration();
-							const currentTime = playerRef.current.getCurrentTime();
-							setProgressTime(Math.min((currentTime / duration) * 100, 100));
-						}
-					}, 1000);
 				},
 				onError: event => {
 					console.log("❌ Video unavailable");
@@ -330,6 +322,18 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 			},
 		});
 	};
+
+	useEffect(() => {
+		if (!playerRef.current) return;
+		const intervalId = setInterval(() => {
+			if (playerRef.current) {
+				const duration = playerRef.current.getDuration();
+				const currentTime = playerRef.current.getCurrentTime();
+				setProgressTime(Math.min((currentTime / duration) * 100, 100));
+			}
+		}, 1000);
+		return () => clearInterval(intervalId);
+	}, [playerRef.current]);
 
 	// useEffect(() => {
 	// 	const current = playlist.getCurrentTrack();
