@@ -54,8 +54,13 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 	};
 
 	useEffect(() => {
+		console.log(isLogin);
 		// isLogin이 정확히 false라고 판단된 케이스 제외 세션 확인
 		if (isLogin !== false) checkSession();
+		else {
+			setShowLucky(false);
+			setPlaylist(undefined);
+		}
 	}, [isLogin]);
 
 	//return <LuckyScreen triggers={triggers} username={username} setChosenTrack={setChosenTrack} />;
@@ -63,7 +68,7 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 	if (isLogin === false) return <LoginScreen setIsLogin={setIsLogin} />;
 	else {
 		if (showLucky) return <LuckyScreen triggers={triggers} username={username} setChosenTrack={setChosenTrack} setOpen={setShowLucky} />;
-		else if (playlist) return <PlayScreen playlist={playlist} triggers={triggers} chosenTrack={chosenTrack} />;
+		else if (playlist) return <PlayScreen playlist={playlist} triggers={triggers} chosenTrack={chosenTrack} setIsLogin={setIsLogin} />;
 		else return <LoadingScreen isLoading={isLogin} />;
 	}
 }

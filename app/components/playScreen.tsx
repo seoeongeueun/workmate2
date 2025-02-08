@@ -15,6 +15,7 @@ type PlayScreenProps = {
 	playlist: Playlist;
 	triggers: Triggers;
 	chosenTrack: string;
+	setIsLogin: React.Dispatch<React.SetStateAction<boolean | undefined>>;
 };
 
 //세부 메뉴 선택지
@@ -26,9 +27,10 @@ const messages: Partial<Record<(typeof modeValues)[number], string>> = {
 	logout: "Log out from current account?",
 	shuffle: "",
 	none: "Playlist is already empty",
+	error: "There's was an error. Please try again.",
 };
 
-export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreenProps) {
+export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin}: PlayScreenProps) {
 	const [currentTrack, setCurrentTrack] = useState<Track | undefined>(undefined);
 	const [isPlay, setIsPlay] = useState<boolean>(false);
 	const [progressTime, setProgressTime] = useState<number>(0);
@@ -39,6 +41,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 	const [mode, setMode] = useState<ModeIndex>(0);
 	const [popupType, setPopupType] = useState<ModeIndex>(-1);
 	const [specialTrackInfo, setSpecialTrackInfo] = useState<string>("");
+	const [isError, setIsError] = useState<boolean>(false);
 	const playerRef = useRef<any>(null);
 
 	const defaultIconSize = "size-6";
@@ -496,7 +499,18 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 		else playlist.unshuffleTracks();
 	}, [shuffleMode]);
 
-	const handleLogout = async () => {};
+	const handleLogout = async () => {
+		try {
+			const response = await apiRequest("/api/logout", "POST");
+			if (response?.error) {
+				setIsError(true);
+			} else {
+				setIsLogin(false);
+			}
+		} catch (error) {
+			console.log("Error logging out");
+		}
+	};
 
 	const handleEmptyPlaylist = async () => {
 		try {
@@ -552,7 +566,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack}: PlayScreen
 				</button>
 			</div>
 			<div className="track-info flex flex-row w-full items-center justify-start gap-spacing-10">
-				<div id="player"></div>
+				<div id="player" className={`${currentTrack && "border"} border-black border-px rounded-px`}></div>
 				<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrack?.title}</p>
 			</div>
 			<span className="text-xxs mt-auto">{specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>

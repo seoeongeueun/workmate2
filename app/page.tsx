@@ -95,7 +95,7 @@ export default function Home() {
 		<div className="font-galmuri font-semibold">
 			<div className="fixed right-4 top-4 z-[999] pointer-events-none">
 				<button
-					className="transition-colors duration-300 border border-px border-white flex w-fit h-fit p-spacing-6 justify-center items-center rounded-full shadow-md shadow-gray-400 pointer-events-auto"
+					className="transition-colors duration-300 flex w-fit h-fit p-spacing-6 justify-center items-center rounded-full pointer-events-auto"
 					onClick={handleColorChange}
 					style={{backgroundColor: themeColors[colorIndex]}}
 				>

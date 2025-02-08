@@ -10,6 +10,7 @@ export async function apiRequest<T = any>(url: string, method: string = "GET", d
 		headers: {
 			"Content-Type": "application/json",
 		},
+		credentials: "include",
 	};
 
 	if (data) {

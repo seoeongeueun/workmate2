@@ -6,7 +6,7 @@ import {getIronSession} from "iron-session";
 import {sessionOptions} from "@/app/lib/session";
 import mongoose from "mongoose";
 
-export async function POST(request: Request, response: Response) {
+export async function POST(request: Request) {
 	try {
 		const {username, password} = (await request.json()) as {
 			username: string;
