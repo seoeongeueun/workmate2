@@ -56,10 +56,10 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 			if (data?.title) {
 				setPlaylist(prevPlaylist => {
 					if (!prevPlaylist) {
-						return new Playlist(data.title, data.id, data.tracks);
+						return new Playlist(data.title, id, data.tracks);
 					} else {
 						prevPlaylist.title = data.title;
-						prevPlaylist.objectId = data.id;
+						prevPlaylist.objectId = id;
 						prevPlaylist.tracks = data.tracks;
 						return prevPlaylist;
 					}
