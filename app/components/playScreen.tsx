@@ -33,7 +33,7 @@ const messages: Partial<Record<(typeof modeValues)[number], string>> = {
 };
 
 export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin, expiration}: PlayScreenProps) {
-	const [currentTrack, setCurrentTrack] = useState<Track | undefined>(undefined);
+	// const [currentTrack, setCurrentTrack] = useState<Track | undefined>(undefined);
 	const [isPlay, setIsPlay] = useState<boolean>(false);
 	const [progressTime, setProgressTime] = useState<number>(0);
 	const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -45,6 +45,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	const [specialTrackInfo, setSpecialTrackInfo] = useState<string>("");
 	const [isError, setIsError] = useState<boolean>(false); //TODO:에러시 메세지창을 위해
 	const playerRef = useRef<any>(null);
+	const currentTrackRef = useRef<Track | undefined>(undefined);
 
 	const defaultIconSize = "size-6";
 
@@ -82,9 +83,9 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			setTrackIndex(playlist.getTrackIndex());
 
 			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
-			if (!currentTrack && !specialTrackInfo) {
+			if (!currentTrackRef.current && !specialTrackInfo) {
 				if (playerRef.current) playerRef.current?.cueVideoById(playlist.extractVideoId(url));
-				else setCurrentTrack(newTrack); //player가 initialized 되지 않았으므로 트리거
+				else currentTrackRef.current = newTrack; //player가 initialized 되지 않았으므로 트리거
 			}
 
 			const response = await apiRequest("/api/playlist", "POST", {
@@ -112,7 +113,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		} else {
 			const nextTrack = playlist.playNext();
 			if (nextTrack) {
-				setCurrentTrack(nextTrack);
+				currentTrackRef.current = nextTrack;
 				cueVideo(playlist.extractVideoId(nextTrack.url));
 			}
 		}
@@ -124,18 +125,17 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		if (!specialTrackInfo) {
 			const prevTrack = playlist.playPrevious();
 			if (prevTrack) {
-				setCurrentTrack(prevTrack);
+				currentTrackRef.current = prevTrack;
 				cueVideo(playlist.extractVideoId(prevTrack.url));
 			}
 		}
 	};
 
 	const handleRemoveTrack = async (isRemove: boolean = true) => {
-		if (isRemove && currentTrack) {
-			console.log("maybe?: ", playlist.getCurrentTrack());
+		if (isRemove && currentTrackRef.current) {
 			const response = await apiRequest("/api/playlist", "POST", {
 				id: playlist.getObjectId(),
-				track: playlist.getCurrentTrack(),
+				track: currentTrackRef.current,
 				mode: "remove",
 			});
 			if (response?.error) {
@@ -143,9 +143,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				console.error("Failed to update playlist:", response.error);
 				songToAdd.value = "Error saving changes";
 			} else {
-				console.log("track to delete: ", currentTrack?.id);
-				const nextTrack = playlist.removeTrack(currentTrack?.id);
-				console.log("nextTrack: ", nextTrack);
+				const nextTrack = playlist.removeTrack(currentTrackRef.current?.id);
 				if (nextTrack) {
 					playerRef.current.stopVideo();
 					playerRef.current.loadVideoById(nextTrack);
@@ -155,7 +153,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					playerRef.current = null;
 					setIsPlay(false);
 					setTrackIndex("0 out of 0");
-					setCurrentTrack(undefined);
+					currentTrackRef.current = undefined;
 				}
 			}
 		}
@@ -207,7 +205,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 		function onYouTubeIframeAPIReady() {
 			console.log("API Ready - Initializing player");
-			const track = chosenTrack || currentTrack?.url || playlist.tracks[0]?.url;
+			const track = chosenTrack || currentTrackRef.current?.url || playlist.tracks[0]?.url;
 			if (track) initializePlayer(playlist.extractVideoId(track));
 		}
 
@@ -218,10 +216,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		if (!playerRef.current && window.YT?.Player) {
 			// 보통 전원을 껐다킨 경우에 발동 되는데 chosenTrack은 빈 값일 것임
 			// 하지만 스페셜 트랙은 휘발성이라 다시 이어서 재생 되지 않아도 괜찮음
-			const initialTrack = currentTrack?.url || chosenTrack || playlist.getCurrentTrack()?.url;
+			const initialTrack = currentTrackRef.current?.url || chosenTrack || playlist.getCurrentTrack()?.url;
 			if (initialTrack) initializePlayer(playlist.extractVideoId(initialTrack));
 		}
-	}, [currentTrack, playerRef.current]);
+	}, [currentTrackRef, playerRef.current]);
 
 	const initializePlayer = (initialVideoId: string) => {
 		playerRef.current = new YT.Player("player", {
@@ -235,7 +233,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					var title = videoData.title;
 					if (!chosenTrack) {
 						playlist.updateTrackTitle(initialVideoId, title);
-						setCurrentTrack(playlist.getCurrentTrack());
+						currentTrackRef.current = playlist.getCurrentTrack();
 						setTrackIndex(playlist.getTrackIndex());
 					} else {
 						// 이벤트 곡의 타이틀을 별도로 저장
@@ -257,15 +255,12 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 							cueVideo(playlist.extractVideoId(playlist.tracks[0].url));
 						} else handlePlayNext();
 					} else if (event.data === YT.PlayerState.CUED) {
-						//현재 문제: plyalist.getcurrentTrack이 뒤쳐짐..cue된 동영상과 달라짐
 						var videoData = event.target.getVideoData();
 						var title = videoData.title;
-						const current = playlist.getCurrentTrack();
-						console.log(playlist.updateCurrentTrackTitle(title));
-						console.log(current, currentTrack, event);
+						const current = currentTrackRef.current;
 						if (current?.url) {
-							playlist.updateTrackTitle(current.url, title);
-							setCurrentTrack({...current, title: title});
+							playlist.updateTrackTitle(playlist.extractVideoId(current.url), title);
+							currentTrackRef.current = {...current, title: title};
 							playerRef.current.playVideo();
 						}
 					}
@@ -287,8 +282,8 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	}, [playerRef.current]);
 
 	useEffect(() => {
-		setTrackIndex(playlist.getTrackIndex());
-	}, [currentTrack]);
+		if (currentTrackRef.current) setTrackIndex(playlist.getTrackIndex());
+	}, [currentTrackRef.current]);
 
 	useEffect(() => {
 		const {prev, current} = triggers;
@@ -375,7 +370,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				console.error("Failed to empty playlist:", response.error);
 			} else {
 				playlist.empty();
-				setCurrentTrack(undefined);
+				currentTrackRef.current = undefined;
 				setShowPopup(false);
 				if (playerRef?.current) playerRef.current.destroy();
 			}
@@ -432,7 +427,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			</div>
 			<div className="track-info flex flex-row w-full items-center justify-start gap-spacing-10">
 				<div id="player"></div>
-				<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrack?.title}</p>
+				<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrackRef.current?.title}</p>
 			</div>
 			<span className="text-xxs mt-auto">{specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>
 			<div className="flex flex-row w-full justify-between items-center">

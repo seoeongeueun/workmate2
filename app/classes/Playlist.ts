@@ -144,12 +144,6 @@ export default class Playlist {
 		}
 	}
 
-	//this.currentTrack의 업데이트가 필요한 경우에만
-	//*중요* 정말 확실할 때만 사용
-	updateCurrentTrackTitle(title: string) {
-		console.log(this.currentTrack, this.nextTrack);
-	}
-
 	shuffleTracks() {
 		this.backup = [...this.tracks];
 		//Fisher-Yates 셔플
