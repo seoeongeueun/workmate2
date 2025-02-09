@@ -3,6 +3,7 @@ import React, {use, useEffect, useState} from "react";
 import {Triggers} from "../page";
 import dialogue from "../data/dialogue.json" assert {type: "json"};
 import {apiRequest} from "../lib/tools";
+import Image from "next/image";
 
 const choice1 = ["💖", "❤️‍🔥", "🪄", "🍀"];
 const choice2 = ["🌃", "🌙", "🛸", "🌉"];
@@ -214,7 +215,7 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 						{displayText}
 					</p>
 				</div>
-				<img src="/icon/alien.gif" alt="alien" className="w-12 h-12" />
+				<Image src="/icon/alien.gif" alt="alien" width={30} height={30} />{" "}
 			</div>
 			{showChoices && (
 				<div className="animate-fadeIn choices flex flex-row items-center justify-between w-[28rem] max-w-full text-xl p-spacing-10 h-20">

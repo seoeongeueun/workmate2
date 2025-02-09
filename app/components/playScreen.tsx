@@ -3,6 +3,7 @@ import {PlayIcon, PauseCircleIcon, BackwardIcon, ForwardIcon, PlusCircleIcon} fr
 import Playlist, {Track} from "../classes/Playlist";
 import {apiRequest} from "../lib/tools";
 import {Triggers} from "../page";
+import Image from "next/image";
 
 declare global {
 	interface Window {
@@ -23,11 +24,12 @@ const modeValues: string[] = ["remove", "shuffle", "empty", "logout"];
 type ModeIndex = -1 | Extract<keyof typeof modeValues, number>;
 const messages: Partial<Record<(typeof modeValues)[number], string>> = {
 	remove: "Remove current track from playlist?",
-	empty: "Empty current playlist?",
+	empty: "Empty your entire playlist?",
 	logout: "Log out from current account?",
 	shuffle: "",
 	none: "Playlist is already empty",
 	error: "There's was an error. Please try again.",
+	special: "Special tracks aren't added to your playlist, so no worries!",
 };
 
 export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin, expiration}: PlayScreenProps) {
@@ -376,7 +378,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		if (type === "a") {
 			switch (modeValues[popupType]) {
 				case "remove":
-					handleRemoveTrack();
+					if (!specialTrackInfo) handleRemoveTrack();
 					break;
 				case "empty":
 					handleEmptyPlaylist();
@@ -392,6 +394,12 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		}
 	};
 
+	const getPopupMessage = () => {
+		playlist.tracks?.length === 0 ? messages.none : messages[modeValues[popupType]];
+		if (modeValues[popupType] === "remove" && specialTrackInfo) return messages.special;
+		if (playlist.tracks?.length === 0) return messages.none;
+		else return messages[modeValues[popupType]];
+	};
 	return (
 		<div className="flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black relative">
 			<div className="flex flex-row w-full justify-end items-center gap-2">
@@ -433,8 +441,8 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
 					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] p-spacing-16 bg-gray-2 flex flex-col justify-between items-center">
 						<div className="flex flex-col items-start justify-start">
-							<button className="leading-8 flex flex-row items-center gap-2">
-								<PlayIcon className={`size-5 animate-blink ${modeValues[mode] === "remove" ? "h-fit" : "h-0"}`} />
+							<button disabled={!specialTrackInfo} className="leading-8 flex flex-row items-center gap-2">
+								<PlayIcon className={`size-5 animate-blink fill-black ${modeValues[mode] === "remove" ? "h-fit" : "h-0"}`} />
 								Remove
 							</button>
 							<button className="leading-8 flex flex-row items-center gap-2" onClick={() => setShuffleMode(prev => !prev)}>
@@ -451,14 +459,14 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 							</button>
 						</div>
 						<div className="w-full flex flex-row items-center justify-between">
-							<div className="flex flex-row items-center gap-spacing-4" onClick={() => setShowPopup(false)}>
+							<button className="flex flex-row items-center gap-spacing-4" onClick={() => setShowPopup(false)}>
 								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">B</span>
 								<span>close</span>
-							</div>
-							<div className="flex flex-row items-center gap-spacing-4" onClick={() => setPopupType(mode)}>
+							</button>
+							<button className="flex flex-row items-center gap-spacing-4" onClick={() => setPopupType(mode)}>
 								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">A</span>
 								<span>confirm</span>
-							</div>
+							</button>
 						</div>
 					</div>
 				</div>
@@ -466,17 +474,19 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			{showPopup && modeValues[popupType] && (
 				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
 					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] text-center p-spacing-16 py-spacing-24 bg-gray-2 flex flex-col justify-between items-center">
-						<span className="leading-8">{playlist.tracks?.length === 0 ? messages.none : messages[modeValues[popupType]]}</span>
+						<span className="leading-8 whitespace-pre-line">{getPopupMessage()}</span>
+						{specialTrackInfo && modeValues[popupType] === "remove" && <Image src="/icon/alien.gif" alt="alien" width={20} height={20} className="mt-4" />}
+
 						<div className="w-full flex flex-row items-center justify-between">
-							<div className="flex flex-row items-center gap-spacing-4" onClick={() => handlePopAction("b")}>
+							<button className="flex flex-row items-center gap-spacing-4" onClick={() => handlePopAction("b")}>
 								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">B</span>
 								<span>cancel</span>
-							</div>
-							{playlist.tracks?.length !== 0 && (
-								<div className="flex flex-row items-center gap-spacing-4" onClick={() => handlePopAction("a")}>
+							</button>
+							{playlist.tracks?.length !== 0 && !(specialTrackInfo && modeValues[popupType] === "remove") && (
+								<button className="flex flex-row items-center gap-spacing-4" onClick={() => handlePopAction("a")}>
 									<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">A</span>
 									<span>confirm</span>
-								</div>
+								</button>
 							)}
 						</div>
 					</div>
