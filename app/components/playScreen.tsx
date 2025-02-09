@@ -41,7 +41,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	const [mode, setMode] = useState<ModeIndex>(0);
 	const [popupType, setPopupType] = useState<ModeIndex>(-1);
 	const [specialTrackInfo, setSpecialTrackInfo] = useState<string>("");
-	const [isError, setIsError] = useState<boolean>(false);
+	const [isError, setIsError] = useState<boolean>(false); //TODO:에러시 메세지창을 위해
 	const playerRef = useRef<any>(null);
 
 	const defaultIconSize = "size-6";
@@ -113,7 +113,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				cueVideo(nextTrack);
 			}
 		}
-		// *중요*: 스페셜 곡은 하나기 때문에 다음 곡 재생인 경우 스페셜 곡 정보를 제거
+		// *중요*: 스페셜 곡은 하나기 때문에 다음 곡 재생인 경우 == 스페셜 곡이 아님 => 스페셜 곡 정보를 제거를 함
 		setSpecialTrackInfo("");
 	}, [playlist, cueVideo, specialTrackInfo]);
 
@@ -202,76 +202,17 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			console.log("API Ready - Initializing player");
 			const track = chosenTrack || currentTrack?.url || playlist.tracks[0]?.url;
 			if (track) initializePlayer(playlist.extractVideoId(track));
-			// const initialVideoId = playlist.extractVideoId(track); // 첫번째 트랙의 동영상 id를 가져오기
-			// if (initialVideoId) {
-			// 	playerRef.current = new YT.Player("player", {
-			// 		height: "50",
-			// 		width: "50",
-			// 		videoId: initialVideoId,
-			// 		events: {
-			// 			onReady: event => {
-			// 				console.log("Player Ready");
-			// 				var videoData = event.target.getVideoData();
-			// 				var title = videoData.title;
-			// 				if (!chosenTrack) {
-			// 					playlist.updateTrackTitle(initialVideoId, title);
-			// 					setCurrentTrack(playlist.getCurrentTrack());
-			// 					setTrackIndex(playlist.getTrackIndex());
-			// 				} else {
-			// 					// 이벤트 곡의 타이틀을 별도로 저장
-			// 					setSpecialTrackInfo(title);
-			// 				}
-			// 				playVideo();
-			// 				intervalId = setInterval(() => {
-			// 					if (playerRef.current) {
-			// 						const duration = playerRef.current.getDuration();
-			// 						const currentTime = playerRef.current.getCurrentTime();
-			// 						setProgressTime(Math.min((currentTime / duration) * 100, 100));
-			// 					}
-			// 				}, 1000);
-			// 			},
-			// 			onError: event => {
-			// 				console.log("❌ Video unavailable");
-			// 				//스페셜 곡이 에러난 경우에만 삭제 처리
-			// 				if (chosenTrack.includes(initialVideoId)) playerRef.current.destroy();
-			// 			},
-			// 			onStateChange: handlePlayerStateChange,
-			// 		},
-			// 	});
-			//}
 		}
 
-		// const handlePlayerStateChange = (event: YT.OnStateChangeEvent) => {
-		// 	//이전 곡 재생 완료 시 다음 곡 자동 재생
-		// 	if (event.data === YT.PlayerState.ENDED) {
-		// 		console.log("video ended");
-		// 		//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
-		// 		if (event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack)) {
-		// 			setSpecialTrackInfo("");
-		// 			cueVideo(playlist.extractVideoId(playlist.tracks[0].url));
-		// 		} else handlePlayNext();
-		// 	} else if (event.data === YT.PlayerState.CUED) {
-		// 		console.log("video cued");
-		// 		var videoData = event.target.getVideoData();
-		// 		var title = videoData.title;
-		// 		const current = playlist.getCurrentTrack();
-		// 		console.log(playlist.getTrackIndex());
-		// 		if (current?.url) {
-		// 			playlist.updateTrackTitle(current.url, title);
-		// 			setCurrentTrack({...current, title: title});
-		// 			setTrackIndex(playlist.getTrackIndex());
-		// 			playerRef.current.playVideo();
-		// 		}
-		// 	}
-		// };
-
 		window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-	}, [playlist]);
+	}, []);
 
 	useEffect(() => {
-		console.log(currentTrack, playerRef.current);
-		if (!playerRef.current && currentTrack) {
-			initializePlayer(playlist.extractVideoId(currentTrack.url));
+		if (!playerRef.current && window.YT?.Player) {
+			// 보통 전원을 껐다킨 경우에 발동 되는데 chosenTrack은 빈 값일 것임
+			// 하지만 스페셜 트랙은 휘발성이라 다시 이어서 재생 되지 않아도 괜찮음
+			const initialTrack = currentTrack?.url || chosenTrack || playlist.getCurrentTrack()?.url;
+			if (initialTrack) initializePlayer(playlist.extractVideoId(initialTrack));
 		}
 	}, [currentTrack, playerRef.current]);
 
@@ -337,79 +278,6 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		return () => clearInterval(intervalId);
 	}, [playerRef.current]);
 
-	// useEffect(() => {
-	// 	const current = playlist.getCurrentTrack();
-	// 	console.log("current: ", current?.title);
-	// 	if (current) {
-	// 		setCurrentTrack(current);
-	// 		setTrackIndex(playlist.getTrackIndex());
-	// 	}
-	// }, [playlist, playlist.currentTrack]);
-
-	// useEffect(() => {
-	// 	const {prev, current} = triggers;
-	// 	if (!current) return;
-	// 	if (current === "select" && currentTrack) {
-	// 		setShowPopup(true);
-	// 		return;
-	// 	}
-
-	// 	//추후 다른 케이스 추가 가능성 있음
-	// 	// if (prev === "select") {
-	// 	// 	switch (current) {
-	// 	// 		case "a":
-	// 	// 			if (modeValues === "remove") handleRemoveTrack();
-	// 	// 			else if (mode === "shuffle") setShuffleMode(prev => !prev);
-	// 	// 			else if (mode === "empty") handleEmptyPlaylist();
-	// 	// 			else if (mode === "logout") handleLogout();
-	// 	// 			break;
-	// 	// 		case "b":
-	// 	// 			setShowPopup(false);
-	// 	// 			break;
-	// 	// 		default:
-	// 	// 			break;
-	// 	// 	}
-	// 	// } else {
-	// 	// 	switch (current) {
-	// 	// 		case "right":
-	// 	// 			handlePlayNext();
-	// 	// 			break;
-	// 	// 		case "left":
-	// 	// 			handlePlayPrev();
-	// 	// 			break;
-	// 	// 		default:
-	// 	// 			break;
-	// 	// 	}
-	// 	// }
-	// 	const isSecondPopup = mode === popupType;
-
-	// 	if (prev === "select") {
-	// 		if (current === "a") {
-	// 			//이미 상세 팝업이 떠있는 경우와 아직 기본 메뉴창인 경우로 분리
-	// 			if (!isSecondPopup) {
-	// 				if (modeValues[mode] === "shuffle") setShuffleMode(prev => !prev);
-	// 				else setPopupType(mode);
-	// 			} else {
-	// 				handlePopAction(current);
-	// 			}
-	// 		} else if (current === "b") {
-	// 			if (!isSecondPopup) {
-	// 				setShowPopup(false);
-	// 			} else setPopupType(-1);
-	// 		} else if (current === "down") {
-	// 			if (!isSecondPopup) setMode(mode === modeValues.length - 1 ? 0 : mode + 1);
-	// 		} else if (current === "up") {
-	// 			if (!isSecondPopup) setMode(mode === 0 ? modeValues.length - 1 : mode - 1);
-	// 		} else if (current === "right") {
-	// 			if (!showPopup) handlePlayNext();
-	// 		} else if (current === "left") {
-	// 			if (!showPopup) handlePlayPrev();
-	// 		}
-	// 	} else if (prev === "a" && isSecondPopup) {
-	// 		if (current == "a" || current === "b") handlePopAction(current);
-	// 	}
-	// }, [triggers]);
-
 	useEffect(() => {
 		const {prev, current} = triggers;
 
@@ -455,35 +323,6 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			else if (current === "right") handlePlayNext();
 		}
 	}, [showPopup, triggers]);
-
-	// const handleTriggers = (current: "a" | "b" | "up" | "down" | "left" | "right" | "select" | "power") => {
-	// 	const isSecondPopup = mode === popupType && popupType !== -1;
-	// 	switch (current) {
-	// 		case "a":
-	// 			if (isSecondPopup) handlePopAction(current);
-	// 			else setPopupType(mode);
-	// 			break;
-	// 		case "b":
-	// 			console.log("huh");
-	// 			if (isSecondPopup) handlePopAction(current);
-	// 			else setPopupType(-1);
-	// 			break;
-	// 		case "up":
-	// 			if (!isSecondPopup) setMode(mode === 0 ? modeValues.length - 1 : mode - 1);
-	// 			break;
-	// 		case "down":
-	// 			if (!isSecondPopup) setMode(mode === modeValues.length - 1 ? 0 : mode + 1);
-	// 			break;
-	// 		case "right":
-	// 			if (!showPopup) handlePlayNext();
-	// 			break;
-	// 		case "left":
-	// 			if (!showPopup) handlePlayPrev();
-	// 			break;
-	// 		default:
-	// 			break;
-	// 	}
-	// };
 
 	useEffect(() => {
 		//메뉴창이 닫히면 무조건 mode => 0, popuptype => -1로 지정
@@ -558,10 +397,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			<div className="flex flex-row w-full justify-end items-center gap-2">
 				<span className="mr-auto">{formatDate(currentTime)}</span>
 				<span>{formatTime(currentTime)}</span>
-				<div className="battery flex flex-row w-fit items-center mb-px">
+				<div id="battery" className="flex flex-row w-fit items-center mb-px">
 					<div className="relative border border-px border-black w-[1.7rem] h-[0.9rem] bg-transparent rounded-[0.2rem]">
 						<div className="absolute rounded-xs max-w-[1.2rem] max-h-[0.4rem] w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-							<div className={`h-full ${parseFloat(expiration) <= 20 ? "bg-red-700" : "bg-black"}`} style={{width: expiration || "100%"}}></div>
+							<div className={`h-full ${parseFloat(expiration) <= 20 ? "bg-red-700 animate-blink" : "bg-black"}`} style={{width: expiration || "100%"}}></div>
 						</div>
 					</div>
 					<div className="w-[0.15rem] h-[0.5rem] bg-black rounded-r-sm"></div>
@@ -574,7 +413,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				</button>
 			</div>
 			<div className="track-info flex flex-row w-full items-center justify-start gap-spacing-10">
-				<div id="player" className={`${currentTrack && "border"} border-black border-px rounded-px`}></div>
+				<div id="player"></div>
 				<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrack?.title}</p>
 			</div>
 			<span className="text-xxs mt-auto">{specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>

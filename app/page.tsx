@@ -199,26 +199,6 @@ export default function Home() {
 								<div className={`w-full h-full flex flex-col justify-center items-center ${loading ? "bg-gray-2 animate-fadeIn" : ""}`}>
 									{power && <MusicPlayer triggers={triggers} />}
 								</div>
-								{/* {power ? (
-									isLogin ? (
-										<MusicPlayer buttonPressed={buttonPressed} />
-									) : (
-										<LoginScreen setIsLogin={setIsLogin} />
-									)
-								) : (
-									<div className={`w-full h-full flex flex-col justify-center items-center ${loading ? "bg-gray-2 animate-fadeIn" : ""}`}>
-										{loading && (
-											<div className="flex flex-col h-full justify-center items-center">
-												<div className="flex flex-row justify-between gap-2">
-													<MusicalNoteIcon className="size-4 animate-bounce mt-2" />
-													<img src="/icon/alien.gif" alt="alien" className="w-12 h-12" />
-													<img src="/icon/song.png" alt="song" className="w-3 h-3 mt-2 animate-bounce"></img>
-												</div>
-												<span className="text-xxxs text-black tracking-widest ml-1 mt-2">workmate</span>
-											</div>
-										)}
-									</div>
-								)} */}
 							</PlaylistProvider>
 						</div>
 					</div>

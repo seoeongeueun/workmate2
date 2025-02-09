@@ -13,7 +13,7 @@ interface MusicPlayerProps {
 }
 
 export default function MusicPlayer({triggers}: MusicPlayerProps) {
-	const [playlist, setPlaylist] = useState<Playlist | undefined>();
+	const [playlist, setPlaylist] = useState<Playlist | undefined>(undefined);
 	const [isLogin, setIsLogin] = useState<boolean | undefined>(undefined);
 	const [username, setUsername] = useState<string>("user");
 	const [chosenTrack, setChosenTrack] = useState<string>("");
@@ -36,7 +36,10 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 			if (timeLeft) setExpiration(calcExpiration(timeLeft));
 
 			setTimeout(() => {
-				setIsLogin(response.isValid);
+				const loggedIn = response?.isValid;
+				if (!loggedIn) localStorage.removeItem("interactionOver");
+				setIsLogin(loggedIn);
+
 				if (id) fetchPlaylist(id);
 				else setPlaylist(undefined);
 			}, 2000);
