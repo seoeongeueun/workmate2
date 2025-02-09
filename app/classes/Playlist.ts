@@ -74,6 +74,7 @@ export default class Playlist {
 
 	playNext() {
 		if (!this.tracks.length) return;
+		console.log("Before update:", this.currentTrack, this.nextTrack);
 		if (this.currentTrack) {
 			const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
 
@@ -82,15 +83,12 @@ export default class Playlist {
 				this.currentTrack = this.tracks[currentIndex + 1];
 			} else {
 				this.nextTrack = undefined;
-				this.currentTrack = undefined;
 			}
 		} else {
-			// this.currentTrack = this.tracks[0]; //currentTrack이 없는 경우 플레이리스트 실행 전인 것으로 판단, 리스트의 첫 번째 곡을 현재 곡으로 지정
-			// this.nextTrack = undefined;
+			this.currentTrack = this.tracks[0]; //currentTrack이 없는 경우 플레이리스트 실행 전인 것으로 판단, 리스트의 첫 번째 곡을 현재 곡으로 지정
+			this.nextTrack = undefined;
 		}
-		// if (this.currentTrack?.url) {
-		// 	return this.extractVideoId(this.currentTrack.url);
-		// }
+		console.log("After update:", this.currentTrack);
 		return this.currentTrack;
 	}
 
@@ -141,18 +139,9 @@ export default class Playlist {
 		const track = this.tracks.find(track => track.url.includes(videoId));
 		if (track) {
 			track.title = title;
+			if (this.currentTrack?.id === track.id) this.currentTrack.title = title;
 		}
 	}
-
-	// shuffleTracks() {
-	// 	this.backup = [...this.tracks];
-	// 	//Fisher-Yates 셔플
-	// 	for (let i = this.tracks.length - 1; i > 0; i--) {
-	// 		const j = Math.floor(Math.random() * (i + 1));
-	// 		[this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
-	// 	}
-
-	// }
 
 	shuffleTracks(id: string | undefined) {
 		this.backup = [...this.tracks];

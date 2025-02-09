@@ -49,6 +49,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	const defaultIconSize = "size-6";
 
+	useEffect(() => {
+		console.log("📀 Playlist instance changed:", playlist);
+	}, [playlist]);
+
 	//유저가 직접 재생/일시중지를 트리거 할 때만 사용하지만
 	//player를 initialize할 때 자동 재생 효과를 주기 위해 예외로 사용
 	const playVideo = useCallback(() => {
@@ -67,10 +71,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	cue 상태만 트리거하고 여기서 재생에는 관여하지 않는다 */
 	const cueVideo = useCallback(
 		(id: string) => {
-			if (!playerRef.current || !window.YT.Player) return;
+			if (!playerRef.current || !(playerRef.current instanceof YT.Player)) return;
 			playerRef.current.cueVideoById(id); //yt api의 method를 통해 cued 상태로 전환
 		},
-		[playerRef, playlist]
+		[playlist]
 	);
 
 	const handleAddSong = async (): Promise<void> => {
@@ -106,7 +110,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		}, 1500);
 	};
 
-	const handlePlayNext = useCallback(() => {
+	const handlePlayNext = () => {
 		//스페셜 곡을 재생 중인 경우는 다음 곡을 재생하는게 아니라 플레이리스트의 첫 곡을 재생한다
 		if (specialTrackInfo) {
 			const next = playlist.getCurrentTrack();
@@ -123,7 +127,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		}
 		// *중요*: 스페셜 곡은 하나기 때문에 다음 곡 재생인 경우 == 스페셜 곡이 아님 => 스페셜 곡 정보를 제거를 함
 		setSpecialTrackInfo("");
-	}, [playlist, cueVideo, specialTrackInfo]);
+	};
 
 	const handlePlayPrev = () => {
 		if (!specialTrackInfo) {
@@ -262,7 +266,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 						var videoData = event.target.getVideoData();
 						var title = videoData.title;
 						const current = currentTrackRef.current;
-						console.log(current);
+						console.log(current, playlist.getCurrentTrack());
 						if (current?.url) {
 							playlist.updateTrackTitle(playlist.extractVideoId(current.url), title);
 							currentTrackRef.current = {...current, title: title};
@@ -275,14 +279,16 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	};
 
 	useEffect(() => {
-		if (!playerRef.current) return;
+		if (!playerRef.current || !(playerRef.current instanceof YT.Player)) return;
+
 		const intervalId = setInterval(() => {
-			if (playerRef.current) {
+			if (playerRef.current && typeof playerRef.current.getDuration === "function") {
 				const duration = playerRef.current.getDuration();
 				const currentTime = playerRef.current.getCurrentTime();
 				setProgressTime(Math.min((currentTime / duration) * 100, 100));
 			}
 		}, 1000);
+
 		return () => clearInterval(intervalId);
 	}, [playerRef.current]);
 

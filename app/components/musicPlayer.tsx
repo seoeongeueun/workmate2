@@ -54,8 +54,16 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 		try {
 			const data = await apiRequest(`/api/playlist/?id=${id}`, "GET");
 			if (data?.title) {
-				const playlist = new Playlist(data.title, id, data.tracks);
-				setPlaylist(playlist);
+				setPlaylist(prevPlaylist => {
+					if (!prevPlaylist) {
+						return new Playlist(data.title, data.id, data.tracks);
+					} else {
+						prevPlaylist.title = data.title;
+						prevPlaylist.objectId = data.id;
+						prevPlaylist.tracks = data.tracks;
+						return prevPlaylist;
+					}
+				});
 			}
 		} catch (error) {
 			console.error("Error fetching playlist:", error);
