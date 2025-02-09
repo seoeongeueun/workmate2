@@ -76,12 +76,13 @@ export default class Playlist {
 		if (!this.tracks.length) return;
 		if (this.currentTrack) {
 			const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
-
+			console.log(currentIndex, this.tracks.length - 1, this.nextTrack);
 			//현재 트랙이 마지막 트랙이 아닌 경우 다음 트랙을 현재 트랙으로 지정
 			if (currentIndex >= 0 && currentIndex < this.tracks.length - 1) {
 				this.currentTrack = this.tracks[currentIndex + 1];
 			} else {
 				this.nextTrack = undefined;
+				this.currentTrack = undefined;
 			}
 		} else {
 			this.currentTrack = this.tracks[0]; //currentTrack이 없는 경우 플레이리스트 실행 전인 것으로 판단, 리스트의 첫 번째 곡을 현재 곡으로 지정
@@ -173,7 +174,18 @@ export default class Playlist {
 	}
 
 	unshuffleTracks() {
+		const backupIds = new Set(this.backup.map(track => track.id));
+		const tracksIds = new Set(this.tracks.map(track => track.id));
+
+		//셔플 모드 중 추가된 곡이 있는지 확인 후 반영
+		const addedTracks = this.tracks.filter(track => !backupIds.has(track.id));
+		this.backup.push(...addedTracks);
+
+		//반대로 삭제된 곡이 있다면 backup에서도 삭제
+		this.backup = this.backup.filter(track => tracksIds.has(track.id));
+
 		this.tracks = [...this.backup];
+
 		return this.getTrackIndex();
 	}
 

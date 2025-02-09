@@ -90,6 +90,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
 			if (!currentTrackRef.current && !specialTrackInfo) {
 				if (playerRef.current) {
+					currentTrackRef.current = newTrack;
 					playerRef.current.cueVideoById(playlist.extractVideoId(url));
 				} else initializePlayer(playlist.extractVideoId(newTrack?.url));
 			}
@@ -123,6 +124,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				cueVideo(playlist.extractVideoId(nextTrack.url));
 			} else {
 				//다음 곡이 없으면 플레이리스트가 끝났다는 뜻
+				console.log("End of playlist");
 				currentTrackRef.current = undefined;
 			}
 		}
