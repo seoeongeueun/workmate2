@@ -74,7 +74,6 @@ export default class Playlist {
 
 	playNext() {
 		if (!this.tracks.length) return;
-		console.log("Before update:", this.currentTrack, this.nextTrack);
 		if (this.currentTrack) {
 			const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
 
@@ -88,7 +87,6 @@ export default class Playlist {
 			this.currentTrack = this.tracks[0]; //currentTrack이 없는 경우 플레이리스트 실행 전인 것으로 판단, 리스트의 첫 번째 곡을 현재 곡으로 지정
 			this.nextTrack = undefined;
 		}
-		console.log("After update:", this.currentTrack);
 		return this.currentTrack;
 	}
 

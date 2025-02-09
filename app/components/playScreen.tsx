@@ -84,13 +84,13 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			songToAdd.value = "Music Added!";
 
 			const newTrack = playlist.addTrack(url);
-
+			//console.log(playlist.getTrackIndex(), playlist.getTrackIndexWithId(newTrack?.id));
+			setTrackIndex(playlist.getTrackIndex());
 			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
 			if (!currentTrackRef.current && !specialTrackInfo) {
 				if (playerRef.current) {
-					currentTrackRef.current = newTrack;
 					playerRef.current.cueVideoById(playlist.extractVideoId(url));
-				} else currentTrackRef.current = newTrack; //player가 initialized 되지 않았으므로 트리거
+				} else initializePlayer(playlist.extractVideoId(newTrack?.url));
 			}
 
 			const response = await apiRequest("/api/playlist", "POST", {
@@ -338,10 +338,12 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			}
 			return;
 		} else {
+			if (!playerRef.current || !(playerRef.current instanceof YT.Player)) return;
+
 			if (current === "left") handlePlayPrev();
 			else if (current === "right") handlePlayNext();
 		}
-	}, [showPopup, triggers]);
+	}, [showPopup, triggers, playerRef]);
 
 	useEffect(() => {
 		//메뉴창이 닫히면 무조건 mode => 0, popuptype => -1로 지정
@@ -390,7 +392,8 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				playlist.empty();
 				currentTrackRef.current = undefined;
 				setShowPopup(false);
-				if (playerRef?.current) playerRef.current.destroy();
+				setTrackIndex("0 out of 0");
+				if (playerRef?.current) playerRef.current = null;
 			}
 		} catch (error) {
 			console.error("Failed to empty playlist:", error);
