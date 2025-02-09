@@ -81,7 +81,7 @@ export default class Playlist {
 			if (currentIndex >= 0 && currentIndex < this.tracks.length - 1) {
 				this.currentTrack = this.tracks[currentIndex + 1];
 			} else {
-				this.nextTrack = this.tracks[currentIndex - 1];
+				this.nextTrack = undefined;
 				this.currentTrack = undefined;
 			}
 		} else {
@@ -159,6 +159,11 @@ export default class Playlist {
 
 	getTrackIndex() {
 		const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
+		return `${currentIndex + 1} out of ${this.tracks.length}`;
+	}
+
+	getTrackIndexWithId(id: string) {
+		const currentIndex = this.tracks.findIndex(track => track.id === id);
 		return `${currentIndex + 1} out of ${this.tracks.length}`;
 	}
 }

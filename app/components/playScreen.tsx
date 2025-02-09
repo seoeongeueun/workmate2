@@ -80,12 +80,13 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			songToAdd.value = "Music Added!";
 
 			const newTrack = playlist.addTrack(url);
-			setTrackIndex(playlist.getTrackIndex());
 
 			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
 			if (!currentTrackRef.current && !specialTrackInfo) {
-				if (playerRef.current) playerRef.current?.cueVideoById(playlist.extractVideoId(url));
-				else currentTrackRef.current = newTrack; //player가 initialized 되지 않았으므로 트리거
+				if (playerRef.current) {
+					currentTrackRef.current = newTrack;
+					playerRef.current.cueVideoById(playlist.extractVideoId(url));
+				} else currentTrackRef.current = newTrack; //player가 initialized 되지 않았으므로 트리거
 			}
 
 			const response = await apiRequest("/api/playlist", "POST", {
@@ -112,9 +113,13 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			if (next) cueVideo(playlist.extractVideoId(next.url));
 		} else {
 			const nextTrack = playlist.playNext();
+			console.log(nextTrack);
 			if (nextTrack) {
 				currentTrackRef.current = nextTrack;
 				cueVideo(playlist.extractVideoId(nextTrack.url));
+			} else {
+				//다음 곡이 없으면 플레이리스트가 끝났다는 뜻
+				currentTrackRef.current = undefined;
 			}
 		}
 		// *중요*: 스페셜 곡은 하나기 때문에 다음 곡 재생인 경우 == 스페셜 곡이 아님 => 스페셜 곡 정보를 제거를 함
@@ -258,6 +263,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 						var videoData = event.target.getVideoData();
 						var title = videoData.title;
 						const current = currentTrackRef.current;
+						console.log(current);
 						if (current?.url) {
 							playlist.updateTrackTitle(playlist.extractVideoId(current.url), title);
 							currentTrackRef.current = {...current, title: title};
@@ -282,7 +288,8 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	}, [playerRef.current]);
 
 	useEffect(() => {
-		if (currentTrackRef.current) setTrackIndex(playlist.getTrackIndex());
+		const current = currentTrackRef.current;
+		if (current) setTrackIndex(playlist.getTrackIndexWithId(current.id));
 	}, [currentTrackRef.current]);
 
 	useEffect(() => {
