@@ -119,7 +119,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			if (next) cueVideo(playlist.extractVideoId(next.url));
 		} else {
 			const nextTrack = playlist.playNext();
-			if (nextTrack) {
+			if (nextTrack && nextTrack?.id !== currentTrackRef.current?.id) {
 				currentTrackRef.current = nextTrack;
 				cueVideo(playlist.extractVideoId(nextTrack.url));
 			} else {
@@ -349,7 +349,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			}
 			return;
 		} else {
-			if (!playerRef.current || !(playerRef.current instanceof YT.Player)) return;
+			if (typeof playerRef.current?.cueVideoById !== "function") return;
 
 			if (current === "left") handlePlayPrev();
 			else if (current === "right") handlePlayNext();

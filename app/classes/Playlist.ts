@@ -82,7 +82,6 @@ export default class Playlist {
 				this.currentTrack = this.tracks[currentIndex + 1];
 			} else {
 				this.nextTrack = undefined;
-				this.currentTrack = undefined;
 			}
 		} else {
 			this.currentTrack = this.tracks[0]; //currentTrack이 없는 경우 플레이리스트 실행 전인 것으로 판단, 리스트의 첫 번째 곡을 현재 곡으로 지정
