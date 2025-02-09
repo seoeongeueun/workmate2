@@ -154,11 +154,11 @@ export default class Playlist {
 
 	// }
 
-	shuffleTracks() {
+	shuffleTracks(id: string | undefined) {
 		this.backup = [...this.tracks];
 
 		//현재 곡이 없다면 전체를 다 Fisher-Yates 셔플
-		if (!this.currentTrack) {
+		if (!id) {
 			for (let i = this.tracks.length - 1; i > 0; i--) {
 				const j = Math.floor(Math.random() * (i + 1));
 				[this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
@@ -167,8 +167,12 @@ export default class Playlist {
 		}
 
 		//현재 곡이 있다면 현재 곡을 셔플된 플레이리스트의 첫 번째 곡으로 지정
-		const index = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
-		const currentTrack = index !== -1 ? this.tracks.splice(index, 1)[0] : null; // Remove if found
+		const index = this.tracks.findIndex(track => track.id === id);
+		let currentTrack: typeof this.currentTrack | null = null;
+
+		if (index !== -1) {
+			currentTrack = this.tracks.splice(index, 1)[0]; // Remove the current track from the list
+		}
 
 		for (let i = this.tracks.length - 1; i > 0; i--) {
 			const j = Math.floor(Math.random() * (i + 1));
@@ -178,6 +182,7 @@ export default class Playlist {
 		if (currentTrack) {
 			this.tracks.unshift(currentTrack);
 		}
+		return this.getTrackIndex();
 	}
 
 	unshuffleTracks() {

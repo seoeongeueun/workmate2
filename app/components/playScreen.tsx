@@ -67,7 +67,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	cue 상태만 트리거하고 여기서 재생에는 관여하지 않는다 */
 	const cueVideo = useCallback(
 		(id: string) => {
-			if (!playerRef.current) return;
+			if (!playerRef.current || !window.YT.Player) return;
 			playerRef.current.cueVideoById(id); //yt api의 method를 통해 cued 상태로 전환
 		},
 		[playerRef, playlist]
@@ -347,7 +347,9 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	useEffect(() => {
 		if (shuffleMode) {
-			playlist.shuffleTracks();
+			const current = currentTrackRef.current;
+			const index = playlist.shuffleTracks(current?.id);
+			if (index) setTrackIndex(index);
 		} else {
 			const newIndex = playlist.unshuffleTracks();
 			setTrackIndex(newIndex);
