@@ -113,7 +113,6 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			if (next) cueVideo(playlist.extractVideoId(next.url));
 		} else {
 			const nextTrack = playlist.playNext();
-			console.log(nextTrack);
 			if (nextTrack) {
 				currentTrackRef.current = nextTrack;
 				cueVideo(playlist.extractVideoId(nextTrack.url));
@@ -347,8 +346,12 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	}, [showPopup]);
 
 	useEffect(() => {
-		if (shuffleMode) playlist.shuffleTracks();
-		else playlist.unshuffleTracks();
+		if (shuffleMode) {
+			playlist.shuffleTracks();
+		} else {
+			const newIndex = playlist.unshuffleTracks();
+			setTrackIndex(newIndex);
+		}
 	}, [shuffleMode]);
 
 	const handleLogout = async () => {

@@ -144,17 +144,45 @@ export default class Playlist {
 		}
 	}
 
+	// shuffleTracks() {
+	// 	this.backup = [...this.tracks];
+	// 	//Fisher-Yates 셔플
+	// 	for (let i = this.tracks.length - 1; i > 0; i--) {
+	// 		const j = Math.floor(Math.random() * (i + 1));
+	// 		[this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
+	// 	}
+
+	// }
+
 	shuffleTracks() {
 		this.backup = [...this.tracks];
-		//Fisher-Yates 셔플
+
+		//현재 곡이 없다면 전체를 다 Fisher-Yates 셔플
+		if (!this.currentTrack) {
+			for (let i = this.tracks.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
+			}
+			return;
+		}
+
+		//현재 곡이 있다면 현재 곡을 셔플된 플레이리스트의 첫 번째 곡으로 지정
+		const index = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
+		const currentTrack = index !== -1 ? this.tracks.splice(index, 1)[0] : null; // Remove if found
+
 		for (let i = this.tracks.length - 1; i > 0; i--) {
 			const j = Math.floor(Math.random() * (i + 1));
 			[this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
+		}
+
+		if (currentTrack) {
+			this.tracks.unshift(currentTrack);
 		}
 	}
 
 	unshuffleTracks() {
 		this.tracks = [...this.backup];
+		return this.getTrackIndex();
 	}
 
 	getTrackIndex() {
