@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef, useCallback} from "react";
-import {PlayIcon, PauseCircleIcon, BackwardIcon, ForwardIcon, PlusCircleIcon} from "@heroicons/react/16/solid";
+import {PlayIcon, PauseCircleIcon, BackwardIcon, ForwardIcon, PlusCircleIcon, SpeakerWaveIcon, SpeakerXMarkIcon} from "@heroicons/react/16/solid";
 import Playlist, {Track} from "../classes/Playlist";
 import {apiRequest} from "../lib/tools";
 import {Triggers} from "../page";
@@ -46,6 +46,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	const [isError, setIsError] = useState<boolean>(false); //TODO:에러시 메세지창을 위해
 	const playerRef = useRef<any>(null);
 	const currentTrackRef = useRef<Track | undefined>(undefined);
+	const [isMute, setIsMute] = useState<boolean>(false);
 
 	const defaultIconSize = "size-6";
 
@@ -184,6 +185,14 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			hour12: true, // AM/PM format
 		};
 		return new Intl.DateTimeFormat("en-US", options).format(date);
+	};
+
+	const handleMute = () => {
+		if (!playerRef.current) return;
+
+		if (!isMute) playerRef.current.mute();
+		else playerRef.current.unMute();
+		setIsMute(prev => !prev);
 	};
 
 	useEffect(() => {
@@ -426,18 +435,24 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		if (playlist.tracks?.length === 0) return messages.none;
 		else return messages[modeValues[popupType]];
 	};
+
 	return (
 		<div className="flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black relative">
-			<div className="flex flex-row w-full justify-end items-center gap-2">
-				<span className="mr-auto">{formatDate(currentTime)}</span>
-				<span>{formatTime(currentTime)}</span>
-				<div id="battery" className="flex flex-row w-fit items-center mb-px">
-					<div className="relative border border-px border-black w-[1.7rem] h-[0.9rem] bg-transparent rounded-[0.2rem]">
-						<div className="absolute rounded-xs max-w-[1.2rem] max-h-[0.4rem] w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-							<div className={`h-full ${parseFloat(expiration) <= 20 ? "bg-red-700 animate-blink" : "bg-black"}`} style={{width: expiration || "100%"}}></div>
+			<div className="flex flex-row w-full justify-between items-center gap-2">
+				<div className="flex flex-row gap-2 items-center">
+					<span>{formatDate(currentTime)}</span>
+					<button onClick={() => handleMute()}>{!isMute ? <SpeakerWaveIcon className="size-4 mb-px" /> : <SpeakerXMarkIcon className="size-4 mb-px" />}</button>
+				</div>
+				<div className="flex flex-row items-center gap-2">
+					<span>{formatTime(currentTime)}</span>
+					<div id="battery" className="flex flex-row w-fit items-center">
+						<div className="relative border border-px border-black w-[1.7rem] h-[0.9rem] bg-transparent rounded-[0.2rem]">
+							<div className="absolute rounded-xs max-w-[1.2rem] max-h-[0.4rem] w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+								<div className={`h-full ${parseFloat(expiration) <= 20 ? "bg-red-700 animate-blink" : "bg-black"}`} style={{width: expiration || "100%"}}></div>
+							</div>
 						</div>
+						<div className="w-[0.15rem] h-[0.5rem] bg-black rounded-r-sm"></div>
 					</div>
-					<div className="w-[0.15rem] h-[0.5rem] bg-black rounded-r-sm"></div>
 				</div>
 			</div>
 			<div className="flex flex-row w-full text-s gap-spacing-4">
