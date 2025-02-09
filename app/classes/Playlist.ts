@@ -31,7 +31,7 @@ export default class Playlist {
 
 	addTrack(url: string, title?: string) {
 		// 신규 트랙 추가시 항상 플레이리스트의 마지막에 추가
-		const id = this.extractVideoId(url) + this.tracks.length; //동영상 아이디를 기반으로 아이디 생성
+		const id = this.extractVideoId(url) + this.tracks.length + new Date().getSeconds(); //동영상 아이디를 기반으로 아이디 생성 + 랜덤 요소
 		const track: Track = {id, url, title};
 		this.tracks.push(track);
 		if (!this.currentTrack) {
@@ -42,21 +42,29 @@ export default class Playlist {
 
 	removeTrack(id: string) {
 		const currentIndex = this.tracks.findIndex(x => x.id === id);
+		if (currentIndex === -1) return;
+
+		this.tracks.splice(currentIndex, 1);
+		let newCurrentTrack: typeof this.currentTrack | undefined;
 
 		// 현재 트랙 삭제 후 전 트랙으로 이동
 		if (this.currentTrack?.id === id) {
 			//전 트랙이 있다면 다음 트랙으로 이동 | 없다면 재생 중지
-			if (currentIndex < this.tracks.length - 1) {
-				this.currentTrack = this.tracks[currentIndex + 1];
+			if (this.tracks[currentIndex]) {
+				newCurrentTrack = this.tracks[currentIndex];
+			} else if (currentIndex > 0) {
+				newCurrentTrack = this.tracks[currentIndex - 1];
 			} else {
-				this.currentTrack = undefined;
+				newCurrentTrack = undefined;
 			}
+		} else {
+			newCurrentTrack = this.currentTrack;
 		}
 		if (this.nextTrack?.id === id) {
 			this.nextTrack = undefined;
 		}
-		this.tracks.splice(currentIndex, 1);
-		return this.extractVideoId(this.currentTrack?.url ?? "");
+		this.currentTrack = newCurrentTrack;
+		return this.extractVideoId(newCurrentTrack?.url ?? "");
 	}
 
 	empty() {
@@ -73,16 +81,17 @@ export default class Playlist {
 			if (currentIndex >= 0 && currentIndex < this.tracks.length - 1) {
 				this.currentTrack = this.tracks[currentIndex + 1];
 			} else {
-				//this.currentTrack = undefined;
-				//마지막 트랙인 경우 아무것도 하지 않음
+				this.nextTrack = this.tracks[currentIndex - 1];
+				this.currentTrack = undefined;
 			}
 		} else {
-			this.currentTrack = this.tracks[0]; //currentTrack이 없는 경우 플레이리스트 실행 전인 것으로 판단, 리스트의 첫 번째 곡을 현재 곡으로 지정
-			this.nextTrack = undefined;
+			// this.currentTrack = this.tracks[0]; //currentTrack이 없는 경우 플레이리스트 실행 전인 것으로 판단, 리스트의 첫 번째 곡을 현재 곡으로 지정
+			// this.nextTrack = undefined;
 		}
-		if (this.currentTrack?.url) {
-			return this.extractVideoId(this.currentTrack.url);
-		}
+		// if (this.currentTrack?.url) {
+		// 	return this.extractVideoId(this.currentTrack.url);
+		// }
+		return this.currentTrack;
 	}
 
 	playPrevious() {
@@ -94,12 +103,18 @@ export default class Playlist {
 				this.currentTrack = this.tracks[currentIndex - 1];
 			}
 		} else {
-			this.currentTrack = this.tracks[0];
+			/* 현재 곡이 없는 경우의 의미
+				1. 마지막 곡인데 재생이 끝났다 => nextTrack으로 지정된 곡을 재생
+				2. 첫 곡이다 => 첫 곡을 다시 재생
+			*/
+			if (this.nextTrack) this.currentTrack = this.nextTrack;
+			else this.currentTrack = this.tracks[0];
 			this.nextTrack = undefined;
 		}
-		if (this.currentTrack?.url) {
-			return this.extractVideoId(this.currentTrack.url);
-		}
+		// if (this.currentTrack?.url) {
+		// 	return this.extractVideoId(this.currentTrack.url);
+		// }
+		return this.currentTrack;
 	}
 
 	getCurrentTrack() {
@@ -127,6 +142,12 @@ export default class Playlist {
 		if (track) {
 			track.title = title;
 		}
+	}
+
+	//this.currentTrack의 업데이트가 필요한 경우에만
+	//*중요* 정말 확실할 때만 사용
+	updateCurrentTrackTitle(title: string) {
+		console.log(this.currentTrack, this.nextTrack);
 	}
 
 	shuffleTracks() {

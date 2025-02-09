@@ -69,7 +69,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			if (!playerRef.current) return;
 			playerRef.current.cueVideoById(id); //yt api의 method를 통해 cued 상태로 전환
 		},
-		[playerRef]
+		[playerRef, playlist]
 	);
 
 	const handleAddSong = async (): Promise<void> => {
@@ -112,7 +112,8 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		} else {
 			const nextTrack = playlist.playNext();
 			if (nextTrack) {
-				cueVideo(nextTrack);
+				setCurrentTrack(nextTrack);
+				cueVideo(playlist.extractVideoId(nextTrack.url));
 			}
 		}
 		// *중요*: 스페셜 곡은 하나기 때문에 다음 곡 재생인 경우 == 스페셜 곡이 아님 => 스페셜 곡 정보를 제거를 함
@@ -123,27 +124,31 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		if (!specialTrackInfo) {
 			const prevTrack = playlist.playPrevious();
 			if (prevTrack) {
-				cueVideo(prevTrack);
+				setCurrentTrack(prevTrack);
+				cueVideo(playlist.extractVideoId(prevTrack.url));
 			}
 		}
 	};
 
 	const handleRemoveTrack = async (isRemove: boolean = true) => {
 		if (isRemove && currentTrack) {
+			console.log("maybe?: ", playlist.getCurrentTrack());
 			const response = await apiRequest("/api/playlist", "POST", {
 				id: playlist.getObjectId(),
 				track: playlist.getCurrentTrack(),
 				mode: "remove",
 			});
-
 			if (response?.error) {
 				const songToAdd = document.getElementById("newSong") as HTMLInputElement;
 				console.error("Failed to update playlist:", response.error);
 				songToAdd.value = "Error saving changes";
 			} else {
+				console.log("track to delete: ", currentTrack?.id);
 				const nextTrack = playlist.removeTrack(currentTrack?.id);
+				console.log("nextTrack: ", nextTrack);
 				if (nextTrack) {
-					playerRef.current.cueVideoById(nextTrack);
+					playerRef.current.stopVideo();
+					playerRef.current.loadVideoById(nextTrack);
 				} else {
 					// 남은 곡이 없는 경우: player 삭제 + 재생 상태 변경 + index를 0으로 재지정 + currenttrack 초기화
 					playerRef.current.destroy();
@@ -207,7 +212,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		}
 
 		window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-	}, []);
+	}, [playlist]);
 
 	useEffect(() => {
 		if (!playerRef.current && window.YT?.Player) {
@@ -252,14 +257,15 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 							cueVideo(playlist.extractVideoId(playlist.tracks[0].url));
 						} else handlePlayNext();
 					} else if (event.data === YT.PlayerState.CUED) {
+						//현재 문제: plyalist.getcurrentTrack이 뒤쳐짐..cue된 동영상과 달라짐
 						var videoData = event.target.getVideoData();
 						var title = videoData.title;
 						const current = playlist.getCurrentTrack();
-						console.log(playlist.getTrackIndex());
+						console.log(playlist.updateCurrentTrackTitle(title));
+						console.log(current, currentTrack, event);
 						if (current?.url) {
 							playlist.updateTrackTitle(current.url, title);
 							setCurrentTrack({...current, title: title});
-							setTrackIndex(playlist.getTrackIndex());
 							playerRef.current.playVideo();
 						}
 					}
@@ -279,6 +285,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		}, 1000);
 		return () => clearInterval(intervalId);
 	}, [playerRef.current]);
+
+	useEffect(() => {
+		setTrackIndex(playlist.getTrackIndex());
+	}, [currentTrack]);
 
 	useEffect(() => {
 		const {prev, current} = triggers;
