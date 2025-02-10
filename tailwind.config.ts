@@ -29,7 +29,6 @@ const config: Config = {
 			fontFamily: {
 				cursyger: ["Cursyger", "sans-serif"],
 				galmuri: ["Galmuri9", "sans-serif"],
-				dunggeunmo: ["DungGeunMo", "sans-serif"],
 			},
 			fontSize: {
 				xxxs: ["1rem", "1.2rem"],

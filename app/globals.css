@@ -5,25 +5,11 @@
 @tailwind utilities;
 
 @font-face {
-	font-family: "DungGeunMo";
-	src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff") format("woff");
-	font-weight: normal;
-	font-style: normal;
-}
-
-@font-face {
 	font-family: "GongGothicMedium";
 	src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10@1.0/GongGothicMedium.woff") format("woff");
 	font-weight: normal;
 	font-style: normal;
 }
-
-/* @font-face {
-	font-family: "Galmuri";
-	src: url("/font/Galmuri9.woff2") format("woff2");
-	font-style: normal;
-	font-display: swap;
-} */
 
 body {
 	font-family: "Galmuri9", sans-serif;
