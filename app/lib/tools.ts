@@ -1,9 +1,16 @@
-export async function apiRequest<T = any>(url: string, method: string = "GET", data?: unknown): Promise<T> {
+interface APIResponse<T = any> {
+	error?: string;
+	data?: T;
+	[key: string]: any;
+}
+
+export async function apiRequest<T = any>(url: string, method: string = "GET", data?: unknown): Promise<APIResponse<T>> {
 	const options: RequestInit = {
 		method,
 		headers: {
 			"Content-Type": "application/json",
 		},
+		credentials: "include",
 	};
 
 	if (data) {
@@ -14,8 +21,8 @@ export async function apiRequest<T = any>(url: string, method: string = "GET", d
 		const response = await fetch(url, options);
 		if (!response.ok) {
 			const errorData = await response.json();
-			console.error(`Error with ${method} request to ${url}:`, errorData);
-			throw new Error(errorData.error);
+			console.log(`Error with ${method} request to ${url}:`, errorData);
+			return {error: errorData.error};
 		}
 		return (await response.json()) as T;
 	} catch (error) {

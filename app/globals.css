@@ -5,28 +5,20 @@
 @tailwind utilities;
 
 @font-face {
-	font-family: "DungGeunMo";
-	src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff") format("woff");
-	font-weight: normal;
-	font-style: normal;
-}
-
-@font-face {
 	font-family: "GongGothicMedium";
 	src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10@1.0/GongGothicMedium.woff") format("woff");
 	font-weight: normal;
 	font-style: normal;
 }
 
+body {
+	font-family: "Galmuri9", sans-serif;
+}
+
 :root {
 	--frame: #242b29;
-	--frame-dark: #030b08;
-	--button: #c7cace;
-	--button-light: #dfe4e6;
-	--button-dark: rgb(146, 140, 137);
-	--button-dark-rgb: 126, 119, 115;
-	--button-shadow: rgb(151, 154, 172);
-	--button-shadow-rgb: 151, 154, 172;
+	--frame-dark: rgb(3, 11, 8);
+
 	--body: rgb(79, 82, 147);
 	--body-shadow: rgb(117, 122, 179);
 	--body-shadow-rgb: 117, 122, 179;
@@ -34,21 +26,97 @@
 	--body-light-rgb: 215, 218, 226;
 	--body-dark: rgb(42, 40, 80);
 	--body-dark-rgb: 42, 40, 80;
-	--logo: #363b70;
+
+	--button: #c7cace;
+	--button-light: #dfe4e6;
+	--button-dark: rgb(146, 140, 137);
+	--button-dark-rgb: 146, 140, 137;
+	--button-shadow: rgb(151, 154, 172);
+	--button-shadow-rgb: 151, 154, 172;
+	--button-hole: rgb(38, 36, 70);
+	--button-hole-rgb: 38, 36, 70;
+
+	--darkest-point: rgb(3, 11, 8);
+	--darkest-point-rgb: 3, 11, 8;
+}
+
+:root[data-theme="blue"] {
+	--body: rgb(79, 82, 147);
+	--body-shadow: rgb(117, 122, 179);
+	--body-shadow-rgb: 117, 122, 179;
+	--body-light: rgb(215, 218, 226);
+	--body-light-rgb: 215, 218, 226;
+	--body-dark: rgb(42, 40, 80);
+	--body-dark-rgb: 42, 40, 80;
+	--button: #c7cace;
+	--button-light: #dfe4e6;
+	--button-dark: rgb(146, 140, 137);
+	--button-dark-rgb: 146, 140, 137;
+	--button-shadow: rgb(151, 154, 172);
+	--button-shadow-rgb: 151, 154, 172;
+	--button-hole: rgb(38, 36, 70);
+	--button-hole-rgb: 38, 36, 70;
+	--darkest-point: rgb(3, 11, 8);
+	--darkest-point-rgb: 3, 11, 8;
+}
+
+:root[data-theme="gray"] {
+	--body: rgb(83, 83, 83);
+	--body-shadow: rgb(120, 120, 120);
+	--body-shadow-rgb: 120, 120, 120;
+	--body-light: rgb(200, 200, 200);
+	--body-light-rgb: 200, 200, 200;
+	--body-dark: rgb(34, 34, 34);
+	--body-dark-rgb: 34, 34, 34;
+	--button: #c7cace;
+	--button-light: #dfe4e6;
+	--button-dark: rgb(146, 140, 137);
+	--button-dark-rgb: 146, 140, 137;
+	--button-shadow: rgb(151, 154, 172);
+	--button-shadow-rgb: 151, 154, 172;
+	--button-hole: rgb(34, 34, 34);
+	--button-hole-rgb: 34, 34, 34;
+	--darkest-point: rgb(3, 11, 8);
+	--darkest-point-rgb: 3, 11, 8;
+}
+
+:root[data-theme="pink"] {
+	--body: rgb(230, 124, 150);
+	--body-shadow: rgb(255, 164, 181);
+	--body-shadow-rgb: 255, 164, 181;
+	--body-light: rgb(255, 235, 243);
+	--body-light-rgb: 255, 235, 243;
+	--body-dark: rgb(179, 88, 103);
+	--body-dark-rgb: 179, 88, 103;
+	--button: rgb(231, 227, 227);
+	--button-light: rgb(248, 241, 239);
+	--button-dark: rgb(171, 153, 146);
+	--button-dark-rgb: 171, 153, 146;
+	--button-shadow: rgb(176, 167, 181);
+	--button-shadow-rgb: 176, 167, 181;
+	--button-hole: rgb(145, 64, 77);
+	--button-hole-rgb: 145, 64, 77;
+	--darkest-point: rgb(48, 14, 14);
+	--darkest-point-rgb: 48, 14, 14;
 }
 
 body {
 	margin: 0;
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
 	overflow: hidden;
+	letter-spacing: 0.025em;
 }
 
 html {
 	/* 16px * 0.625 = 10px */
 	font-size: 62.5%;
 	height: 100%;
+}
+
+* {
+	font-weight: 500;
+	text-rendering: optimizeLegibility;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 code {

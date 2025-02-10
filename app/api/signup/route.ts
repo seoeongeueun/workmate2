@@ -4,8 +4,7 @@ import {User} from "@/app/models/User";
 import {Playlist} from "@/app/models/Playlist";
 import bcrypt from "bcrypt";
 import {getIronSession} from "iron-session";
-import {sessionOptions} from "@/app/lib/session";
-import mongoose from "mongoose";
+import {sessionOptions, MAX_AGE, SessionData} from "@/app/lib/session";
 
 export async function POST(request: Request) {
 	try {
@@ -15,7 +14,7 @@ export async function POST(request: Request) {
 		};
 
 		if (!username || !password) {
-			return NextResponse.json({error: "Missing input"}, {status: 400});
+			return NextResponse.json({error: "ErrorCode: 0 - Missing input"}, {status: 400});
 		}
 
 		await dbConnect();
@@ -23,7 +22,7 @@ export async function POST(request: Request) {
 		//중복 이름 확인 (대소문자 무시)
 		const exists = await User.findOne({username: {$regex: new RegExp(`^${username}$`, "i")}}).lean();
 		if (exists) {
-			return NextResponse.json({error: "Username taken"}, {status: 409});
+			return NextResponse.json({error: "ErrorCode: 1 - Username taken"}, {status: 409});
 		}
 
 		//플레이리스트 먼저 생성
@@ -42,13 +41,14 @@ export async function POST(request: Request) {
 
 		//유저 생성 후 바로 로그인 처리
 		const response = NextResponse.json({success: true}, {status: 201});
-		const session = await getIronSession<{user?: {id: string; username: string; playlistId: mongoose.Types.ObjectId}}>(request, response, sessionOptions);
+		const session = await getIronSession<SessionData>(request, response, sessionOptions);
 
 		//대표 플레이리스트의 object id를 같이 저장
 		session.user = {
 			id: user._id.toString(),
 			username: user.username,
 			playlistId: playlist._id,
+			expiresAt: Date.now() + MAX_AGE,
 		};
 
 		await session.save();

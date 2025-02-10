@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
-			<body className="font-galmuri">{children}</body>
+			<body>{children}</body>
 		</html>
 	);
 }

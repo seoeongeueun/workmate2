@@ -12,20 +12,37 @@ const handleRemove = async (id: string, trackId: string) => {
 	return await PlaylistModel.findByIdAndUpdate(id, {$pull: {tracks: {id: trackId}}}, {new: true});
 };
 
+const handleEmptyTracks = async (id: string) => {
+	return await PlaylistModel.findByIdAndUpdate(id, {$set: {tracks: []}}, {new: true});
+};
+
 export async function POST(request: Request) {
 	try {
-		const {id, track, isRemove} = (await request.json()) as {
+		const {id, track, mode} = (await request.json()) as {
 			id: string;
-			track: Track;
-			isRemove: boolean;
+			track: Track | undefined;
+			mode: "add" | "remove" | "empty";
 		};
+
+		//플레이리스트를 완전히 비우는 경우만 track이 없어도 된다
+		if (mode !== "empty" && !track) {
+			return NextResponse.json({error: "Track not provided"}, {status: 404});
+		}
 
 		let updatedPlaylist;
 
-		if (isRemove) {
-			updatedPlaylist = await handleRemove(id, track.id);
-		} else {
-			updatedPlaylist = await handleAdd(id, track);
+		switch (mode) {
+			case "remove":
+				updatedPlaylist = await handleRemove(id, track!.id);
+				break;
+			case "add":
+				updatedPlaylist = await handleAdd(id, track!);
+				break;
+			case "empty":
+				updatedPlaylist = await handleEmptyTracks(id);
+				break;
+			default:
+				break;
 		}
 
 		if (!updatedPlaylist) {
