@@ -60,9 +60,9 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	const defaultIconSize = "size-6";
 
-	useEffect(() => {
-		console.log("📀 Playlist instance changed:", playlist);
-	}, [playlist]);
+	// useEffect(() => {
+	// 	console.log("📀 Playlist instance changed:", playlist);
+	// }, [playlist]);
 
 	//유저가 직접 재생/일시중지를 트리거 할 때만 사용하지만
 	//player를 initialize할 때 자동 재생 효과를 주기 위해 예외로 사용
@@ -97,6 +97,9 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			const newTrack = playlist.addTrack(url);
 			setTrackIndex(playlist.getTrackIndex());
 			setShowStopIcon(false);
+
+			const container = document.getElementById("player");
+			if (container) container.style.display = "block";
 
 			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
 			if ((!currentTrackRef.current && !specialTrackInfo) || showStopIcon) {
@@ -174,15 +177,23 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					playerRef.current.loadVideoById(nextTrack);
 				} else {
 					// 남은 곡이 없는 경우: player 삭제 + 재생 상태 변경 + index를 0으로 재지정 + currenttrack 초기화
-					playerRef.current.destroy();
-					playerRef.current = null;
-					setIsPlay(false);
-					setTrackIndex("0 out of 0");
-					currentTrackRef.current = undefined;
+					cleanUpPlaylist();
 				}
 			}
 		}
 		setShowPopup(false);
+	};
+
+	const cleanUpPlaylist = () => {
+		console.log("🧹 Cleaning up the playlist");
+		if (playerRef.current) {
+			playerRef.current.destroy();
+			playerRef.current = null;
+		}
+		setShowStopIcon(false);
+		setIsPlay(false);
+		setTrackIndex("0 out of 0");
+		currentTrackRef.current = undefined;
 	};
 
 	const formatDate = (date: Date): string => {
@@ -282,10 +293,18 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				onStateChange: (event: YT.OnStateChangeEvent) => {
 					//이전 곡 재생 완료 시 다음 곡 자동 재생
 					if (event.data === YT.PlayerState.ENDED) {
+						const isSpecialTrack = event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack);
+						const firstTrack = playlist.tracks[0];
 						//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
-						if (event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack)) {
+						if (isSpecialTrack) {
 							setSpecialTrackInfo("");
-							cueVideo(playlist.extractVideoId(playlist.tracks[0].url));
+							if (firstTrack) {
+								currentTrackRef.current = firstTrack;
+								cueVideo(playlist.extractVideoId(firstTrack.url));
+							} else {
+								const container = document.getElementById("player");
+								if (container) container.style.display = "none";
+							}
 						} else {
 							if (!playlist.getNextTrackVideoId()) {
 								setShowStopIcon(true);
@@ -421,10 +440,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				console.error("Failed to empty playlist:", response.error);
 			} else {
 				playlist.empty();
-				currentTrackRef.current = undefined;
-				setShowPopup(false);
-				setTrackIndex("0 out of 0");
-				if (playerRef?.current) playerRef.current = null;
+				cleanUpPlaylist();
 			}
 		} catch (error) {
 			console.error("Failed to empty playlist:", error);

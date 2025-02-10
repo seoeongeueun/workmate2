@@ -71,7 +71,6 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 
 	useEffect(() => {
 		const {prev, current} = triggers;
-		console.log(prev, current);
 		if (!showChoices || !showChoices2) return;
 		switch (current) {
 			case "left":
