@@ -54,6 +54,9 @@ export default function Home() {
 	};
 
 	useEffect(() => {
+		const color = localStorage.getItem("color") || "";
+		if (parseInt(color)) setColorIndex(parseInt(color));
+
 		const handleKeyDown = (event: KeyboardEvent) => {
 			const buttonValue = keyToButtonValue[event.code];
 			if (buttonValue) {
@@ -89,6 +92,7 @@ export default function Home() {
 		const newIndex = (colorIndex + 1) % themeColors.length;
 		setColorIndex(newIndex);
 		document.documentElement.setAttribute("data-theme", colorNames[newIndex]);
+		localStorage.setItem("color", newIndex.toString());
 	};
 
 	return (
