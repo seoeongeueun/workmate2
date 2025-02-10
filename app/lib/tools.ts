@@ -24,7 +24,8 @@ export async function apiRequest<T = any>(url: string, method: string = "GET", d
 			console.log(`Error with ${method} request to ${url}:`, errorData);
 			return {error: errorData.error};
 		}
-		return (await response.json()) as T;
+		const responseData = await response.json();
+		return {data: responseData};
 	} catch (error) {
 		console.error("Error during fetch:", error);
 		throw error;
