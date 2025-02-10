@@ -468,10 +468,18 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	};
 
 	const getPopupMessage = () => {
-		playlist.tracks?.length === 0 ? messages.none : messages[modeValues[popupType]];
+		if (modeValues[popupType] === "logout") return messages.logout;
 		if (modeValues[popupType] === "remove" && specialTrackInfo) return messages.special;
 		if (playlist.tracks?.length === 0) return messages.none;
 		else return messages[modeValues[popupType]];
+	};
+
+	const showConfirm = () => {
+		const mode = modeValues[popupType];
+		if (mode === "logout") return true;
+		else if (playlist.tracks?.length === 0) return false;
+		else if (specialTrackInfo && modeValues[popupType] === "remove") return false;
+		else return true;
 	};
 
 	return (
@@ -572,7 +580,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 								<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">B</span>
 								<span>cancel</span>
 							</button>
-							{playlist.tracks?.length !== 0 && !(specialTrackInfo && modeValues[popupType] === "remove") && (
+							{showConfirm() && (
 								<button className="flex flex-row items-center gap-spacing-4" onClick={() => handlePopAction("a")}>
 									<span className="border-px border-black rounded-full border p-px flex items-center justify-center w-6 h-6 bg-gray-1">A</span>
 									<span>confirm</span>
