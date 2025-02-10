@@ -1,5 +1,15 @@
 import React, {useState, useEffect, useRef, useCallback} from "react";
-import {PlayIcon, PauseCircleIcon, BackwardIcon, ForwardIcon, PlusCircleIcon, SpeakerWaveIcon, SpeakerXMarkIcon} from "@heroicons/react/16/solid";
+import {
+	PlayIcon,
+	PauseCircleIcon,
+	BackwardIcon,
+	ForwardIcon,
+	PlusCircleIcon,
+	PlayCircleIcon,
+	SpeakerWaveIcon,
+	SpeakerXMarkIcon,
+	XCircleIcon,
+} from "@heroicons/react/16/solid";
 import Playlist, {Track} from "../classes/Playlist";
 import {apiRequest} from "../lib/tools";
 import {Triggers} from "../page";
@@ -33,7 +43,6 @@ const messages: Partial<Record<(typeof modeValues)[number], string>> = {
 };
 
 export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin, expiration}: PlayScreenProps) {
-	// const [currentTrack, setCurrentTrack] = useState<Track | undefined>(undefined);
 	const [isPlay, setIsPlay] = useState<boolean>(false);
 	const [progressTime, setProgressTime] = useState<number>(0);
 	const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -44,9 +53,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	const [popupType, setPopupType] = useState<ModeIndex>(-1);
 	const [specialTrackInfo, setSpecialTrackInfo] = useState<string>("");
 	const [isError, setIsError] = useState<boolean>(false); //TODO:에러시 메세지창을 위해
+	const [isMute, setIsMute] = useState<boolean>(false);
+	const [showStopIcon, setShowStopIcon] = useState<boolean>(false);
 	const playerRef = useRef<any>(null);
 	const currentTrackRef = useRef<Track | undefined>(undefined);
-	const [isMute, setIsMute] = useState<boolean>(false);
 
 	const defaultIconSize = "size-6";
 
@@ -57,7 +67,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	//유저가 직접 재생/일시중지를 트리거 할 때만 사용하지만
 	//player를 initialize할 때 자동 재생 효과를 주기 위해 예외로 사용
 	const playVideo = useCallback(() => {
-		if (!playerRef.current) {
+		if (!playerRef.current || showStopIcon) {
 			return;
 		}
 		if (!isPlay) {
@@ -85,10 +95,11 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			songToAdd.value = "Music Added!";
 
 			const newTrack = playlist.addTrack(url);
-			//console.log(playlist.getTrackIndex(), playlist.getTrackIndexWithId(newTrack?.id));
 			setTrackIndex(playlist.getTrackIndex());
+			setShowStopIcon(false);
+
 			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
-			if (!currentTrackRef.current && !specialTrackInfo) {
+			if ((!currentTrackRef.current && !specialTrackInfo) || showStopIcon) {
 				if (playerRef.current) {
 					currentTrackRef.current = newTrack;
 					playerRef.current.cueVideoById(playlist.extractVideoId(url));
@@ -113,6 +124,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	};
 
 	const handlePlayNext = () => {
+		if (showStopIcon) return;
 		//스페셜 곡을 재생 중인 경우는 다음 곡을 재생하는게 아니라 플레이리스트의 첫 곡을 재생한다
 		if (specialTrackInfo) {
 			const next = playlist.getCurrentTrack();
@@ -120,12 +132,12 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		} else {
 			const nextTrack = playlist.playNext();
 			if (nextTrack && nextTrack?.id !== currentTrackRef.current?.id) {
+				setIsPlay(true);
 				currentTrackRef.current = nextTrack;
 				cueVideo(playlist.extractVideoId(nextTrack.url));
 			} else {
 				//다음 곡이 없으면 플레이리스트가 끝났다는 뜻
 				console.log("End of playlist");
-				currentTrackRef.current = undefined;
 			}
 		}
 		// *중요*: 스페셜 곡은 하나기 때문에 다음 곡 재생인 경우 == 스페셜 곡이 아님 => 스페셜 곡 정보를 제거를 함
@@ -133,6 +145,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	};
 
 	const handlePlayPrev = () => {
+		setShowStopIcon(false);
 		if (!specialTrackInfo) {
 			const prevTrack = playlist.playPrevious();
 			if (prevTrack) {
@@ -156,6 +169,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			} else {
 				const nextTrack = playlist.removeTrack(currentTrackRef.current?.id);
 				if (nextTrack) {
+					setShowStopIcon(false);
 					playerRef.current.stopVideo();
 					playerRef.current.loadVideoById(nextTrack);
 				} else {
@@ -268,7 +282,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				onStateChange: (event: YT.OnStateChangeEvent) => {
 					//이전 곡 재생 완료 시 다음 곡 자동 재생
 					if (event.data === YT.PlayerState.ENDED) {
+						if (!playlist.getNextTrackVideoId()) setShowStopIcon(true);
+						console.log(playlist.getNextTrackVideoId());
 						//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
+						console.log(event.target.getVideoData()?.video_id, playlist.extractVideoId(chosenTrack));
 						if (event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack)) {
 							setSpecialTrackInfo("");
 							cueVideo(playlist.extractVideoId(playlist.tracks[0].url));
@@ -277,7 +294,6 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 						var videoData = event.target.getVideoData();
 						var title = videoData.title;
 						const current = currentTrackRef.current;
-						console.log(current, playlist.getCurrentTrack());
 						if (current?.url) {
 							playlist.updateTrackTitle(playlist.extractVideoId(current.url), title);
 							currentTrackRef.current = {...current, title: title};
@@ -301,7 +317,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		}, 1000);
 
 		return () => clearInterval(intervalId);
-	}, [playerRef.current]);
+	}, [playerRef.current, currentTrackRef.current]);
 
 	useEffect(() => {
 		const current = currentTrackRef.current;
@@ -475,7 +491,15 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				<button onClick={handlePlayPrev}>
 					<BackwardIcon className={defaultIconSize} />
 				</button>
-				<button onClick={playVideo}>{!isPlay ? <PlayIcon className={defaultIconSize} /> : <PauseCircleIcon className={defaultIconSize} />}</button>
+				<button onClick={playVideo} disabled={showStopIcon}>
+					{showStopIcon ? (
+						<XCircleIcon className={defaultIconSize} />
+					) : !isPlay ? (
+						<PlayCircleIcon className={defaultIconSize} />
+					) : (
+						<PauseCircleIcon className={defaultIconSize} />
+					)}
+				</button>
 				<button onClick={handlePlayNext}>
 					<ForwardIcon className={defaultIconSize} />
 				</button>

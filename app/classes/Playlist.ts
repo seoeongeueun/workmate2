@@ -76,7 +76,7 @@ export default class Playlist {
 		if (!this.tracks.length) return;
 		if (this.currentTrack) {
 			const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
-			console.log(currentIndex, this.tracks.length - 1, this.nextTrack);
+
 			//현재 트랙이 마지막 트랙이 아닌 경우 다음 트랙을 현재 트랙으로 지정
 			if (currentIndex >= 0 && currentIndex < this.tracks.length - 1) {
 				this.currentTrack = this.tracks[currentIndex + 1];
