@@ -44,6 +44,7 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 	const [videoData, setVideoData] = useState<Record<string, string[]>>({});
 	const [month, setMonth] = useState<string>("");
 	const [isFirstDay, setIsFirstDay] = useState<boolean>(false);
+	const [isTyping, setIsTyping] = useState<boolean>(false);
 
 	useEffect(() => {
 		const randomSelection = [
@@ -105,8 +106,11 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 		let timeoutId: NodeJS.Timeout | null = null;
 		let displayed = "";
 
+		setIsTyping(true);
+
 		function typeChar() {
 			if (i >= line.length) {
+				setIsTyping(false);
 				setTimeout(
 					() => {
 						setLineIndex(prev => Math.min(prev + 1, dialogue[currentLine].length - 1));
@@ -145,6 +149,10 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 	}, [currentLine, lineIndex, isFirstDay, username]);
 
 	useEffect(() => {
+		if (isTyping) return;
+	}, [lineIndex]);
+
+	useEffect(() => {
 		if (showChoices2) {
 			//선택지는 둘 중 하나만 노출
 			setShowChoices(false);
@@ -174,9 +182,6 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 	};
 
 	const handleChoiceSelect = (index: number) => {
-		//유저가 선택지를 고르면 이벤트가 끝난 것으로 로컬 스토리지에 저장
-		localStorage.setItem("interactionOver", "true");
-
 		setNextLine(`00${index}` as DialogueKeys);
 
 		if (!videoData) return;
@@ -193,6 +198,9 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 	};
 
 	const handlePlayTrack = (isPlay: boolean) => {
+		//유저가 선택지를 고르면 이벤트가 끝난 것으로 로컬 스토리지에 저장
+		localStorage.setItem("interactionOver", "true");
+
 		if (!isPlay) {
 			setNextLine("005");
 			setChosenTrack("");
@@ -209,16 +217,18 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 
 	return (
 		<div className="relative flex flex-col w-full h-full justify-end items-center">
-			<div className="absolute top-1/2 -translate-y-1/2 max-h-full flex flex-col w-full justify-end items-center gap-4">
-				<div className="text-box relative w-fit max-w-[26rem] h-fit min-h-12 py-spacing-10 px-spacing-12 max-h-2/3 bg-black border border-px border-white rounded-md text-white flex flex-col items-start gap-spacing-4">
-					<p id="dialog" className="tracking-widest text-xxxs">
-						{displayText}
-					</p>
-				</div>
-				<Image src="/icon/alien.gif" alt="alien" width={30} height={30} />{" "}
+			<div className="mb-[5.5rem] max-h-full flex flex-col w-full justify-end items-center gap-4">
+				{displayText && (
+					<div className="text-box relative w-fit max-w-[26rem] h-fit min-h-12 py-spacing-10 px-spacing-12 max-h-2/3 bg-black border border-px border-white rounded-md text-white flex flex-col items-start gap-spacing-4">
+						<p id="dialog" className="tracking-widest text-xxxs">
+							{displayText}
+						</p>
+					</div>
+				)}
+				<Image src="/icon/alien.gif" alt="alien" width={30} height={30} className="mt-auto" />
 			</div>
 			{showChoices && (
-				<div className="animate-fadeIn choices flex flex-row items-center justify-between w-[28rem] max-w-full text-xl p-spacing-10 h-20">
+				<div className="-mt-20 animate-fadeIn choices flex flex-row items-center justify-between w-[28rem] max-w-full text-xl p-spacing-10 h-20">
 					{choices?.length > 0 &&
 						choices.map((c, i) => (
 							<button key={`choice-${i + 1}`} onClick={() => handleChoiceSelect(i + 1)} className="flex flex-row items-center gap-spacing-2">
@@ -229,7 +239,7 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 				</div>
 			)}
 			{showChoices2 && (
-				<div className="animate-fadeIn choices flex flex-row items-center justify-between w-[28rem] max-w-full text-xxxs p-spacing-10 h-20">
+				<div className="-mt-20 animate-fadeIn choices flex flex-row items-center justify-between w-[28rem] max-w-full text-xxxs p-spacing-10 h-20">
 					<button onClick={() => handlePlayTrack(false)} className="flex flex-row items-center gap-spacing-2">
 						<PlayIcon className={`size-5 animate-blink ${selectedIndex % 2 === 0 ? "h-8" : "h-0"}`}></PlayIcon>
 						<p className="tracking-widest">no</p>
