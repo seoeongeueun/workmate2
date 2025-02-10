@@ -282,14 +282,18 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				onStateChange: (event: YT.OnStateChangeEvent) => {
 					//이전 곡 재생 완료 시 다음 곡 자동 재생
 					if (event.data === YT.PlayerState.ENDED) {
-						if (!playlist.getNextTrackVideoId()) setShowStopIcon(true);
-						console.log(playlist.getNextTrackVideoId());
 						//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
-						console.log(event.target.getVideoData()?.video_id, playlist.extractVideoId(chosenTrack));
 						if (event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack)) {
 							setSpecialTrackInfo("");
 							cueVideo(playlist.extractVideoId(playlist.tracks[0].url));
-						} else handlePlayNext();
+						} else {
+							if (!playlist.getNextTrackVideoId()) {
+								setShowStopIcon(true);
+								return;
+							}
+							console.log("Playing next - ", playlist.getNextTrackVideoId());
+							handlePlayNext();
+						}
 					} else if (event.data === YT.PlayerState.CUED) {
 						var videoData = event.target.getVideoData();
 						var title = videoData.title;

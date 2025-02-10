@@ -74,9 +74,9 @@ export default function Home() {
 	}, []);
 
 	useEffect(() => {
-		const current = triggers.current;
+		const {prev, current} = triggers;
 		if (current === "power") {
-			setPower(prev => !prev);
+			setPower(old => !old);
 			setLoading(!power);
 		}
 	}, [triggers]);

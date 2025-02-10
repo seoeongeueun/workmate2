@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 		};
 
 		if (!username || !password) {
-			return NextResponse.json({error: "Missing input"}, {status: 400});
+			return NextResponse.json({error: "ErrorCode: 0 - Missing input"}, {status: 400});
 		}
 
 		await dbConnect();
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 		//중복 이름 확인 (대소문자 무시)
 		const exists = await User.findOne({username: {$regex: new RegExp(`^${username}$`, "i")}}).lean();
 		if (exists) {
-			return NextResponse.json({error: "Username taken"}, {status: 409});
+			return NextResponse.json({error: "ErrorCode: 1 - Username taken"}, {status: 409});
 		}
 
 		//플레이리스트 먼저 생성
