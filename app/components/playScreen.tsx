@@ -450,7 +450,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					<div id="battery" className="flex flex-row w-fit items-center">
 						<div className="relative border border-px border-black w-[1.7rem] h-[0.9rem] bg-transparent rounded-[0.2rem]">
 							<div className="absolute rounded-xs max-w-[1.2rem] max-h-[0.4rem] w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-								<div className={`h-full ${parseFloat(expiration) <= 20 ? "bg-red-700 animate-blink" : "bg-black"}`} style={{width: expiration || "100%"}}></div>
+								<div
+									className={`h-full ${parseFloat(expiration) <= 15 ? (parseFloat(expiration) <= 5 ? "bg-red-700 animate-blink" : "bg-red-700") : "bg-black"}`}
+									style={{width: expiration || "100%"}}
+								></div>
 							</div>
 						</div>
 						<div className="w-[0.15rem] h-[0.5rem] bg-black rounded-r-sm"></div>
