@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 		siteName: "Workmate",
 		images: [
 			{
-				url: "/main.png",
+				url: "/opengraph.png",
 				width: 1200,
 				height: 630,
 				alt: "OpenGraph Preview",
