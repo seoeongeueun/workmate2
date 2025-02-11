@@ -53,13 +53,13 @@ $transition: 0.5s ease-in-out;
 		}
 
 		&.top {
-			width: 52.6rem;
+			width: 50.4rem;
 			height: 15rem;
 			top: 22.9rem;
 			z-index: 21;
 
 			> div {
-				top: 90%;
+				top: 89%;
 				border-radius: 60%;
 				box-shadow:
 					inset 0 1px 1px 0 rgba(150, 152, 190, 0.6),
@@ -73,7 +73,7 @@ $transition: 0.5s ease-in-out;
 
 .frame-side {
 	position: relative;
-	width: 3.5rem;
+	width: 3.4rem;
 	height: 24rem;
 	overflow: hidden;
 	z-index: 19;
@@ -86,13 +86,13 @@ $transition: 0.5s ease-in-out;
 
 	&.left {
 		right: 17.7rem;
-		bottom: 22.4rem;
+		bottom: 22.2rem;
 	}
 
 	> div {
 		position: absolute;
 		background-color: var(--frame);
-		width: 3.2rem;
+		width: 3.1rem;
 		height: 100%;
 		right: 0;
 		border-top-left-radius: 60% 100%;
@@ -115,17 +115,19 @@ $transition: 0.5s ease-in-out;
 		overflow: hidden;
 
 		&.top {
-			width: 50.8rem;
-			height: 20rem;
-			bottom: 27.67rem;
+			width: 51rem;
+			height: 20.1rem;
+			bottom: 27.6rem;
 			transform: scaleY(-1);
 			z-index: 23;
 
 			> div {
-				box-shadow:
-					inset 0 1px 1px 0 rgba(169, 171, 197, 0.5),
-					0px -3px 2px -3px #ecedf3,
-					0px -2px 1px 2px var(--body);
+				// box-shadow:
+				// 	inset 0 1px 1px 0 rgba(169, 171, 197, 0.5),
+				// 	0px -3px 2px -3px #ecedf3,
+				// 	0px -2px 1px 2px var(--body);
+				box-shadow: inset 0 1px 1px 0 rgba(150, 152, 190, 0.6), 0px 0px 1px 4px var(--body), 0px -9px 1px -8px rgba(3, 11, 8, 0.8);
+				outline: 1px solid rgba(245, 245, 245, 0.3);
 			}
 		}
 
@@ -135,19 +137,19 @@ $transition: 0.5s ease-in-out;
 			width: 100%;
 			height: 100%;
 			z-index: 20;
-			top: 88.5%;
+			top: 88.4%;
 			border-radius: 50%;
 			border: 1px solid var(--frame-dark);
 		}
 
 		&.base {
-			width: 38.5rem;
+			width: 38.4rem;
 			height: 32rem;
 			transform: rotateX(180deg);
 
 			> div {
 				top: 85%;
-				border-radius: 14%;
+    border-radius: 13%;
 				border: 1px solid var(--frame-dark);
 				// box-shadow:
 				// 	2px -1px 1px -2px var(--frame-dark),
@@ -397,7 +399,7 @@ $transition: 0.5s ease-in-out;
 		inset -0px 24px 3px -18px var(--body-shadow),
 		inset -0px 33px 1px -25px rgba(var(--body-light-rgb), 0.6),
 		inset -0px 41px 0px -30px var(--body-shadow);
-	border-top: inset 1px solid var(--body-light);
+	// border-top: inset 1px solid var(--body-light);
 }
 
 .body-bottom {
@@ -591,7 +593,6 @@ $transition: 0.5s ease-in-out;
 	left: 10.2rem;
 	top: 29rem;
 	transform: rotate(10deg);
-	font-family: "Helvetica Neue";
 
 	> .border {
 		width: 6.5rem;
@@ -646,8 +647,10 @@ $transition: 0.5s ease-in-out;
 				0px -1px 0px rgba(var(--body-light-rgb), 0.4),
 				0px 1px 0px var(--body-dark);
 			margin-left: 0.9rem;
-			font-weight: 700;
+			font-weight: 600;
 			margin-top: 0.2rem;
+			font-size: 0.9rem;
+			font-family: "GongGothicMedium";
 		}
 	}
 }
@@ -686,6 +689,7 @@ $transition: 0.5s ease-in-out;
 			margin-top: 0.25rem;
 			text-shadow: 1px 1px 1px var(--button-light);
 			font-family: "GongGothicMedium";
+			font-size: 2rem;
 		}
 
 		&:first-child {
@@ -761,13 +765,12 @@ $transition: 0.5s ease-in-out;
 	align-items: center;
 	position: absolute;
 	top: 12.5rem;
-	right: 11.2rem;
+	right: 12.2rem;
 	z-index: 99;
-	font-family: "Helvetica Neue";
 
 	.power {
-		width: 1.2rem;
-		height: 1.2rem;
+		width: 1rem;
+		height: 1rem;
 		border-radius: 100%;
 		background-color: var(--body);
 		box-shadow:
@@ -790,9 +793,11 @@ $transition: 0.5s ease-in-out;
 			0px -1px 0px rgba(var(--body-light-rgb), 0.4),
 			0px 1px 0px var(--body-dark);
 		margin-left: 0.6rem;
-		font-weight: 700;
+		font-weight: 600;
 		letter-spacing: 0.5px;
 		margin-top: 0.1rem;
+		font-size: 0.8rem;
+		font-family: "GongGothicMedium";
 	}
 }
 

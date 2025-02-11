@@ -174,10 +174,7 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 	};
 
 	const handleFormat = (text: string) => {
-		const state: Record<string, string> = {
-			user: username,
-			month: month,
-		};
+		const state: Record<string, string> = {user: username, month: month};
 		return text.replace(/\$\{(\w+)\}/g, (_, key) => state[key] || "");
 	};
 
@@ -225,7 +222,7 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 						</p>
 					</div>
 				)}
-				<Image src="/icon/alien.gif" alt="alien" width={30} height={30} className="mt-auto" />
+				<img src="/icon/alien.gif" alt="alien" className="w-12 h-12 mt-auto" />
 			</div>
 			{showChoices && (
 				<div className="-mt-20 animate-fadeIn choices flex flex-row items-center justify-between w-[28rem] max-w-full text-xl p-spacing-10 h-20">

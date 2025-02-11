@@ -114,11 +114,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				} else initializePlayer(playlist.extractVideoId(newTrack?.url));
 			}
 
-			const response = await apiRequest("/api/playlist", "POST", {
-				id: playlist.getObjectId(),
-				track: newTrack,
-				mode: "add",
-			});
+			const response = await apiRequest("/api/playlist", "POST", {id: playlist.getObjectId(), track: newTrack, mode: "add"});
 			if (response?.error) {
 				console.error("Failed to update playlist:", response.error);
 				songToAdd.value = "Error saving changes";
@@ -160,11 +156,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	const handleRemoveTrack = async (isRemove: boolean = true) => {
 		if (isRemove && currentTrackRef.current) {
-			const response = await apiRequest("/api/playlist", "POST", {
-				id: playlist.getObjectId(),
-				track: currentTrackRef.current,
-				mode: "remove",
-			});
+			const response = await apiRequest("/api/playlist", "POST", {id: playlist.getObjectId(), track: currentTrackRef.current, mode: "remove"});
 			if (response?.error) {
 				const songToAdd = document.getElementById("newSong") as HTMLInputElement;
 				console.error("Failed to update playlist:", response.error);
@@ -210,11 +202,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	};
 
 	const formatDate = (date: Date): string => {
-		const options: Intl.DateTimeFormatOptions = {
-			month: "2-digit",
-			day: "2-digit",
-			weekday: "short",
-		};
+		const options: Intl.DateTimeFormatOptions = {month: "2-digit", day: "2-digit", weekday: "short"};
 		return new Intl.DateTimeFormat("en-US", options).format(date).replace(",", ".").replace(/\//g, ".");
 	};
 
@@ -494,11 +482,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	const handleEmptyPlaylist = async () => {
 		try {
-			const response = await apiRequest("/api/playlist", "POST", {
-				id: playlist.getObjectId(),
-				track: undefined,
-				mode: "empty",
-			});
+			const response = await apiRequest("/api/playlist", "POST", {id: playlist.getObjectId(), track: undefined, mode: "empty"});
 			if (response?.error) {
 				console.error("Failed to empty playlist:", response.error);
 			} else {
@@ -639,7 +623,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
 					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] text-center p-spacing-16 py-spacing-24 bg-gray-2 flex flex-col justify-between items-center">
 						<span className="leading-8 whitespace-pre-line">{getPopupMessage()}</span>
-						{specialTrackInfo && modeValues[popupType] === "remove" && <Image src="/icon/alien.gif" alt="alien" width={20} height={20} className="mt-4" />}
+						{specialTrackInfo && modeValues[popupType] === "remove" && <img src="/icon/alien.gif" alt="alien" className="w-5 h-5 mt-4" />}
 
 						<div className="w-full flex flex-row items-center justify-between">
 							<button className="flex flex-row items-center gap-spacing-4" onClick={() => handlePopAction("b")}>
