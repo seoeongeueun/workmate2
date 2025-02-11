@@ -42,6 +42,8 @@ const messages: Partial<Record<(typeof modeValues)[number], string>> = {
 	special: "Special tracks aren't added to your playlist, so no worries!",
 };
 
+const muiscAddMessages = ["Music added!", "Error saving changes"];
+
 export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin, expiration}: PlayScreenProps) {
 	const [isPlay, setIsPlay] = useState<boolean>(false);
 	const [progressTime, setProgressTime] = useState<number>(0);
@@ -92,6 +94,9 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		const songToAdd = document.getElementById("newSong") as HTMLInputElement;
 		const url = songToAdd.value;
 		if (url) {
+			//연달아 더하기를 누른 경우는 무시
+			if (muiscAddMessages.includes(url)) return;
+
 			songToAdd.value = "Music Added!";
 
 			const newTrack = playlist.addTrack(url);
@@ -128,33 +133,28 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	const handlePlayNext = () => {
 		if (showStopIcon) return;
+
 		//스페셜 곡을 재생 중인 경우는 다음 곡을 재생하는게 아니라 플레이리스트의 첫 곡을 재생한다
-		if (specialTrackInfo) {
-			const next = playlist.getCurrentTrack();
-			if (next) cueVideo(playlist.extractVideoId(next.url));
-		} else {
-			const nextTrack = playlist.playNext();
-			if (nextTrack && nextTrack?.id !== currentTrackRef.current?.id) {
-				setIsPlay(true);
-				currentTrackRef.current = nextTrack;
-				cueVideo(playlist.extractVideoId(nextTrack.url));
-			} else {
-				//다음 곡이 없으면 플레이리스트가 끝났다는 뜻
-				console.log("End of playlist");
-			}
+		const nextTrack = specialTrackInfo ? playlist.getCurrentTrack() : playlist.playNext();
+		if (!nextTrack) {
+			console.log("✋ End of playlist");
+			return;
 		}
-		// *중요*: 스페셜 곡은 하나기 때문에 다음 곡 재생인 경우 == 스페셜 곡이 아님 => 스페셜 곡 정보를 제거를 함
+
 		setSpecialTrackInfo("");
+		currentTrackRef.current = nextTrack;
+		cueVideo(playlist.extractVideoId(nextTrack.url));
 	};
 
 	const handlePlayPrev = () => {
 		setShowStopIcon(false);
-		if (!specialTrackInfo) {
-			const prevTrack = playlist.playPrevious();
-			if (prevTrack) {
-				currentTrackRef.current = prevTrack;
-				cueVideo(playlist.extractVideoId(prevTrack.url));
-			}
+		//스페셜 곡은 항상 첫번째 곡이기 때문에 이전으로 넘길 수 없음
+		if (specialTrackInfo) return;
+
+		const prevTrack = playlist.playPrevious();
+		if (prevTrack) {
+			currentTrackRef.current = prevTrack;
+			cueVideo(playlist.extractVideoId(prevTrack.url));
 		}
 	};
 
@@ -169,12 +169,18 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				const songToAdd = document.getElementById("newSong") as HTMLInputElement;
 				console.error("Failed to update playlist:", response.error);
 				songToAdd.value = "Error saving changes";
+
+				setTimeout(() => {
+					songToAdd.value = "";
+				}, 2000);
 			} else {
 				const nextTrack = playlist.removeTrack(currentTrackRef.current?.id);
 				if (nextTrack) {
+					currentTrackRef.current = nextTrack;
+					cueVideo(playlist.extractVideoId(nextTrack.url));
 					setShowStopIcon(false);
-					playerRef.current.stopVideo();
-					playerRef.current.loadVideoById(nextTrack);
+					// playerRef.current.stopVideo();
+					// playerRef.current.loadVideoById(nextTrack);
 				} else {
 					// 남은 곡이 없는 경우: player 삭제 + 재생 상태 변경 + index를 0으로 재지정 + currenttrack 초기화
 					cleanUpPlaylist();
@@ -186,9 +192,16 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	const cleanUpPlaylist = () => {
 		console.log("🧹 Cleaning up the playlist");
+
+		//플레이어가 사라진 것처럼 보이게
+		const container = document.getElementById("player");
+		if (container) container.style.display = "none";
+
 		if (playerRef.current) {
-			playerRef.current.destroy();
-			playerRef.current = null;
+			setSpecialTrackInfo("");
+			playerRef.current.cueVideoById("");
+			// playerRef.current.destroy();
+			// playerRef.current = null;
 		}
 		setShowStopIcon(false);
 		setIsPlay(false);
@@ -202,7 +215,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			day: "2-digit",
 			weekday: "short",
 		};
-		return new Intl.DateTimeFormat("en-US", options).format(date).replace(/\//g, ".");
+		return new Intl.DateTimeFormat("en-US", options).format(date).replace(",", ".").replace(/\//g, ".");
 	};
 
 	const formatTime = (date: Date): string => {
@@ -356,43 +369,83 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		}
 
 		const isSecondPopup = mode === popupType;
-		// 2dpeth 메뉴창이 켜진 경우
-		if (isSecondPopup) {
-			// 두번 째 메뉴창이 켜진 경우 a/b 버튼 외는 기능 없음
-			if (current === "a") handlePopAction(current);
-			else if (current === "b") setPopupType(-1);
-			return;
-			/* 1depth 기본 메뉴창이 켜진 경우
-			유효한 기능은 a => 2depth 메뉴 오픈 (셔플 모드 제외)
-			b => 메뉴창 닫기
-			up => 상단 선택지로 이동
-			down => 하단 선택지로 이동
-		*/
-		} else if (showPopup) {
-			switch (current) {
-				case "a":
-					if (modeValues[mode] === "shuffle") setShuffleMode(prev => !prev);
-					else setPopupType(mode);
-					break;
-				case "b":
-					setShowPopup(false);
-					break;
-				case "up":
-					setMode(mode === 0 ? modeValues.length - 1 : mode - 1);
-					break;
-				case "down":
-					setMode(mode === modeValues.length - 1 ? 0 : mode + 1);
-					break;
-				default:
-					break;
+
+		if (showPopup) {
+			if (isSecondPopup) {
+				// 두번 째 메뉴창이 켜진 경우 a/b 버튼 외는 기능 없음
+				if (current === "a") handlePopAction(current);
+				else if (current === "b") setPopupType(-1);
+				return;
+				/* 1depth 기본 메뉴창이 켜진 경우
+				유효한 기능은 a => 2depth 메뉴 오픈 (셔플 모드 제외)
+				b => 메뉴창 닫기
+				up => 상단 선택지로 이동
+				down => 하단 선택지로 이동
+			*/
+			} else {
+				switch (current) {
+					case "a":
+						if (modeValues[mode] === "shuffle") setShuffleMode(prev => !prev);
+						else setPopupType(mode);
+						break;
+					case "b":
+						setShowPopup(false);
+						break;
+					case "up":
+						setMode(mode === 0 ? modeValues.length - 1 : mode - 1);
+						break;
+					case "down":
+						setMode(mode === modeValues.length - 1 ? 0 : mode + 1);
+						break;
+					default:
+						break;
+				}
+				return;
 			}
-			return;
 		} else {
 			if (typeof playerRef.current?.cueVideoById !== "function") return;
 
 			if (current === "left") handlePlayPrev();
 			else if (current === "right") handlePlayNext();
 		}
+
+		// 2dpeth 메뉴창이 켜진 경우
+		// if (isSecondPopup) {
+		// 	// 두번 째 메뉴창이 켜진 경우 a/b 버튼 외는 기능 없음
+		// 	if (current === "a") handlePopAction(current);
+		// 	else if (current === "b") setPopupType(-1);
+		// 	return;
+		// 	/* 1depth 기본 메뉴창이 켜진 경우
+		// 	유효한 기능은 a => 2depth 메뉴 오픈 (셔플 모드 제외)
+		// 	b => 메뉴창 닫기
+		// 	up => 상단 선택지로 이동
+		// 	down => 하단 선택지로 이동
+		// */
+		// } else if (showPopup) {
+		// 	switch (current) {
+		// 		case "a":
+		// 			if (modeValues[mode] === "shuffle") setShuffleMode(prev => !prev);
+		// 			else setPopupType(mode);
+		// 			break;
+		// 		case "b":
+		// 			setShowPopup(false);
+		// 			break;
+		// 		case "up":
+		// 			setMode(mode === 0 ? modeValues.length - 1 : mode - 1);
+		// 			break;
+		// 		case "down":
+		// 			setMode(mode === modeValues.length - 1 ? 0 : mode + 1);
+		// 			break;
+		// 		default:
+		// 			break;
+		// 	}
+		// 	return;
+		// } else {
+		// 	if (typeof playerRef.current?.cueVideoById !== "function") return;
+
+		// 	if (current === "left") handlePlayPrev();
+		// 	else if (current === "right") handlePlayNext();
+		// }
 	}, [showPopup, triggers, playerRef]);
 
 	useEffect(() => {
@@ -406,8 +459,18 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	useEffect(() => {
 		if (shuffleMode) {
 			const current = currentTrackRef.current;
-			const index = playlist.shuffleTracks(current?.id);
-			if (index) setTrackIndex(index);
+			if (showStopIcon) {
+				setShowStopIcon(false);
+				playlist.shuffleTracks(undefined);
+				if (playerRef.current) {
+					playerRef.current.seekTo(0);
+					playerRef.current.playVideo();
+				}
+			} else {
+				const index = playlist.shuffleTracks(current?.id);
+				//if (index) setTrackIndex(index);
+				//셔플 중에는 index 대신 셔플 메시지가 뜨는 것으로 변경
+			}
 		} else {
 			const newIndex = playlist.unshuffleTracks();
 			setTrackIndex(newIndex);
@@ -441,6 +504,9 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			} else {
 				playlist.empty();
 				cleanUpPlaylist();
+				setShowPopup(false);
+				setShowStopIcon(false);
+				setIsPlay(true);
 			}
 		} catch (error) {
 			console.error("Failed to empty playlist:", error);
@@ -514,7 +580,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				<div id="player"></div>
 				<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrackRef.current?.title}</p>
 			</div>
-			<span className="text-xxs mt-auto">{specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>
+			<span className="text-xxs mt-auto">{shuffleMode ? "shuffle on" : specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>
 			<div className="flex flex-row w-full justify-between items-center">
 				<button onClick={handlePlayPrev}>
 					<BackwardIcon className={defaultIconSize} />

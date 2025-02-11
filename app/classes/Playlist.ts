@@ -41,6 +41,7 @@ export default class Playlist {
 	}
 
 	removeTrack(id: string) {
+		console.log("called");
 		const currentIndex = this.tracks.findIndex(x => x.id === id);
 		if (currentIndex === -1) return;
 
@@ -64,12 +65,14 @@ export default class Playlist {
 			this.nextTrack = undefined;
 		}
 		this.currentTrack = newCurrentTrack;
-		return this.extractVideoId(newCurrentTrack?.url ?? "");
+		return newCurrentTrack;
 	}
 
 	empty() {
 		this.tracks = [];
 		this.backup = [];
+		this.currentTrack = undefined;
+		this.nextTrack = undefined;
 	}
 
 	playNext() {
@@ -150,6 +153,7 @@ export default class Playlist {
 				const j = Math.floor(Math.random() * (i + 1));
 				[this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
 			}
+			this.currentTrack = this.tracks[0];
 			return;
 		}
 

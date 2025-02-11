@@ -28,15 +28,16 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 	const checkSession = async () => {
 		try {
 			const response = await apiRequest("/api/auth", "GET");
-			const id = response?.playlistId;
-			setUsername(response?.username);
+			const data = response?.data;
+			const id = data?.playlistId;
+			setUsername(data?.username);
 
 			const expiration = await apiRequest("/api/logout");
 			const timeLeft = expiration?.timeLeft;
 			if (timeLeft) setExpiration(calcExpiration(timeLeft));
 
 			setTimeout(() => {
-				const loggedIn = response?.isValid;
+				const loggedIn = data?.isValid;
 				if (!loggedIn) localStorage.removeItem("interactionOver");
 				setIsLogin(loggedIn);
 
@@ -52,7 +53,8 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 
 	const fetchPlaylist = async (id: string) => {
 		try {
-			const data = await apiRequest(`/api/playlist/?id=${id}`, "GET");
+			const response = await apiRequest(`/api/playlist/?id=${id}`, "GET");
+			const data = response?.data;
 			if (data?.title) {
 				setPlaylist(prevPlaylist => {
 					if (!prevPlaylist) {
