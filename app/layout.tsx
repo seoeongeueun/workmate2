@@ -4,7 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
 	title: "workmate",
 	description: "Work with me! 📻",
-	icons: "/icon/alien.ico",
 	openGraph: {
 		title: "workmate",
 		description: "A retro music player true old-school lovers 📻",
