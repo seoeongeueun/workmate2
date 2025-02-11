@@ -71,6 +71,8 @@ export default class Playlist {
 	empty() {
 		this.tracks = [];
 		this.backup = [];
+		this.currentTrack = undefined;
+		this.nextTrack = undefined;
 	}
 
 	playNext() {
@@ -151,6 +153,7 @@ export default class Playlist {
 				const j = Math.floor(Math.random() * (i + 1));
 				[this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
 			}
+			this.currentTrack = this.tracks[0];
 			return;
 		}
 

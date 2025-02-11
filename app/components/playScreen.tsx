@@ -459,8 +459,18 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	useEffect(() => {
 		if (shuffleMode) {
 			const current = currentTrackRef.current;
-			const index = playlist.shuffleTracks(current?.id);
-			if (index) setTrackIndex(index);
+			if (showStopIcon) {
+				setShowStopIcon(false);
+				playlist.shuffleTracks(undefined);
+				if (playerRef.current) {
+					playerRef.current.seekTo(0);
+					playerRef.current.playVideo();
+				}
+			} else {
+				const index = playlist.shuffleTracks(current?.id);
+				//if (index) setTrackIndex(index);
+				//셔플 중에는 index 대신 셔플 메시지가 뜨는 것으로 변경
+			}
 		} else {
 			const newIndex = playlist.unshuffleTracks();
 			setTrackIndex(newIndex);
@@ -495,6 +505,8 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				playlist.empty();
 				cleanUpPlaylist();
 				setShowPopup(false);
+				setShowStopIcon(false);
+				setIsPlay(true);
 			}
 		} catch (error) {
 			console.error("Failed to empty playlist:", error);
@@ -568,7 +580,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				<div id="player"></div>
 				<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrackRef.current?.title}</p>
 			</div>
-			<span className="text-xxs mt-auto">{specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>
+			<span className="text-xxs mt-auto">{shuffleMode ? "shuffled" : specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>
 			<div className="flex flex-row w-full justify-between items-center">
 				<button onClick={handlePlayPrev}>
 					<BackwardIcon className={defaultIconSize} />
