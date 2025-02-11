@@ -18,6 +18,7 @@ interface LoginScreenProps {
 export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 	const [selectLogin, setSelectLogin] = useState<boolean>(true);
 	const [errorCode, setErrorCode] = useState<number | null>(null);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	const errorMessages: Record<ErrorCodes, string> = {
 		[ErrorCodes.MissingFields]: "All fields are required",
@@ -42,6 +43,7 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 	}, []);
 
 	const getErrorMessage = (code: ErrorCodes | null): string => {
+		if (isLoading) return "Processing...";
 		if (code === null) {
 			if (selectLogin) return "Log in or sign up to continue";
 			return "Fill in the fields to sign up";
@@ -50,6 +52,8 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 	};
 
 	const handleLogin = async () => {
+		setIsLoading(true);
+
 		//login으로 화살표 이동
 		setSelectLogin(true);
 
@@ -88,6 +92,8 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 	};
 
 	const handleSignup = async () => {
+		setIsLoading(true);
+
 		// signup으로 화살표 이동
 		setSelectLogin(false);
 
@@ -118,8 +124,10 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 				return;
 			}
 			setIsLogin(true);
+			setIsLoading(false);
 		} catch (error) {
 			setErrorCode(2);
+			setIsLoading(false);
 			setIsLogin(false);
 			return;
 		}
@@ -153,13 +161,13 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 				<div className="flex flex-row justify-center items-center mt-spacing-8 mr-4 gap-16">
 					<div className="flex flex-row items-center justify-end gap-2 w-32">
 						{selectLogin && <PlayIcon className="size-5 animate-blink"></PlayIcon>}
-						<button type="submit" onClick={handleLogin}>
+						<button type="submit" disabled={isLoading} onClick={handleLogin}>
 							Log In
 						</button>
 					</div>
 					<div className="flex flex-row items-center justify-end gap-2 w-32">
 						{!selectLogin && <PlayIcon className="size-5 animate-blink"></PlayIcon>}
-						<button type="submit" onClick={handleSignup}>
+						<button type="submit" disabled={isLoading} onClick={handleSignup}>
 							Sign Up
 						</button>
 					</div>
