@@ -80,6 +80,7 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 				const match = response.error.match(/ErrorCode:\s*(\d+)/);
 				if (match) setErrorCode(parseInt(match[1]));
 				else setErrorCode(3);
+				setIsLoading(false);
 				setIsLogin(false);
 				return;
 			}
@@ -120,6 +121,7 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 				const match = response.error.match(/ErrorCode:\s*(\d+)/);
 				if (match) setErrorCode(parseInt(match[1]));
 				else setErrorCode(2);
+				setIsLoading(false);
 				setIsLogin(false);
 				return;
 			}
