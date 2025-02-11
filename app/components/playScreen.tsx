@@ -268,8 +268,8 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	const initializePlayer = (initialVideoId: string) => {
 		playerRef.current = new YT.Player("player", {
-			height: "50",
-			width: "50",
+			height: "54",
+			width: "54",
 			videoId: initialVideoId,
 			events: {
 				onReady: event => {
@@ -542,7 +542,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				<div className="flex flex-row items-center gap-2">
 					<span>{formatTime(currentTime)}</span>
 					<div id="battery" className="flex flex-row w-fit items-center">
-						<div className="relative border border-px border-black w-[1.7rem] h-[0.9rem] bg-transparent rounded-[0.2rem]">
+						<div className="relative border border-px border-black w-[1.6rem] h-[0.8rem] bg-transparent rounded-[0.2rem]">
 							<div className="absolute rounded-xs max-w-[1.2rem] max-h-[0.4rem] w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
 								<div
 									className={`h-full ${parseFloat(expiration) <= 15 ? (parseFloat(expiration) <= 5 ? "bg-red-700 animate-blink" : "bg-red-700") : "bg-black"}`}
@@ -582,7 +582,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					<ForwardIcon className={defaultIconSize} />
 				</button>
 			</div>
-			<div className="w-full p-px border border-px rounded-[1px] border-black">
+			<div className="w-full p-[2px] border border-px rounded-[1px] border-black">
 				<div className="bg-black h-px" style={{width: progressTime.toFixed(2) + "%"}} />
 			</div>
 			{showPopup && (

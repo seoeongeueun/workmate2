@@ -70,10 +70,7 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 		}
 
 		try {
-			const response = await apiRequest<{success: boolean}>("/api/auth", "POST", {
-				username,
-				password,
-			});
+			const response = await apiRequest<{success: boolean}>("/api/auth", "POST", {username, password});
 
 			if (response?.error) {
 				const match = response.error.match(/ErrorCode:\s*(\d+)/);
@@ -111,10 +108,7 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 		}
 
 		try {
-			const response = await apiRequest<{success: boolean}>("/api/signup", "POST", {
-				username,
-				password,
-			});
+			const response = await apiRequest<{success: boolean}>("/api/signup", "POST", {username, password});
 
 			if (response?.error) {
 				const match = response.error.match(/ErrorCode:\s*(\d+)/);
@@ -160,13 +154,13 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 					<div className="flex flex-row items-center justify-end gap-2 w-32">
 						{selectLogin && <PlayIcon className="size-5 animate-blink"></PlayIcon>}
 						<button type="submit" onClick={handleLogin}>
-							log in
+							Log In
 						</button>
 					</div>
 					<div className="flex flex-row items-center justify-end gap-2 w-32">
 						{!selectLogin && <PlayIcon className="size-5 animate-blink"></PlayIcon>}
 						<button type="submit" onClick={handleSignup}>
-							sign up
+							Sign Up
 						</button>
 					</div>
 				</div>

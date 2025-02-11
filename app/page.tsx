@@ -18,14 +18,7 @@ export interface Triggers {
 	current: ButtonValue | undefined;
 }
 
-const keyToButtonValue: Record<string, ButtonValue> = {
-	KeyA: "a",
-	KeyB: "b",
-	ArrowUp: "up",
-	ArrowDown: "down",
-	ArrowLeft: "left",
-	ArrowRight: "right",
-};
+const keyToButtonValue: Record<string, ButtonValue> = {KeyA: "a", KeyB: "b", ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right"};
 
 const themeColors: string[] = ["rgb(79, 82, 147)", "rgb(83, 83, 83)", "rgb(236, 122, 147)"];
 const colorNames: string[] = ["blue", "gray", "pink"];
@@ -45,10 +38,7 @@ export default function Home() {
 			console.log("Button clicked:", buttonValue);
 
 			if (buttonValue) {
-				setTriggers(prevState => ({
-					prev: prevState.prev === "select" && buttonValue !== "b" ? "select" : prevState.current,
-					current: buttonValue,
-				}));
+				setTriggers(prevState => ({prev: prevState.prev === "select" && buttonValue !== "b" ? "select" : prevState.current, current: buttonValue}));
 			}
 		}
 	};
@@ -60,10 +50,7 @@ export default function Home() {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			const buttonValue = keyToButtonValue[event.code];
 			if (buttonValue) {
-				setTriggers(prevState => ({
-					prev: prevState.prev === "select" && buttonValue !== "b" ? "select" : prevState.current,
-					current: buttonValue,
-				}));
+				setTriggers(prevState => ({prev: prevState.prev === "select" && buttonValue !== "b" ? "select" : prevState.current, current: buttonValue}));
 			}
 		};
 
