@@ -8,6 +8,7 @@
 		"start": "next start",
 		"lint": "next lint"
 	},
+	"type": "module",
 	"dependencies": {
 		"@heroicons/react": "^2.2.0",
 		"@types/youtube": "^0.1.0",
