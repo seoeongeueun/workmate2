@@ -41,6 +41,7 @@ export default class Playlist {
 	}
 
 	removeTrack(id: string) {
+		console.log("called");
 		const currentIndex = this.tracks.findIndex(x => x.id === id);
 		if (currentIndex === -1) return;
 
@@ -64,7 +65,7 @@ export default class Playlist {
 			this.nextTrack = undefined;
 		}
 		this.currentTrack = newCurrentTrack;
-		return this.extractVideoId(newCurrentTrack?.url ?? "");
+		return newCurrentTrack;
 	}
 
 	empty() {
