@@ -494,6 +494,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			} else {
 				playlist.empty();
 				cleanUpPlaylist();
+				setShowPopup(false);
 			}
 		} catch (error) {
 			console.error("Failed to empty playlist:", error);
