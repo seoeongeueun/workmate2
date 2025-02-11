@@ -215,7 +215,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			day: "2-digit",
 			weekday: "short",
 		};
-		return new Intl.DateTimeFormat("en-US", options).format(date).replace(/\//g, ".");
+		return new Intl.DateTimeFormat("en-US", options).format(date).replace(",", ".").replace(/\//g, ".");
 	};
 
 	const formatTime = (date: Date): string => {
@@ -580,7 +580,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				<div id="player"></div>
 				<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrackRef.current?.title}</p>
 			</div>
-			<span className="text-xxs mt-auto">{shuffleMode ? "shuffled" : specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>
+			<span className="text-xxs mt-auto">{shuffleMode ? "shuffle on" : specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>
 			<div className="flex flex-row w-full justify-between items-center">
 				<button onClick={handlePlayPrev}>
 					<BackwardIcon className={defaultIconSize} />
