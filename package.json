@@ -4,8 +4,9 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
+		"electron:dev": "tsc && electron .",
 		"build": "next build",
-		"start": "next start",
+		"start": "electron .",
 		"lint": "next lint"
 	},
 	"type": "module",
