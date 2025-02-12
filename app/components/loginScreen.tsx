@@ -93,8 +93,6 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 	};
 
 	const handleSignup = async () => {
-		setIsLoading(true);
-
 		// signup으로 화살표 이동
 		setSelectLogin(false);
 
@@ -115,6 +113,7 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 		}
 
 		try {
+			setIsLoading(true);
 			const response = await apiRequest<{success: boolean}>("/api/signup", "POST", {username, password});
 
 			if (response?.error) {
