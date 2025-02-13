@@ -46,9 +46,18 @@ const apiHandlers: Record<string, (data: any) => Promise<any>> = {
 export async function handleApiRequest(url: string, data: any) {
 	const handler = apiHandlers[url];
 
+	// /api/playlist는 ?id=값이 붙기 때문에 별도 케이스
+	if (url.includes("/api/playlist") && data.method === "GET") {
+		const {searchParams} = new URL(url, "http:placeholder");
+		const id = searchParams.get("id");
+		data.body = {...data.body, id};
+
+		const playlistHandler = apiHandlers["/api/playlist"];
+		if (playlistHandler) return await playlistHandler(data);
+	}
+
 	if (!handler) {
 		throw new Error(`Unknown API endpoint: ${url}`);
 	}
-
 	return await handler(data);
 }

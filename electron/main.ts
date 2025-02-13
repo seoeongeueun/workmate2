@@ -54,10 +54,11 @@ app.on("window-all-closed", () => {
 	if (process.platform !== "darwin") app.quit();
 });
 
-ipcMain.on("api-request", async (event, {url, method, data}) => {
+ipcMain.handle("api-request", async (event, {url, method, data}) => {
 	try {
 		const result = await handleApiRequest(url, {method, body: data});
-		return {data: result};
+
+		return JSON.parse(JSON.stringify(result));
 	} catch (error) {
 		return {error: error};
 	}

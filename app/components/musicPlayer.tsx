@@ -32,6 +32,8 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 			const id = data?.playlistId;
 			setUsername(data?.username);
 
+			console.log(data);
+
 			const expiration = await apiRequest("/api/logout");
 			const timeLeft = expiration?.timeLeft;
 			if (timeLeft) setExpiration(calcExpiration(timeLeft));
