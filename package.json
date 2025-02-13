@@ -13,6 +13,11 @@
 		"lint": "next lint"
 	},
 	"type": "module",
+	"build": {
+		"appId": "app.vercel.workmatebeta",
+		"productName": "Workmate",
+		"icon": "icons/icon120x120"
+	},
 	"dependencies": {
 		"@heroicons/react": "^2.2.0",
 		"@types/youtube": "^0.1.0",

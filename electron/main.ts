@@ -1,21 +1,3 @@
-// import dotenv from "dotenv";
-// import path from "path";
-// import {fileURLToPath} from "url";
-
-// // ✅ Get the correct directory path
-// const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// // ✅ FORCE Electron to load `.env`
-// dotenv.config({path: path.join(__dirname, "../.env")});
-
-// // 🚨 Debugging: Print to ensure `MONGODB_URI` is actually loaded
-// console.log("MONGODB_URI Loaded in Electron:", process.env.MONGODB_URI);
-
-// if (!process.env.MONGODB_URI) {
-// 	console.error("❌ ERROR: MONGODB_URI is still missing! Electron is NOT loading .env.");
-// 	process.exit(1); // 🔥 Stop execution if .env is not loaded
-// }
-
 import {app, BrowserWindow} from "electron";
 import {handleApiRequest} from "./api/index.js";
 import {ipcMain} from "electron";
@@ -29,8 +11,10 @@ const __dirname = path.dirname(__filename);
 
 app.whenReady().then(() => {
 	mainWindow = new BrowserWindow({
-		width: 1000,
-		height: 600,
+		width: 800,
+		height: 500,
+		alwaysOnTop: true,
+		icon: path.join(__dirname, "icons/icon48x48.png"),
 		webPreferences: {
 			nodeIntegration: false,
 			contextIsolation: true,
