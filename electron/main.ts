@@ -24,7 +24,8 @@ import {fileURLToPath} from "url";
 
 let mainWindow: BrowserWindow | null = null;
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.whenReady().then(() => {
 	mainWindow = new BrowserWindow({
