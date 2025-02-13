@@ -1,7 +1,7 @@
-import {Playlist as PlaylistModel} from "@/app/models/Playlist";
+import {Playlist as PlaylistModel} from "../../app/models/Playlist.js";
 import mongoose from "mongoose";
-import Playlist, {Track} from "@/app/classes/Playlist";
-import dbConnect from "@/app/lib/dbConnect";
+import Playlist, {Track} from "../../app/classes/Playlist.js";
+import dbConnect from "../../app/lib/dbConnect.js";
 
 dbConnect().catch(err => console.error("Database connection error:", err));
 

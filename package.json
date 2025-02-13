@@ -2,9 +2,10 @@
 	"name": "workmate2",
 	"version": "0.1.0",
 	"private": true,
+	"main": "dist/electron/main.js",
 	"scripts": {
 		"dev": "next dev",
-		"electron:dev": "tsc && electron .",
+		"electron:dev": "npx tsc && electron .",
 		"build": "next build",
 		"start": "electron .",
 		"lint": "next lint"
@@ -26,6 +27,7 @@
 		"react-dom": "19.0.0-rc-66855b96-20241106",
 		"sass": "^1.84.0",
 		"sass-loader": "^16.0.4",
+		"shell-env": "^4.0.1",
 		"wait-on": "^8.0.2"
 	},
 	"devDependencies": {

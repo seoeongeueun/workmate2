@@ -1,6 +1,6 @@
-import {postPlaylist, getPlaylist} from "./playlist";
-import {postLuckyData, getLuckyData} from "./lucky";
-import {getUserSession, loginUser, logoutUser, registerUser, getSessionTimeLeft} from "./auth";
+import {postPlaylist, getPlaylist} from "./playlist.js";
+import {postLuckyData, getLuckyData} from "./lucky.js";
+import {getUserSession, loginUser, logoutUser, registerUser, getSessionTimeLeft} from "./auth.js";
 
 const apiHandlers: Record<string, (data: any) => Promise<any>> = {
 	"/api/playlist": async data => {

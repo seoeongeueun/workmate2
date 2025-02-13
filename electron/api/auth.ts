@@ -1,9 +1,9 @@
-import dbConnect from "@/app/lib/dbConnect";
-import {User} from "@/app/models/User";
+import dbConnect from "../../app/lib/dbConnect.js";
+import {User} from "../../app/models/User.js";
 import bcrypt from "bcrypt";
-import {Playlist} from "@/app/models/Playlist";
-import {MAX_AGE} from "@/app/lib/session";
-import {saveSession, getSession, clearSession} from "../lib/session";
+import {Playlist} from "../../app/models/Playlist.js";
+import {MAX_AGE} from "../../app/lib/session.js";
+import {saveSession, getSession, clearSession} from "../lib/session.js";
 
 /* /api/auth 시작*/
 //로그인
