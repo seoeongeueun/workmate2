@@ -16,16 +16,17 @@
 	"build": {
 		"appId": "app.vercel.workmatebeta",
 		"productName": "Workmate",
-		"icon": "icons/icon120x120"
+		"icon": "icons/icon120x120",
+		"directories": {
+			"output": "release"
+		}
 	},
 	"dependencies": {
 		"@heroicons/react": "^2.2.0",
 		"@types/youtube": "^0.1.0",
 		"bcrypt": "^5.1.1",
 		"concurrently": "^9.1.2",
-		"electron": "^34.1.1",
-		"electron-builder": "^25.1.8",
-		"electron-conf": "^1.2.1",
+		"dotenv": "^16.4.7",
 		"iron-session": "^8.0.4",
 		"mongoose": "^8.9.2",
 		"next": "15.0.3",

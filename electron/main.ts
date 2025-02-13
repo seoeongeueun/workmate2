@@ -1,10 +1,10 @@
-import {app, BrowserWindow} from "electron";
+import {app, BrowserWindow} from "electron/main";
 import {handleApiRequest} from "./api/index.js";
 import {ipcMain} from "electron";
 import path from "path";
 import {fileURLToPath} from "url";
 
-let mainWindow: BrowserWindow | null = null;
+let mainWindow: Electron.BrowserWindow | null = null;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

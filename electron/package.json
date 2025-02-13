@@ -1,0 +1,31 @@
+{
+	"name": "workmate",
+	"version": "1.0.0",
+	"description": "A retro music player true old-school lovers 📻",
+	"author": "seoeongeueun <seongeun9901@gmail.com>",
+	"license": "MIT",
+	"main": "dist/electron/main.js",
+	"devDependencies": {
+		"electron": "^27.3.11",
+		"electron-builder": "^25.1.8"
+	},
+	"scripts": {
+		"dev": "electron .",
+		"build": "electron-builder"
+	},
+	"build": {
+		"appId": "app.vercel.workmatebeta",
+		"productName": "Workmate",
+		"directories": {
+			"output": "release"
+		},
+		"files": [
+			"../dist/**/*",
+			"./icons/**/*"
+		],
+		"icon": "./icons/icon512x512"
+	},
+	"dependencies": {
+		"electron-conf": "^1.2.1"
+	}
+}
