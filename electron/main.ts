@@ -56,7 +56,7 @@ app.on("window-all-closed", () => {
 
 ipcMain.on("api-request", async (event, {url, method, data}) => {
 	try {
-		const result = handleApiRequest(url, data);
+		const result = await handleApiRequest(url, {method, body: data});
 		return {data: result};
 	} catch (error) {
 		return {error: error};

@@ -6,7 +6,7 @@ interface APIResponse<T = any> {
 
 export async function apiRequest<T = any>(url: string, method: string = "GET", data?: unknown): Promise<APIResponse<T>> {
 	if (typeof window !== "undefined" && window.electron) {
-		return window.electron.invoke("api-request", {url, method, body: data});
+		return await window.electron.invoke("api-request", {url, method, data});
 	} else {
 		const options: RequestInit = {
 			method,

@@ -5,11 +5,11 @@
 	"main": "dist/electron/main.js",
 	"scripts": {
 		"dev": "next dev",
-		"electron:dev": "tsc && tsc -p tsconfig.preload.json && electron .",
-		"electron:start": "electron dist/electron/main.js",
-		"electron:build": "electron-builder",
 		"build": "next build",
-		"start": "electron .",
+		"electron:build": "electron-builder",
+		"electron:dev": "npx tsc && electron .",
+		"electron:start": "electron dist/electron/main.js",
+		"start": "next run start",
 		"lint": "next lint"
 	},
 	"type": "module",
