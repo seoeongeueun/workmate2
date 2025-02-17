@@ -20,7 +20,7 @@
 
 # electron
 dist/
-electron/release
+/release
 
 # production
 /build

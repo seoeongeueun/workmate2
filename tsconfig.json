@@ -1,29 +1,27 @@
 {
 	"compilerOptions": {
-		"target": "ES2017",
+		"target": "ESNext",
 		"lib": ["dom", "dom.iterable", "esnext"],
 		"allowJs": true,
 		"skipLibCheck": true,
 		"strict": true,
 		"noEmit": false,
 		"esModuleInterop": true,
-		"module": "esnext",
+		"module": "ESNext",
 		"moduleResolution": "node",
 		"resolveJsonModule": true,
 		"isolatedModules": true,
-		"outDir": "dist",
-		"rootDir": "./",
 		"jsx": "preserve",
 		"incremental": true,
+		"paths": {
+			"@/*": ["./*"]
+		},
 		"plugins": [
 			{
 				"name": "next"
 			}
-		],
-		"paths": {
-			"@/*": ["./*"]
-		}
+		]
 	},
-	"include": ["app/**/*.ts", "app/**/*.tsx", "electron/**/*.ts", "electron/**/*.js", "electron/**/*.tsx", ".next/types/**/*.ts"],
-	"exclude": ["node_modules", "dist", "tailwind.config.cjs", "next-env.d.ts", "**/*.css", ".next"]
+	"include": ["app/**/*.ts", "app/**/*.tsx", ".next/types/**/*.ts"],
+	"exclude": ["node_modules", "dist", "electron", "tailwind.config.cjs", "next-env.d.ts", "**/*.css", ".next"]
 }

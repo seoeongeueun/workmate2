@@ -1,6 +1,6 @@
 import {Conf} from "electron-conf/main";
 
-import {SessionData} from "../../app/lib/session";
+import {SessionData} from "../../app/lib/session.js";
 
 const sessionStore = new Conf<{userSession?: SessionData["user"]}>({
 	name: "workmate",

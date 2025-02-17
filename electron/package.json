@@ -1,31 +1,43 @@
 {
 	"name": "workmate",
 	"version": "1.0.0",
-	"description": "A retro music player true old-school lovers 📻",
-	"author": "seoeongeueun <seongeun9901@gmail.com>",
+	"description": "A retro music player for true old-school lovers 📻",
+	"author": "seongeueun <seongeun9901@gmail.com>",
 	"license": "MIT",
-	"main": "dist/electron/main.js",
+	"main": "main.js",
+	"type": "module",
 	"devDependencies": {
 		"electron": "^27.3.11",
-		"electron-builder": "^25.1.8"
+		"electron-builder": "^25.1.8",
+		"typescript": "^5.8.0-dev.20250216"
 	},
 	"scripts": {
 		"dev": "electron .",
-		"build": "electron-builder"
+		"build": "electron-builder",
+		"tsc": "tsc --project tsconfig.electron.json"
 	},
 	"build": {
 		"appId": "app.vercel.workmatebeta",
 		"productName": "Workmate",
 		"directories": {
-			"output": "release"
+			"output": "../release"
 		},
 		"files": [
-			"../dist/**/*",
-			"./icons/**/*"
+			"package.json",
+			{
+				"from": "../dist/electron",
+				"to": "."
+			},
+			{
+				"from": "../dist/app",
+				"to": "app"
+			},
+			"icons/**/*"
 		],
-		"icon": "./icons/icon512x512"
+		"icon": "./icons/icon512x512.png"
 	},
 	"dependencies": {
 		"electron-conf": "^1.2.1"
-	}
+	},
+	"types": "electron"
 }

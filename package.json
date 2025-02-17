@@ -2,25 +2,13 @@
 	"name": "workmate2",
 	"version": "0.1.0",
 	"private": true,
-	"main": "dist/electron/main.js",
 	"scripts": {
 		"dev": "next dev",
 		"build": "next build",
-		"electron:build": "electron-builder",
-		"electron:dev": "npx tsc && electron .",
-		"electron:start": "electron dist/electron/main.js",
 		"start": "next run start",
 		"lint": "next lint"
 	},
 	"type": "module",
-	"build": {
-		"appId": "app.vercel.workmatebeta",
-		"productName": "Workmate",
-		"icon": "icons/icon120x120",
-		"directories": {
-			"output": "release"
-		}
-	},
 	"dependencies": {
 		"@heroicons/react": "^2.2.0",
 		"@types/youtube": "^0.1.0",
