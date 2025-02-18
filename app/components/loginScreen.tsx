@@ -64,11 +64,13 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 		const password = passwordInput?.value;
 
 		if (!password || !username) {
+			setIsLoading(false);
 			setErrorCode(0);
 			return;
 		}
 
 		if (password.length < 6) {
+			setIsLoading(false);
 			setErrorCode(4);
 			return;
 		}
@@ -86,6 +88,7 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 			}
 			setIsLogin(true);
 		} catch (error) {
+			setIsLoading(false);
 			setErrorCode(3);
 			setIsLogin(false);
 			return;
@@ -103,11 +106,13 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 		const password = passwordInput?.value;
 
 		if (!password || !username) {
+			setIsLoading(false);
 			setErrorCode(0);
 			return;
 		}
 
 		if (password.length < 6) {
+			setIsLoading(false);
 			setErrorCode(4);
 			return;
 		}
@@ -127,8 +132,8 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 			setIsLogin(true);
 			setIsLoading(false);
 		} catch (error) {
-			setErrorCode(2);
 			setIsLoading(false);
+			setErrorCode(2);
 			setIsLogin(false);
 			return;
 		}
