@@ -44,8 +44,8 @@ export default function Home() {
 	};
 
 	useEffect(() => {
-		const color = localStorage.getItem("color") || "";
-		if (parseInt(color)) setColorIndex(parseInt(color));
+		const index = parseInt(localStorage.getItem("color") || "") || 0;
+		setColorIndex(index);
 
 		const handleKeyDown = (event: KeyboardEvent) => {
 			const buttonValue = keyToButtonValue[event.code];
