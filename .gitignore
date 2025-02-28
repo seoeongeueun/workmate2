@@ -19,8 +19,8 @@
 /out/
 
 # electron
-dist/
-/release
+*/dist
+*/release
 
 # production
 /build

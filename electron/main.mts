@@ -1,13 +1,13 @@
-import {app, BrowserWindow} from "electron/main";
+import {app, BrowserWindow, ipcMain} from "electron";
 import {handleApiRequest} from "./api/index.js";
-import {ipcMain} from "electron";
 import path from "path";
-import {fileURLToPath} from "url";
+import dotenv from "dotenv";
+dotenv.config();
 
-let mainWindow: Electron.BrowserWindow | null = null;
+let mainWindow: BrowserWindow | null = null;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
 app.whenReady().then(() => {
 	mainWindow = new BrowserWindow({
@@ -18,7 +18,7 @@ app.whenReady().then(() => {
 		webPreferences: {
 			nodeIntegration: false,
 			contextIsolation: true,
-			preload: path.join(__dirname, "preload.js"),
+			preload: path.join(__dirname, "preload.mjs"),
 		},
 	});
 

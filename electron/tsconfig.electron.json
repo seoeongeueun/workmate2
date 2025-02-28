@@ -1,17 +1,16 @@
 {
 	"compilerOptions": {
-		"target": "ESNext",
-		"lib": ["DOM", "ESNext"],
+		"target": "ES2022",
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
+		"verbatimModuleSyntax": true,
+		"outDir": "./dist",
+		"rootDir": "../",
 		"strict": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
-		"resolveJsonModule": true,
-		"outDir": "../dist",
-		"rootDir": "../",
-		"isolatedModules": true
+		"resolveJsonModule": true
 	},
-	"include": ["./**/*.ts", "app/**/*"],
-	"exclude": ["../node_modules", "../dist"]
+	"include": ["../electron/**/*"],
+	"exclude": ["node_modules", "../dist", "../release"]
 }
