@@ -1,4 +1,3 @@
-import dbConnect from "../../app/lib/dbConnect.js";
 import {User} from "../../app/models/User.js";
 import bcrypt from "bcrypt";
 import {Playlist} from "../../app/models/Playlist.js";
@@ -13,8 +12,6 @@ export async function loginUser(data: {username: string; password: string}) {
 	if (!username || !password) {
 		throw new Error("Inputs missing");
 	}
-
-	await dbConnect();
 
 	//대소문자 무시한 동일 유저네임 찾기
 	const user = await User.findOne({username: {$regex: new RegExp(`^${username}$`, "i")}}).lean();
@@ -87,8 +84,6 @@ export async function registerUser(data: {username: string; password: string}) {
 	if (!username || !password) {
 		throw new Error("ErrorCode: 0 - Missing input");
 	}
-
-	await dbConnect();
 
 	//중복 이름 확인 (대소문자 무시)
 	const exists = await User.findOne({username: {$regex: new RegExp(`^${username}$`, "i")}}).lean();

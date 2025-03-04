@@ -1,7 +1,5 @@
 // import {contextBridge, ipcRenderer, IpcRendererEvent} from "electron";
 
-// export {};
-
 // contextBridge.exposeInMainWorld("electron", {
 // 	send: (channel: string, data: any) => ipcRenderer.send(channel, data),
 // 	receive: (channel: string, func: (data: unknown) => void) => {

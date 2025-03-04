@@ -1,7 +1,4 @@
-import dbConnect from "../../app/lib/dbConnect.js";
 import {Lucky} from "../../app/models/Lucky.js";
-
-dbConnect().catch(err => console.error("Database connection error:", err));
 
 export async function getLuckyData() {
 	try {

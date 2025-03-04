@@ -7,7 +7,7 @@
 	"type": "module",
 	"main": "dist/electron/main.mjs",
 	"scripts": {
-		"tsc": "tsc --project tsconfig.electron.json",
+		"tsc": "tsc --project tsconfig.electron.json && node ./lib/encrypt-env.js && cp ./preload.cjs dist/electron/preload.cjs",
 		"dev": "npx electron .",
 		"build": "npm run tsc && electron-builder"
 	},
@@ -15,35 +15,38 @@
 		"appId": "app.vercel.workmatebeta",
 		"productName": "Workmate",
 		"asar": true,
-		"directories": {
-			"output": "release",
-			"app": "."
-		},
-		"asarUnpack": [
-			"node_modules/electron-conf/**",
-			"./dist/electron/main.mjs"
-		],
 		"files": [
+			"dist/electron/**/*",
+			"dist/app/**/*",
 			"package.json",
 			"icons/**/*",
-			"dist/electron/**/*",
-			"dist/app/**/*"
+			{
+				"from": "../out",
+				"to": "dist/out"
+			}
 		],
 		"extraResources": [
 			{
-				"from": "dist/electron",
+				"from": "env.enc.json",
 				"to": "."
 			},
 			{
-				"from": "dist/app",
-				"to": "app"
+				"from": "../out/icon",
+				"to": "."
+			},
+			{
+				"from": "../out/music",
+				"to": "."
 			}
 		],
 		"icon": "./icons/icon512x512.png"
 	},
 	"dependencies": {
+		"bcrypt": "^5.1.1",
 		"crypto": "^1.0.1",
+		"dotenv": "^16.4.7",
 		"electron-conf": "^1.2.1",
+		"mongoose": "^8.11.0",
 		"typescript": "^5.7.3"
 	},
 	"devDependencies": {

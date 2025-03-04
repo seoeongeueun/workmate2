@@ -3,10 +3,6 @@ import mongoose from "mongoose";
 import Playlist from "../../app/classes/Playlist.js";
 import type {Track} from "../../app/classes/Playlist.js";
 
-import dbConnect from "../../app/lib/dbConnect.js";
-
-dbConnect().catch(err => console.error("Database connection error:", err));
-
 const handleAdd = async (id: string, track: Track) => {
 	return await PlaylistModel.findByIdAndUpdate(id, {$addToSet: {tracks: track}}, {new: true});
 };
