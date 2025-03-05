@@ -1,30 +1,30 @@
-const Power = "/music/power.mp3";
+const Power = "./music/power.mp3";
 
 type AudioKey = "power";
 
 const audios: Record<AudioKey, HTMLAudioElement> = {
-    power: typeof window !== "undefined" ? new Audio(Power) : null as unknown as HTMLAudioElement,
+	power: typeof window !== "undefined" ? new Audio(Power) : (null as unknown as HTMLAudioElement),
 };
 
 let current: AudioKey | null = null;
 
 const play = (name: AudioKey): void => {
-    if (current) {
-        audios[current].pause();
-    }
+	if (current) {
+		audios[current].pause();
+	}
 
-    audios[name].play();
-    current = name;
-}
+	audios[name].play();
+	current = name;
+};
 
 const pause = (name: AudioKey): void => {
-    current = null;
-    audios[name].pause();
-}
+	current = null;
+	audios[name].pause();
+};
 
 const audioControls = {
-  pause,
-  play,
+	pause,
+	play,
 };
 
 export default audioControls;

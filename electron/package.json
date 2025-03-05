@@ -29,14 +29,6 @@
 			{
 				"from": "env.enc.json",
 				"to": "."
-			},
-			{
-				"from": "../out/icon",
-				"to": "."
-			},
-			{
-				"from": "../out/music",
-				"to": "."
 			}
 		],
 		"icon": "./icons/icon512x512.png"
