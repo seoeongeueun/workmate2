@@ -867,7 +867,8 @@ $transition: 0.5s ease-in-out;
 }
 
 .blur-shadow {
-	width: 57rem;
+	width: 100%;
+	min-width: 77rem;
 	height: 5rem;
 	border-radius: 100%;
 	position: relative;
@@ -879,12 +880,12 @@ $transition: 0.5s ease-in-out;
 
 	&::before {
 		content: "";
-		width: 100%;
+		width: 57rem;
 		height: 100%;
 		border-radius: 100%;
 		background-color: rgb(26, 25, 27);
 		position: absolute;
 		filter: blur(9px);
-		transform: scaleY(0.9);
+		transform: scaleY(0.8);
 	}
 }

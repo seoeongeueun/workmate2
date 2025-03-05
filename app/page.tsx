@@ -3,7 +3,8 @@ import {useState, useEffect} from "react";
 import audioControls from "./lib/audioControls";
 import MusicPlayer from "./components/musicPlayer";
 import {PlaylistProvider} from "./context/playlistContext";
-import {PaintBrushIcon} from "@heroicons/react/24/solid";
+import {PaintBrushIcon, ExclamationTriangleIcon} from "@heroicons/react/24/solid";
+import {Cog8ToothIcon} from "@heroicons/react/24/outline";
 import "./global.scss";
 
 /* 
@@ -29,6 +30,8 @@ export default function Home() {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [triggers, setTriggers] = useState<Triggers>({prev: undefined, current: undefined});
 	const [colorIndex, setColorIndex] = useState<ColorIndex>(0);
+	const [isKorean, setIsKorean] = useState<boolean | undefined>(undefined);
+	const [showSettings, setShowSettings] = useState<boolean>(false);
 
 	const handleGlobalClick = (event: MouseEvent) => {
 		const target = event.target as HTMLElement;
@@ -46,6 +49,7 @@ export default function Home() {
 	useEffect(() => {
 		const index = parseInt(localStorage.getItem("color") || "") || 0;
 		setColorIndex(index);
+		document.documentElement.setAttribute("data-theme", colorNames[index]);
 
 		const handleKeyDown = (event: KeyboardEvent) => {
 			const buttonValue = keyToButtonValue[event.code];
@@ -56,6 +60,12 @@ export default function Home() {
 
 		window.addEventListener("keydown", handleKeyDown);
 		document.addEventListener("click", handleGlobalClick);
+
+		if (navigator.language.startsWith("ko")) {
+			setIsKorean(true);
+		} else {
+			setIsKorean(false);
+		}
 
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
@@ -75,8 +85,8 @@ export default function Home() {
 		if (power) audioControls.play("power");
 	}, [power]);
 
-	const handleColorChange = () => {
-		const newIndex = (colorIndex + 1) % themeColors.length;
+	const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const newIndex = colorNames.indexOf(e.target.value);
 		setColorIndex(newIndex);
 		document.documentElement.setAttribute("data-theme", colorNames[newIndex]);
 		localStorage.setItem("color", newIndex.toString());
@@ -84,15 +94,56 @@ export default function Home() {
 
 	return (
 		<div className="font-galmuri font-semibold w-full h-full">
-			<div className="fixed right-4 top-4 z-[999] pointer-events-none">
-				<button
-					className="transition-colors duration-300 flex w-fit h-fit p-spacing-6 justify-center items-center rounded-full pointer-events-auto"
-					onClick={handleColorChange}
-					style={{backgroundColor: themeColors[colorIndex]}}
-				>
-					<PaintBrushIcon className="size-6 fill-white"></PaintBrushIcon>
-				</button>
-			</div>
+			{isKorean !== undefined && (
+				<div className="fixed p-4 w-screen pointer-events-none flex flex-row justify-between items-start gap-2">
+					<div
+						className={`transition-opacity ${showSettings ? "opacity-30" : "opacity-100"} bg-gray-2 xs:block md:hidden w-fit h-fit text-black border break-keep border-px border-black p-2 rounded-sm text-md gap-1 flex flex-row items-center max-w-full`}
+					>
+						<ExclamationTriangleIcon className="size-6 mr-2"></ExclamationTriangleIcon>
+						{isKorean ? (
+							<span>원활한 디스플레이를 위해 pc 사용이 권장되며, 800 픽셀 이하 해상도 기기에서 일부 요소가 정상적으로 표시되지 않을 수 있습니다.</span>
+						) : (
+							<span className="text-wider">
+								Devices with resolutions below 800 pixels may not display some elements correctly. For optimal display, PC usage is recommended.
+							</span>
+						)}
+					</div>
+					<div className="ml-auto z-[999] pointer-events-none flex flex-row-reverse gap-2">
+						<button
+							onClick={() => setShowSettings(prev => !prev)}
+							className="bg-transparent flex w-fit h-fit p-spacing-2 justify-center items-center rounded-full pointer-events-auto"
+						>
+							<Cog8ToothIcon className="size-8 hover:animate-[spin_1300ms_ease-in-out_infinite]"></Cog8ToothIcon>
+						</button>
+						{showSettings && (
+							<div className="fixed top-4 right-[3.9rem] rounded-sm pointer-events-auto bg-gray-2 border border-px w-[15rem] h-fit border-black text-black text-md p-4">
+								<div className="flex flex-col justify-start gap-2">
+									<span>Settings</span>
+									<div className="flex flex-row gap-3">
+										{colorNames.map(color => (
+											<div key={color} className="flex flex-row gap-2 text-sm">
+												<input
+													type="radio"
+													name="colors"
+													value={color}
+													onChange={handleColorChange}
+													checked={colorNames[colorIndex] === color}
+													className="cursor-pointer"
+												/>
+												<label className="form-check-label">{color}</label>
+											</div>
+										))}
+									</div>
+									{/* <div className="flex flex-row gap-2 items-center">
+								<label>Always on top</label>
+								<input type="checkbox" id="always-on-top" name="always-on-top" defaultChecked />
+							</div> */}
+								</div>
+							</div>
+						)}
+					</div>
+				</div>
+			)}
 			<div className="w-screen h-full flex items-center justify-start md:justify-center overflow-auto">
 				<div className="gameboy-body w-[77rem] h-[30rem] flex items-center justify-center">
 					<div className="gameboy-frames flex flex-row items-center position-center">
@@ -208,8 +259,10 @@ export default function Home() {
 						</div>
 					</div>
 				</div>
-				<div className="blur-shadow">
-					<div className="body-filler"></div>
+				<div className="w-full h-fit position-center">
+					<div className="blur-shadow">
+						<div className="body-filler"></div>
+					</div>
 				</div>
 			</div>
 		</div>
