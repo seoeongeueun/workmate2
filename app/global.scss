@@ -126,7 +126,10 @@ $transition: 0.5s ease-in-out;
 				// 	inset 0 1px 1px 0 rgba(169, 171, 197, 0.5),
 				// 	0px -3px 2px -3px #ecedf3,
 				// 	0px -2px 1px 2px var(--body);
-				box-shadow: inset 0 1px 1px 0 rgba(150, 152, 190, 0.6), 0px 0px 1px 4px var(--body), 0px -9px 1px -8px rgba(3, 11, 8, 0.8);
+				box-shadow:
+					inset 0 1px 1px 0 rgba(150, 152, 190, 0.6),
+					0px 0px 1px 4px var(--body),
+					0px -9px 1px -8px rgba(3, 11, 8, 0.8);
 				outline: 1px solid rgba(245, 245, 245, 0.3);
 			}
 		}
@@ -149,7 +152,7 @@ $transition: 0.5s ease-in-out;
 
 			> div {
 				top: 85%;
-    border-radius: 13%;
+				border-radius: 13%;
 				border: 1px solid var(--frame-dark);
 				// box-shadow:
 				// 	2px -1px 1px -2px var(--frame-dark),
@@ -792,11 +795,11 @@ $transition: 0.5s ease-in-out;
 		text-shadow:
 			0px -1px 0px rgba(var(--body-light-rgb), 0.4),
 			0px 1px 0px var(--body-dark);
-		margin-left: 0.6rem;
+		margin-left: 0.7rem;
 		font-weight: 600;
 		letter-spacing: 0.5px;
-		margin-top: 0.1rem;
-		font-size: 0.8rem;
+		margin-top: 0.4rem;
+		font-size: 0.9rem;
 		font-family: "GongGothicMedium";
 	}
 }
@@ -851,5 +854,37 @@ $transition: 0.5s ease-in-out;
 .choices {
 	p {
 		filter: hue-rotate(3deg) saturate(150%);
+	}
+}
+
+.body-filler {
+	width: 40rem;
+	height: 9rem;
+	background-color: var(--body);
+	border-radius: 100%;
+	position: relative;
+	bottom: 6rem;
+}
+
+.blur-shadow {
+	width: 57rem;
+	height: 5rem;
+	border-radius: 100%;
+	position: relative;
+	top: 18rem;
+	display: flex;
+	z-index: 0;
+	justify-content: center;
+	opacity: 0.2;
+
+	&::before {
+		content: "";
+		width: 100%;
+		height: 100%;
+		border-radius: 100%;
+		background-color: rgb(26, 25, 27);
+		position: absolute;
+		filter: blur(9px);
+		transform: scaleY(0.9);
 	}
 }

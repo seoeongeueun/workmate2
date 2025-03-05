@@ -208,6 +208,9 @@ export default function Home() {
 						</div>
 					</div>
 				</div>
+				<div className="blur-shadow">
+					<div className="body-filler"></div>
+				</div>
 			</div>
 		</div>
 	);
