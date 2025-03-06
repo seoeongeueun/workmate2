@@ -3,7 +3,8 @@ import {useState, useEffect} from "react";
 import audioControls from "./lib/audioControls";
 import MusicPlayer from "./components/musicPlayer";
 import {PlaylistProvider} from "./context/playlistContext";
-import {PaintBrushIcon, ExclamationTriangleIcon} from "@heroicons/react/24/solid";
+import {apiRequest} from "./lib/tools";
+import {ExclamationTriangleIcon} from "@heroicons/react/24/solid";
 import {Cog8ToothIcon} from "@heroicons/react/24/outline";
 import "./global.scss";
 
@@ -92,10 +93,18 @@ export default function Home() {
 		localStorage.setItem("color", newIndex.toString());
 	};
 
+	const handleAlwaysOnTop = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const alwaysOnTop = e.target.checked;
+		const response = await apiRequest("/api/always-on-top", "POST", {alwaysOnTop});
+		if (response.error) {
+			console.error("Failed to change settings", response.error);
+		}
+	};
+
 	return (
 		<div className="font-galmuri font-semibold w-full h-full">
 			{isKorean !== undefined && (
-				<div className="fixed p-4 w-screen pointer-events-none flex flex-row justify-between items-start gap-2">
+				<div className="fixed p-4 w-screen z-[999] pointer-events-none flex flex-row justify-between items-start gap-2">
 					<div
 						className={`transition-opacity ${showSettings ? "opacity-30" : "opacity-100"} bg-gray-2 xs:block md:hidden w-fit h-fit text-black border break-keep border-px border-black p-2 rounded-sm text-md gap-1 flex flex-row items-center max-w-full`}
 					>
@@ -108,10 +117,10 @@ export default function Home() {
 							</span>
 						)}
 					</div>
-					<div className="ml-auto z-[999] pointer-events-none flex flex-row-reverse gap-2">
+					<div className="ml-auto flex flex-row-reverse gap-2">
 						<button
 							onClick={() => setShowSettings(prev => !prev)}
-							className="bg-transparent flex w-fit h-fit p-spacing-2 justify-center items-center rounded-full pointer-events-auto"
+							className="bg-transparent flex w-fit h-fit p-spacing-2 justify-center items-center rounded-full !pointer-events-auto"
 						>
 							<Cog8ToothIcon className="size-8 hover:animate-[spin_1300ms_ease-in-out_infinite]"></Cog8ToothIcon>
 						</button>
@@ -134,10 +143,10 @@ export default function Home() {
 											</div>
 										))}
 									</div>
-									{/* <div className="flex flex-row gap-2 items-center">
-								<label>Always on top</label>
-								<input type="checkbox" id="always-on-top" name="always-on-top" defaultChecked />
-							</div> */}
+									<div className="flex flex-row gap-2 items-center">
+										<label>Always on top</label>
+										<input type="checkbox" id="always-on-top" name="always-on-top" defaultChecked onChange={handleAlwaysOnTop} className="cursor-pointer" />
+									</div>
 								</div>
 							</div>
 						)}

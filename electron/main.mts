@@ -53,9 +53,14 @@ app.on("window-all-closed", () => {
 
 ipcMain.handle("api-request", async (event, {url, method, data}) => {
 	try {
-		const result = await handleApiRequest(url, {method, body: data});
+		if (url.includes("/api/always-on-top") && method === "POST" && mainWindow) {
+			mainWindow.setAlwaysOnTop(data.alwaysOnTop);
+			return {success: true};
+		} else {
+			const result = await handleApiRequest(url, {method, body: data});
 
-		return JSON.parse(JSON.stringify(result));
+			return JSON.parse(JSON.stringify(result));
+		}
 	} catch (error) {
 		return {error: error};
 	}

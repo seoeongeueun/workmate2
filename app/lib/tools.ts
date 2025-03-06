@@ -6,7 +6,7 @@ interface APIResponse<T = any> {
 
 export async function apiRequest<T = any>(url: string, method: string = "GET", data?: unknown): Promise<APIResponse<T>> {
 	if (typeof window !== "undefined" && window.electron) {
-		//console.log(`[IPC Request Sent] ${url}`, {method, data, stack: new Error().stack}); // ✅ Show call stack
+		//console.log(`[IPC Request Sent] ${url}`, {method, data, stack: new Error().stack});
 		const response = await window.electron.invoke("api-request", {url, method, data});
 		//console.log(`[IPC Response Received] ${url}`, response);
 		return {data: response};
