@@ -95,55 +95,57 @@ export default function Home() {
 	return (
 		<div className="font-galmuri font-semibold w-full h-full">
 			{isKorean !== undefined && (
-				<div className="fixed p-4 w-screen pointer-events-none flex flex-row justify-between items-start gap-2">
+				<div className="fixed p-4 w-full pointer-events-none flex justify-center">
 					<div
-						className={`transition-opacity ${showSettings ? "opacity-30" : "opacity-100"} bg-gray-2 xs:block md:hidden w-fit h-fit text-black border break-keep border-px border-black p-2 rounded-sm text-md gap-1 flex flex-row items-center max-w-full`}
+						className={`transition-opacity ${showSettings ? "opacity-30" : "opacity-100"} bg-gray-2 block md:hidden w-[calc(100%-3rem)] mr-auto max-w-[40rem] h-fit text-black border break-word border-px border-black p-spacing-10 py-spacing-6 rounded-sm text-md gap-1 flex flex-row items-center max-w-full`}
 					>
-						<ExclamationTriangleIcon className="size-6 mr-2"></ExclamationTriangleIcon>
-						{isKorean ? (
-							<span>원활한 디스플레이를 위해 pc 사용이 권장되며, 800 픽셀 이하 해상도 기기에서 일부 요소가 정상적으로 표시되지 않을 수 있습니다.</span>
+						<ExclamationTriangleIcon className="size-6 mr-spacing-8 shrink-0"></ExclamationTriangleIcon>
+						{!isKorean ? (
+							<span className="whitespace-pre-line">{`최적의 디스플레이를 위해 800픽셀 이상 너비를 권장합니다.\n본 시스템은 PC 환경을 기준으로 제작되어, 모바일 기기에서 일부 기능이 원활하게 작동하지 않을 수 있습니다.`}</span>
 						) : (
-							<span className="text-wider">
-								Devices with resolutions below 800 pixels may not display some elements correctly. For optimal display, PC usage is recommended.
+							<span className="text-wider whitespace-pre-line">
+								{`For optimal performance, PC usage is recommended.\n Devices with resolutions below 800 pixels may not display some elements correctly.`}
 							</span>
-						)}
-					</div>
-					<div className="ml-auto z-[999] pointer-events-none flex flex-row-reverse gap-2">
-						<button
-							onClick={() => setShowSettings(prev => !prev)}
-							className="bg-transparent flex w-fit h-fit p-spacing-2 justify-center items-center rounded-full pointer-events-auto"
-						>
-							<Cog8ToothIcon className="size-8 hover:animate-[spin_1300ms_ease-in-out_infinite]"></Cog8ToothIcon>
-						</button>
-						{showSettings && (
-							<div className="fixed top-4 right-[3.9rem] rounded-sm pointer-events-auto bg-gray-2 border border-px w-[15rem] h-fit border-black text-black text-md p-4">
-								<div className="flex flex-col justify-start gap-2">
-									<span>Settings</span>
-									<div className="flex flex-row gap-3">
-										{colorNames.map(color => (
-											<div key={color} className="flex flex-row gap-2 text-sm">
-												<input
-													type="radio"
-													name="colors"
-													value={color}
-													onChange={handleColorChange}
-													checked={colorNames[colorIndex] === color}
-													className="cursor-pointer"
-												/>
-												<label className="form-check-label">{color}</label>
-											</div>
-										))}
-									</div>
-									{/* <div className="flex flex-row gap-2 items-center">
-								<label>Always on top</label>
-								<input type="checkbox" id="always-on-top" name="always-on-top" defaultChecked />
-							</div> */}
-								</div>
-							</div>
 						)}
 					</div>
 				</div>
 			)}
+			<div className="fixed right-0 p-4 w-fit pointer-events-none">
+				<div className="z-[999] pointer-events-none flex flex-row-reverse gap-2">
+					<button
+						onClick={() => setShowSettings(prev => !prev)}
+						className="bg-transparent flex w-fit h-fit p-spacing-2 justify-center items-center rounded-full pointer-events-auto"
+					>
+						<Cog8ToothIcon className="size-8 hover:animate-[spin_700ms_ease-in-out_backwards]"></Cog8ToothIcon>
+					</button>
+					{showSettings && (
+						<div className="rounded-sm pointer-events-auto bg-gray-2 border border-px min-w-[15rem] w-fit h-fit border-black text-black text-md p-4">
+							<div className="flex flex-col justify-start gap-2">
+								<span>Settings</span>
+								<div className="flex flex-row gap-3">
+									{colorNames.map(color => (
+										<div key={color} className="flex flex-row gap-2 text-sm">
+											<input
+												type="radio"
+												name="colors"
+												value={color}
+												onChange={handleColorChange}
+												checked={colorNames[colorIndex] === color}
+												className="cursor-pointer"
+											/>
+											<label className="form-check-label">{color}</label>
+										</div>
+									))}
+								</div>
+								{/* <div className="flex flex-row gap-2 items-center">
+								<label>Always on top</label>
+								<input type="checkbox" id="always-on-top" name="always-on-top" defaultChecked />
+							</div> */}
+							</div>
+						</div>
+					)}
+				</div>
+			</div>
 			<div className="w-screen h-full flex items-center justify-start md:justify-center overflow-auto">
 				<div className="gameboy-body w-[77rem] h-[30rem] flex items-center justify-center">
 					<div className="gameboy-frames flex flex-row items-center position-center">
@@ -259,7 +261,7 @@ export default function Home() {
 						</div>
 					</div>
 				</div>
-				<div className="w-full h-fit position-center">
+				<div className="w-full h-fit position-center pointer-events-none">
 					<div className="blur-shadow">
 						<div className="body-filler"></div>
 					</div>

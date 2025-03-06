@@ -588,20 +588,20 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			{showPopup && (
 				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
 					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] p-spacing-16 bg-gray-2 flex flex-col justify-between items-center">
-						<div className="flex flex-col items-start justify-start">
-							<button disabled={!specialTrackInfo} className="leading-8 flex flex-row items-center gap-2">
+						<div className="flex flex-col items-start justify-start h-fit">
+							<button disabled={!specialTrackInfo} className="h-8 leading-8 flex flex-row items-center gap-2">
 								<PlayIcon className={`size-5 animate-blink fill-black ${modeValues[mode] === "remove" ? "h-fit" : "h-0"}`} />
 								Remove
 							</button>
-							<button className="leading-8 flex flex-row items-center gap-2" onClick={() => setShuffleMode(prev => !prev)}>
+							<button className="h-8 leading-8 flex flex-row items-center gap-2" onClick={() => setShuffleMode(prev => !prev)}>
 								<PlayIcon className={`size-5 animate-blink ${modeValues[mode] === "shuffle" ? "h-fit" : "h-0"}`} />
 								{`Shuffle <${shuffleMode ? "on" : "off"}>`}
 							</button>
-							<button className="leading-8 flex flex-row items-center gap-2">
+							<button className="h-8 leading-8 flex flex-row items-center gap-2">
 								<PlayIcon className={`size-5 animate-blink ${modeValues[mode] === "empty" ? "h-fit" : "h-0"}`} />
 								Empty
 							</button>
-							<button className="leading-8 flex flex-row items-center gap-2">
+							<button className="h-8 leading-8 flex flex-row items-center gap-2">
 								<PlayIcon className={`size-5 animate-blink ${modeValues[mode] === "logout" ? "h-fit" : "h-0"}`} />
 								Log out
 							</button>
@@ -623,7 +623,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
 					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] text-center p-spacing-16 py-spacing-24 bg-gray-2 flex flex-col justify-between items-center">
 						<span className="leading-8 whitespace-pre-line">{getPopupMessage()}</span>
-						{specialTrackInfo && modeValues[popupType] === "remove" && <img src="/icon/alien.gif" alt="alien" className="w-5 h-5 mt-4" />}
+						{specialTrackInfo && modeValues[popupType] === "remove" && <img src="./icon/alien.gif" alt="alien" className="w-5 h-5 mt-4" />}
 
 						<div className="w-full flex flex-row items-center justify-between">
 							<button className="flex flex-row items-center gap-spacing-4" onClick={() => handlePopAction("b")}>
