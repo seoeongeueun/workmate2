@@ -4,7 +4,6 @@ import path from "path";
 import {loadEncryptedEnv} from "./lib/decrypt-env.js";
 import dbConnect from "./api/dbConnect.js";
 import {fileURLToPath} from "url";
-import fs from "fs";
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -32,9 +31,6 @@ app.whenReady().then(() => {
 	if (isDev) {
 		mainWindow.loadURL("http://localhost:3000");
 	} else {
-		const indexPath = path.join(__dirname, "../out/index.html");
-		console.log("Looking for file:", indexPath);
-		console.log("Exists?:", fs.existsSync(indexPath));
 		mainWindow.loadFile(path.join(__dirname, "../out/index.html"));
 	}
 

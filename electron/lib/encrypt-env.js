@@ -2,14 +2,17 @@ import fs from "fs";
 import {fileURLToPath} from "url";
 import path from "path";
 import crypto from "crypto";
-
-const ALGORITHM = "aes-256-cbc";
-const KEY = process.env.ENCRYPTION_KEY || "01011111101111000011001111111101"; // 32바이트
-const IV = crypto.randomBytes(16);
+import dotenv from "dotenv";
 
 // ESM에서 __dirname 흉내내기
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+dotenv.config({path: path.resolve(__dirname, "../../.env")});
+
+const ALGORITHM = "aes-256-cbc";
+const KEY = Buffer.from(process.env.ENCRYPTION_KEY || "UFWtsYJji5qlXkQSRioY6lb+YzqyBEN4Ido68Yvu3AM=", "base64");
+const IV = crypto.randomBytes(16);
 
 const envPath = path.join(__dirname, "../../.env");
 if (!fs.existsSync(envPath)) {

@@ -287,7 +287,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					playVideo();
 				},
 				onError: event => {
-					console.log("❌ Video unavailable");
+					console.log(`❌ Video ${initialVideoId} is unavailable`);
 					//스페셜 곡이 에러난 경우에만 삭제 처리
 					if (chosenTrack.includes(initialVideoId)) playerRef.current.destroy();
 				},

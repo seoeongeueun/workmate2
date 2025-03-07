@@ -8,8 +8,8 @@
 	"main": "dist/electron/main.mjs",
 	"scripts": {
 		"tsc": "tsc --project tsconfig.electron.json && node ./lib/encrypt-env.js && cp ./preload.cjs dist/electron/preload.cjs",
-		"dev": "npx electron .",
-		"build": "npm run tsc && electron-builder"
+		"dev": "NODE_ENV=development npx electron .",
+		"build": "NODE_ENV=production npm run tsc && electron-builder --mac --win --x64"
 	},
 	"build": {
 		"appId": "app.vercel.workmatebeta",

@@ -21,7 +21,8 @@ export function loadEncryptedEnv() {
 	const {iv, data} = JSON.parse(fs.readFileSync(filePath, "utf-8"));
 
 	const ALGORITHM = "aes-256-cbc";
-	const KEY = process.env.ENCRYPTION_KEY || "01011111101111000011001111111101";
+	const KEY = Buffer.from((window as any).env.ENCRYPTION_KEY || "UFWtsYJji5qlXkQSRioY6lb+YzqyBEN4Ido68Yvu3AM=", "base64");
+	console.log("!!: ", (window as any).env.ENCRYPTION_KEY);
 	const ivBuf = Buffer.from(iv, "base64");
 	const decipher = crypto.createDecipheriv(ALGORITHM, KEY, ivBuf);
 

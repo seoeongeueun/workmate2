@@ -17,3 +17,7 @@ contextBridge.exposeInMainWorld("electron", {
 	receive: (channel, func) => ipcRenderer.on(channel, (_event, data) => func(data)),
 	invoke: (channel, data) => ipcRenderer.invoke(channel, data),
 });
+
+contextBridge.exposeInMainWorld("env", {
+	ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || "UFWtsYJji5qlXkQSRioY6lb+YzqyBEN4Ido68Yvu3AM=",
+});
