@@ -77,7 +77,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		} else {
 			playerRef.current.pauseVideo();
 		}
-		setIsPlay(!isPlay);
+		//setIsPlay(!isPlay);
 	}, [isPlay]);
 
 	/* cue 과정은 동영상의 제목을 가져오기 위해 거쳐가는 필수 단계
@@ -287,7 +287,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					playVideo();
 				},
 				onError: event => {
-					console.log(`❌ Video ${initialVideoId} is unavailable`);
+					console.log(`❌ Video ${initialVideoId} is unavailable: ${event.data}`);
 					//스페셜 곡이 에러난 경우에만 삭제 처리
 					if (chosenTrack.includes(initialVideoId)) playerRef.current.destroy();
 				},
@@ -323,6 +323,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 							currentTrackRef.current = {...current, title: title};
 							playerRef.current.playVideo();
 						}
+					} else if (event.data === YT.PlayerState.PAUSED) {
+						setIsPlay(false);
+					} else if (event.data === YT.PlayerState.PLAYING) {
+						setIsPlay(true);
 					}
 				},
 			},

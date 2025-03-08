@@ -10,6 +10,9 @@ let mainWindow: BrowserWindow | null = null;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+//gpu 제한
+app.disableHardwareAcceleration();
+
 app.whenReady().then(() => {
 	// env 먼저 복호화 후 윈도우 생성
 	loadEncryptedEnv();

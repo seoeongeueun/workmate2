@@ -268,7 +268,7 @@ export default function Home() {
 						</div>
 					</div>
 				</div>
-				<div className="w-full h-fit position-center">
+				<div className="w-full h-fit position-center pointer-events-none">
 					<div className="blur-shadow">
 						<div className="body-filler"></div>
 					</div>

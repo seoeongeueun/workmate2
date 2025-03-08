@@ -18,11 +18,11 @@ export function loadEncryptedEnv() {
 		console.warn("env.enc.json 파일을 찾을 수 없습니다.");
 		return {};
 	}
+
 	const {iv, data} = JSON.parse(fs.readFileSync(filePath, "utf-8"));
 
 	const ALGORITHM = "aes-256-cbc";
-	const KEY = Buffer.from((window as any).env.ENCRYPTION_KEY || "UFWtsYJji5qlXkQSRioY6lb+YzqyBEN4Ido68Yvu3AM=", "base64");
-	console.log("!!: ", (window as any).env.ENCRYPTION_KEY);
+	const KEY = Buffer.from("IcFCmIhA5cVjrQx4UAYq+05Gbgat6M3qJ2UcOCAcO+A=", "base64");
 	const ivBuf = Buffer.from(iv, "base64");
 	const decipher = crypto.createDecipheriv(ALGORITHM, KEY, ivBuf);
 
