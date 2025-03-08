@@ -4,6 +4,8 @@ import path from "path";
 import {loadEncryptedEnv} from "./lib/decrypt-env.js";
 import dbConnect from "./api/dbConnect.js";
 import {fileURLToPath} from "url";
+import express from "express";
+import getPort from "get-port";
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -34,7 +36,22 @@ app.whenReady().then(() => {
 	if (isDev) {
 		mainWindow.loadURL("http://localhost:3000");
 	} else {
-		mainWindow.loadFile(path.join(__dirname, "../out/index.html"));
+		//단순 index.html를 사용할 경우 file://에서 동영상 임베드 제한이 걸려 express로 실행
+		const server = express();
+		const outPath = path.join(__dirname, "../out");
+		server.use(express.static(outPath));
+
+		(async () => {
+			// 3000, 3001, 3002 순으로 가능한 포트 찾기
+			const port = await getPort({port: [3000, 3001, 3002]});
+
+			server.listen(port, () => {
+				console.log(`Running on port ${port}`);
+				if (mainWindow) {
+					mainWindow.loadURL(`http://localhost:${port}`);
+				}
+			});
+		})();
 	}
 
 	dbConnect()

@@ -38,10 +38,13 @@
 		"crypto": "^1.0.1",
 		"dotenv": "^16.4.7",
 		"electron-conf": "^1.2.1",
+		"express": "^4.21.2",
+		"get-port": "^7.1.0",
 		"mongoose": "^8.11.0",
 		"typescript": "^5.7.3"
 	},
 	"devDependencies": {
+		"@types/express": "^5.0.0",
 		"electron": "^34.2.0",
 		"electron-builder": "^25.1.8"
 	}
