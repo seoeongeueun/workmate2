@@ -9,6 +9,7 @@ import {
 	SpeakerWaveIcon,
 	SpeakerXMarkIcon,
 	XCircleIcon,
+	NoSymbolIcon,
 } from "@heroicons/react/16/solid";
 import Playlist, {Track} from "../classes/Playlist";
 import {apiRequest} from "../lib/tools";
@@ -130,6 +131,8 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	const handlePlayNext = (wasSpecialTrack: boolean = false) => {
 		if (showStopIcon) return;
+		// 에러난 동영상을 처리 중인 경우는 스킵 조작을 무시
+		if (!wasSpecialTrack && isVideoError) return;
 		//스페셜 곡을 재생 중인 경우는 다음 곡을 재생하는게 아니라 플레이리스트의 첫 곡을 재생한다
 		const nextTrack = specialTrackInfo ? playlist.getCurrentTrack() : playlist.playNext(wasSpecialTrack);
 		if (!nextTrack) {
@@ -146,6 +149,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		setShowStopIcon(false);
 		//스페셜 곡은 항상 첫번째 곡이기 때문에 이전으로 넘길 수 없음
 		if (specialTrackInfo) return;
+		if (isVideoError) return;
 
 		const prevTrack = playlist.playPrevious();
 		if (prevTrack) {
@@ -166,6 +170,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					songToAdd.value = "";
 				}, 2000);
 			} else {
+				setIsVideoError(false);
 				const nextTrack = playlist.removeTrack(currentTrackRef.current?.id);
 				if (nextTrack) {
 					currentTrackRef.current = nextTrack;
@@ -289,9 +294,13 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				onError: event => {
 					console.log(`❌ Video ${initialVideoId} is unavailable`);
 					setIsVideoError(true);
-					//다음 곡을 재생 시도
+
+					//에러난 곡을 삭제 시도
 					setTimeout(() => {
-						handlePlayNext(chosenTrack.includes(initialVideoId));
+						if (chosenTrack.includes(initialVideoId)) {
+							// 스페셜 곡은 원래 유저 플레이리스트에 들어있지 않기 때문에 삭제 호출을 할 필요가 없다
+							handlePlayNext(true);
+						} else handleRemoveTrack();
 					}, 1700);
 				},
 				onStateChange: (event: YT.OnStateChangeEvent) => {
@@ -539,9 +548,9 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				</button>
 			</div>
 			<div className="track-info flex flex-row w-full items-center justify-start gap-spacing-10">
-				<div id="player"></div>
+				<div id="player" className="pointer-events-none"></div>
 				{isVideoError ? (
-					<p className="text-xs line-clamp-2">{`skipping unavailable video...`}</p>
+					<p className="text-xs line-clamp-2 whitespace-pre-line">{`⚠️ Video not available:\n removing from playlist...`}</p>
 				) : (
 					<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrackRef.current?.title}</p>
 				)}
