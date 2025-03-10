@@ -298,7 +298,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					//에러난 곡을 삭제 시도
 					setTimeout(() => {
 						if (chosenTrack.includes(initialVideoId)) {
-							// 스페셜 곡은 유저에 원래 플레이리스트에 들어있지 않기 때문에 삭제 호출을 할 필요가 없다
+							// 스페셜 곡은 원래 유저 플레이리스트에 들어있지 않기 때문에 삭제 호출을 할 필요가 없다
 							handlePlayNext(true);
 						} else handleRemoveTrack();
 					}, 1700);
@@ -548,7 +548,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				</button>
 			</div>
 			<div className="track-info flex flex-row w-full items-center justify-start gap-spacing-10">
-				<div id="player"></div>
+				<div id="player" className="pointer-events-none"></div>
 				{isVideoError ? (
 					<p className="text-xs line-clamp-2 whitespace-pre-line">{`⚠️ Video not available:\n removing from playlist...`}</p>
 				) : (
