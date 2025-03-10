@@ -75,8 +75,12 @@ export default class Playlist {
 		this.nextTrack = undefined;
 	}
 
-	playNext() {
+	playNext(wasSpecialTrack: boolean = false) {
 		if (!this.tracks.length) return;
+		if (wasSpecialTrack) {
+			//스페셜 트랙 재생 중에 playnext가 호출될 경우 아무런 추가 행동이 필요 없이 현재 첫 곡을 리턴한다
+			return this.currentTrack;
+		}
 		if (this.currentTrack) {
 			const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);
 

@@ -55,6 +55,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	const [popupType, setPopupType] = useState<ModeIndex>(-1);
 	const [specialTrackInfo, setSpecialTrackInfo] = useState<string>("");
 	const [isError, setIsError] = useState<boolean>(false); //TODO:에러시 메세지창을 위해
+	const [isVideoError, setIsVideoError] = useState<boolean>(false); // 동영상 재생 에러인 경우
 	const [isMute, setIsMute] = useState<boolean>(false);
 	const [showStopIcon, setShowStopIcon] = useState<boolean>(false);
 	const playerRef = useRef<any>(null);
@@ -127,11 +128,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		}, 1500);
 	};
 
-	const handlePlayNext = () => {
+	const handlePlayNext = (wasSpecialTrack: boolean = false) => {
 		if (showStopIcon) return;
-
 		//스페셜 곡을 재생 중인 경우는 다음 곡을 재생하는게 아니라 플레이리스트의 첫 곡을 재생한다
-		const nextTrack = specialTrackInfo ? playlist.getCurrentTrack() : playlist.playNext();
+		const nextTrack = specialTrackInfo ? playlist.getCurrentTrack() : playlist.playNext(wasSpecialTrack);
 		if (!nextTrack) {
 			console.log("✋ End of playlist");
 			return;
@@ -287,46 +287,58 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					playVideo();
 				},
 				onError: event => {
-					console.log(`❌ Video ${initialVideoId} is unavailable: ${event.data}`);
-					//스페셜 곡이 에러난 경우에만 삭제 처리
-					if (chosenTrack.includes(initialVideoId)) playerRef.current.destroy();
+					console.log(`❌ Video ${initialVideoId} is unavailable`);
+					setIsVideoError(true);
+					//다음 곡을 재생 시도
+					setTimeout(() => {
+						handlePlayNext(chosenTrack.includes(initialVideoId));
+					}, 1700);
 				},
 				onStateChange: (event: YT.OnStateChangeEvent) => {
-					//이전 곡 재생 완료 시 다음 곡 자동 재생
-					if (event.data === YT.PlayerState.ENDED) {
-						const isSpecialTrack = event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack);
-						const firstTrack = playlist.tracks[0];
-						//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
-						if (isSpecialTrack) {
-							setSpecialTrackInfo("");
-							if (firstTrack) {
-								currentTrackRef.current = firstTrack;
-								cueVideo(playlist.extractVideoId(firstTrack.url));
+					switch (event.data) {
+						//이전 곡 재생 완료 시 다음 곡 자동 재생
+						case YT.PlayerState.ENDED:
+							const isSpecialTrack = event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack);
+							const firstTrack = playlist.tracks[0];
+							//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
+							if (isSpecialTrack) {
+								setSpecialTrackInfo("");
+								if (firstTrack) {
+									currentTrackRef.current = firstTrack;
+									cueVideo(playlist.extractVideoId(firstTrack.url));
+								} else {
+									const container = document.getElementById("player");
+									if (container) container.style.display = "none";
+								}
 							} else {
-								const container = document.getElementById("player");
-								if (container) container.style.display = "none";
+								if (!playlist.getNextTrackVideoId()) {
+									setShowStopIcon(true);
+									return;
+								}
+								console.log("Playing next - ", playlist.getNextTrackVideoId());
+								handlePlayNext();
 							}
-						} else {
-							if (!playlist.getNextTrackVideoId()) {
-								setShowStopIcon(true);
-								return;
+							break;
+						case YT.PlayerState.CUED:
+							var videoData = event.target.getVideoData();
+							var title = videoData.title;
+							const current = currentTrackRef.current;
+							if (current?.url) {
+								playlist.updateTrackTitle(playlist.extractVideoId(current.url), title);
+								currentTrackRef.current = {...current, title: title};
+								setIsVideoError(false);
+								playerRef.current.playVideo();
+								setTrackIndex(playlist.getTrackIndexWithId(current.id));
 							}
-							console.log("Playing next - ", playlist.getNextTrackVideoId());
-							handlePlayNext();
-						}
-					} else if (event.data === YT.PlayerState.CUED) {
-						var videoData = event.target.getVideoData();
-						var title = videoData.title;
-						const current = currentTrackRef.current;
-						if (current?.url) {
-							playlist.updateTrackTitle(playlist.extractVideoId(current.url), title);
-							currentTrackRef.current = {...current, title: title};
-							playerRef.current.playVideo();
-						}
-					} else if (event.data === YT.PlayerState.PAUSED) {
-						setIsPlay(false);
-					} else if (event.data === YT.PlayerState.PLAYING) {
-						setIsPlay(true);
+							break;
+						case YT.PlayerState.PAUSED:
+							setIsPlay(false);
+							break;
+						case YT.PlayerState.PLAYING:
+							setIsPlay(true);
+							break;
+						default:
+							break;
 					}
 				},
 			},
@@ -347,10 +359,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		return () => clearInterval(intervalId);
 	}, [playerRef.current, currentTrackRef.current]);
 
-	useEffect(() => {
-		const current = currentTrackRef.current;
-		if (current) setTrackIndex(playlist.getTrackIndexWithId(current.id));
-	}, [currentTrackRef.current]);
+	// useEffect(() => {
+	// 	const current = currentTrackRef.current;
+	// 	if (current) setTrackIndex(playlist.getTrackIndexWithId(current.id));
+	// }, [currentTrackRef.current]);
 
 	useEffect(() => {
 		const {prev, current} = triggers;
@@ -400,44 +412,6 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			if (current === "left") handlePlayPrev();
 			else if (current === "right") handlePlayNext();
 		}
-
-		// 2dpeth 메뉴창이 켜진 경우
-		// if (isSecondPopup) {
-		// 	// 두번 째 메뉴창이 켜진 경우 a/b 버튼 외는 기능 없음
-		// 	if (current === "a") handlePopAction(current);
-		// 	else if (current === "b") setPopupType(-1);
-		// 	return;
-		// 	/* 1depth 기본 메뉴창이 켜진 경우
-		// 	유효한 기능은 a => 2depth 메뉴 오픈 (셔플 모드 제외)
-		// 	b => 메뉴창 닫기
-		// 	up => 상단 선택지로 이동
-		// 	down => 하단 선택지로 이동
-		// */
-		// } else if (showPopup) {
-		// 	switch (current) {
-		// 		case "a":
-		// 			if (modeValues[mode] === "shuffle") setShuffleMode(prev => !prev);
-		// 			else setPopupType(mode);
-		// 			break;
-		// 		case "b":
-		// 			setShowPopup(false);
-		// 			break;
-		// 		case "up":
-		// 			setMode(mode === 0 ? modeValues.length - 1 : mode - 1);
-		// 			break;
-		// 		case "down":
-		// 			setMode(mode === modeValues.length - 1 ? 0 : mode + 1);
-		// 			break;
-		// 		default:
-		// 			break;
-		// 	}
-		// 	return;
-		// } else {
-		// 	if (typeof playerRef.current?.cueVideoById !== "function") return;
-
-		// 	if (current === "left") handlePlayPrev();
-		// 	else if (current === "right") handlePlayNext();
-		// }
 	}, [showPopup, triggers, playerRef]);
 
 	useEffect(() => {
@@ -566,15 +540,19 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			</div>
 			<div className="track-info flex flex-row w-full items-center justify-start gap-spacing-10">
 				<div id="player"></div>
-				<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrackRef.current?.title}</p>
+				{isVideoError ? (
+					<p className="text-xs line-clamp-2">{`skipping unavailable video...`}</p>
+				) : (
+					<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrackRef.current?.title}</p>
+				)}
 			</div>
 			<span className="text-xxs mt-auto">{shuffleMode ? "shuffle on" : specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>
 			<div className="flex flex-row w-full justify-between items-center">
 				<button onClick={handlePlayPrev}>
 					<BackwardIcon className={defaultIconSize} />
 				</button>
-				<button onClick={playVideo} disabled={showStopIcon}>
-					{showStopIcon ? (
+				<button onClick={playVideo} disabled={showStopIcon || isVideoError}>
+					{showStopIcon || isVideoError ? (
 						<XCircleIcon className={defaultIconSize} />
 					) : !isPlay ? (
 						<PlayCircleIcon className={defaultIconSize} />
@@ -582,7 +560,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 						<PauseCircleIcon className={defaultIconSize} />
 					)}
 				</button>
-				<button onClick={handlePlayNext}>
+				<button onClick={() => handlePlayNext()}>
 					<ForwardIcon className={defaultIconSize} />
 				</button>
 			</div>
@@ -592,20 +570,20 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			{showPopup && (
 				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
 					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] p-spacing-16 bg-gray-2 flex flex-col justify-between items-center">
-						<div className="flex flex-col items-start justify-start">
-							<button disabled={!specialTrackInfo} className="leading-8 flex flex-row items-center gap-2">
+						<div className="flex flex-col items-start justify-start h-fit">
+							<button disabled={!specialTrackInfo} className="h-8 leading-8 flex flex-row items-center gap-2">
 								<PlayIcon className={`size-5 animate-blink fill-black ${modeValues[mode] === "remove" ? "h-fit" : "h-0"}`} />
 								Remove
 							</button>
-							<button className="leading-8 flex flex-row items-center gap-2" onClick={() => setShuffleMode(prev => !prev)}>
+							<button className="h-8 leading-8 flex flex-row items-center gap-2" onClick={() => setShuffleMode(prev => !prev)}>
 								<PlayIcon className={`size-5 animate-blink ${modeValues[mode] === "shuffle" ? "h-fit" : "h-0"}`} />
 								{`Shuffle <${shuffleMode ? "on" : "off"}>`}
 							</button>
-							<button className="leading-8 flex flex-row items-center gap-2">
+							<button className="h-8 leading-8 flex flex-row items-center gap-2">
 								<PlayIcon className={`size-5 animate-blink ${modeValues[mode] === "empty" ? "h-fit" : "h-0"}`} />
 								Empty
 							</button>
-							<button className="leading-8 flex flex-row items-center gap-2">
+							<button className="h-8 leading-8 flex flex-row items-center gap-2">
 								<PlayIcon className={`size-5 animate-blink ${modeValues[mode] === "logout" ? "h-fit" : "h-0"}`} />
 								Log out
 							</button>
@@ -627,7 +605,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				<div className="absolute bg-transparent w-full h-full flex items-center justify-center bottom-spacing-2">
 					<div className="border border-px border-black w-2/3 h-2/3 rounded-[1px] text-center p-spacing-16 py-spacing-24 bg-gray-2 flex flex-col justify-between items-center">
 						<span className="leading-8 whitespace-pre-line">{getPopupMessage()}</span>
-						{specialTrackInfo && modeValues[popupType] === "remove" && <img src="/icon/alien.gif" alt="alien" className="w-5 h-5 mt-4" />}
+						{specialTrackInfo && modeValues[popupType] === "remove" && <img src="./icon/alien.gif" alt="alien" className="w-5 h-5 mt-4" />}
 
 						<div className="w-full flex flex-row items-center justify-between">
 							<button className="flex flex-row items-center gap-spacing-4" onClick={() => handlePopAction("b")}>

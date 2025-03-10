@@ -9,6 +9,7 @@ enum ErrorCodes {
 	SignupFail = 2,
 	LoginError = 3,
 	PasswordLength = 4,
+	InvalidChars = 5,
 }
 
 interface LoginScreenProps {
@@ -26,6 +27,7 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 		[ErrorCodes.SignupFail]: "Failed to sign up, please try again later",
 		[ErrorCodes.LoginError]: "Log in failed, please check the fields again",
 		[ErrorCodes.PasswordLength]: "Password should be at least 6 characters long",
+		[ErrorCodes.InvalidChars]: "Username can only contain letters and nums",
 	};
 
 	const handleKeyDown = (event: KeyboardEvent) => {
@@ -75,6 +77,12 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 			return;
 		}
 
+		if (/[^a-zA-Z0-9]/.test(username)) {
+			setIsLoading(false);
+			setErrorCode(5);
+			return;
+		}
+
 		try {
 			const response = await apiRequest<{success: boolean}>("/api/auth", "POST", {username, password});
 
@@ -117,6 +125,12 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 			return;
 		}
 
+		if (/[^a-zA-Z0-9]/.test(username)) {
+			setIsLoading(false);
+			setErrorCode(5);
+			return;
+		}
+
 		try {
 			setIsLoading(true);
 			const response = await apiRequest<{success: boolean}>("/api/signup", "POST", {username, password});
@@ -150,19 +164,11 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 				<div className="w-[0.15rem] h-[0.5rem] bg-black rounded-r-sm"></div>
 			</div>
 			<div className="flex flex-row items-center text-xxs">
-				{errorCode !== null && <ExclamationTriangleIcon className="size-5 mr-2 mt-px" />}
+				{errorCode !== null && !isLoading && <ExclamationTriangleIcon className="size-5 mr-2 mt-px" />}
 				{getErrorMessage(errorCode)}
 			</div>
 			<div className="flex flex-col items-center w-full text-s gap-spacing-6 mb-1">
-				<input
-					id="username"
-					type="text"
-					placeholder="Username"
-					className="w-full text-xs bg-gray-1 border border-black rounded-[1px] px-3"
-					onInput={e => {
-						e.currentTarget.value = e.currentTarget.value.replace(/[^A-Za-z]/g, "");
-					}}
-				/>
+				<input id="username" type="text" placeholder="Username" className="w-full text-xs bg-gray-1 border border-black rounded-[1px] px-3" />
 				<input id="password" type="password" minLength={6} placeholder="Password" className="w-full text-xs bg-gray-1 border border-black rounded-[1px] px-3" />
 				<div className="flex flex-row justify-center items-center mt-spacing-8 mr-4 gap-16">
 					<div className="flex flex-row items-center justify-end gap-2 w-32">
