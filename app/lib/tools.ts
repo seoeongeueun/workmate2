@@ -31,3 +31,8 @@ export async function apiRequest<T = any>(url: string, method: string = "GET", d
 		throw error;
 	}
 }
+
+export function extractVideoId(url: string): string {
+	const idMatch = url.match(/(?:youtube\.com\/(?:[^\/\n\s]+\/\s*[^\/\n\s]+\/|(?:v|e(?:mbed)?)\/|\S*?watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+	return idMatch ? idMatch[1] : "";
+}

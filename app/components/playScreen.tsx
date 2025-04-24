@@ -12,9 +12,9 @@ import {
 	NoSymbolIcon,
 } from "@heroicons/react/16/solid";
 import Playlist, {Track} from "../classes/Playlist";
-import {apiRequest} from "../lib/tools";
+import {apiRequest, extractVideoId} from "../lib/tools";
 import {Triggers} from "../page";
-import Image from "next/image";
+import {usePlaylistStore} from "@/app/stores/playlistStore";
 
 declare global {
 	interface Window {
@@ -23,7 +23,6 @@ declare global {
 }
 
 type PlayScreenProps = {
-	playlist: Playlist;
 	triggers: Triggers;
 	chosenTrack: string;
 	setIsLogin: React.Dispatch<React.SetStateAction<boolean | undefined>>;
@@ -45,12 +44,11 @@ const messages: Partial<Record<(typeof modeValues)[number], string>> = {
 
 const muiscAddMessages = ["Music added!", "Error saving changes"];
 
-export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin, expiration}: PlayScreenProps) {
+export default function PlayScreen({triggers, chosenTrack, setIsLogin, expiration}: PlayScreenProps) {
 	const [isPlay, setIsPlay] = useState<boolean>(false);
 	const [progressTime, setProgressTime] = useState<number>(0);
 	const [currentTime, setCurrentTime] = useState<Date>(new Date());
 	const [showPopup, setShowPopup] = useState<boolean>(false);
-	const [trackIndex, setTrackIndex] = useState<string>("0 out of 0");
 	const [shuffleMode, setShuffleMode] = useState<boolean>(false);
 	const [mode, setMode] = useState<ModeIndex>(0);
 	const [popupType, setPopupType] = useState<ModeIndex>(-1);
@@ -60,13 +58,22 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	const [isMute, setIsMute] = useState<boolean>(false);
 	const [showStopIcon, setShowStopIcon] = useState<boolean>(false);
 	const playerRef = useRef<any>(null);
-	const currentTrackRef = useRef<Track | undefined>(undefined);
+	//const currentTrackRef = useRef<Track | undefined>(undefined);
 
 	const defaultIconSize = "size-6";
 
-	// useEffect(() => {
-	// 	console.log("📀 Playlist instance changed:", playlist);
-	// }, [playlist]);
+	// 최신 상태가 필요하고, 값이 바뀔 때마다 리렌더링 되어야 하는 값 구독
+	const objectId = usePlaylistStore(s => s.objectId);
+	const tracks = usePlaylistStore(s => s.tracks);
+	const currentTrack = usePlaylistStore(s => s.currentTrack);
+	const {addTrack, playNext, playPrevious, removeTrack, shuffleTracks, unshuffleTracks, getNextTrackVideoId, updateTrackTitle, empty} =
+		usePlaylistStore.getState();
+
+	const trackIndexLabel = usePlaylistStore(s => {
+		if (s.tracks.length === 0) return "0 out of 0";
+		const idx = s.tracks.findIndex(t => t.id === s.currentTrack?.id);
+		return `${idx + 1} out of ${s.tracks.length}`;
+	});
 
 	//유저가 직접 재생/일시중지를 트리거 할 때만 사용하지만
 	//player를 initialize할 때 자동 재생 효과를 주기 위해 예외로 사용
@@ -84,13 +91,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	/* cue 과정은 동영상의 제목을 가져오기 위해 거쳐가는 필수 단계
 	cue 상태만 트리거하고 여기서 재생에는 관여하지 않는다 */
-	const cueVideo = useCallback(
-		(id: string) => {
-			if (!playerRef.current || !(playerRef.current instanceof YT.Player)) return;
-			playerRef.current.cueVideoById(id); //yt api의 method를 통해 cued 상태로 전환
-		},
-		[playlist]
-	);
+	const cueVideo = (id: string) => {
+		if (!playerRef.current || !(playerRef.current instanceof YT.Player)) return;
+		playerRef.current.cueVideoById(id); //yt api의 method를 통해 cued 상태로 전환
+	};
 
 	const handleAddSong = async (): Promise<void> => {
 		const songToAdd = document.getElementById("newSong") as HTMLInputElement;
@@ -101,22 +105,21 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 			songToAdd.value = "Music Added!";
 
-			const newTrack = playlist.addTrack(url);
-			setTrackIndex(playlist.getTrackIndex());
+			const newTrack = addTrack(url);
 			setShowStopIcon(false);
 
 			const container = document.getElementById("player");
 			if (container) container.style.display = "block";
 
 			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
-			if ((!currentTrackRef.current && !specialTrackInfo) || showStopIcon) {
+			if ((!currentTrack && !specialTrackInfo) || showStopIcon) {
 				if (playerRef.current) {
-					currentTrackRef.current = newTrack;
-					playerRef.current.cueVideoById(playlist.extractVideoId(url));
-				} else initializePlayer(playlist.extractVideoId(newTrack?.url));
+					//currentTrackRef.current = newTrack;
+					playerRef.current.cueVideoById(extractVideoId(url));
+				} else initializePlayer(extractVideoId(newTrack?.url));
 			}
 
-			const response = await apiRequest("/api/playlist", "POST", {id: playlist.getObjectId(), track: newTrack, mode: "add"});
+			const response = await apiRequest("/api/playlist", "POST", {id: objectId, track: newTrack, mode: "add"});
 			if (response?.error) {
 				console.error("Failed to update playlist:", response.error);
 				songToAdd.value = "Error saving changes";
@@ -134,15 +137,15 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		// 에러난 동영상을 처리 중인 경우는 스킵 조작을 무시
 		if (!wasSpecialTrack && isVideoError) return;
 		//스페셜 곡을 재생 중인 경우는 다음 곡을 재생하는게 아니라 플레이리스트의 첫 곡을 재생한다
-		const nextTrack = specialTrackInfo ? playlist.getCurrentTrack() : playlist.playNext(wasSpecialTrack);
+		const nextTrack = specialTrackInfo ? currentTrack : playNext(wasSpecialTrack);
 		if (!nextTrack) {
 			console.log("✋ End of playlist");
 			return;
 		}
 
 		setSpecialTrackInfo("");
-		currentTrackRef.current = nextTrack;
-		cueVideo(playlist.extractVideoId(nextTrack.url));
+		//currentTrackRef.current = nextTrack;
+		cueVideo(extractVideoId(nextTrack.url));
 	};
 
 	const handlePlayPrev = () => {
@@ -151,16 +154,16 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		if (specialTrackInfo) return;
 		if (isVideoError) return;
 
-		const prevTrack = playlist.playPrevious();
+		const prevTrack = playPrevious();
 		if (prevTrack) {
-			currentTrackRef.current = prevTrack;
-			cueVideo(playlist.extractVideoId(prevTrack.url));
+			//currentTrackRef.current = prevTrack;
+			cueVideo(extractVideoId(prevTrack.url));
 		}
 	};
 
 	const handleRemoveTrack = async (isRemove: boolean = true) => {
-		if (isRemove && currentTrackRef.current) {
-			const response = await apiRequest("/api/playlist", "POST", {id: playlist.getObjectId(), track: currentTrackRef.current, mode: "remove"});
+		if (isRemove && currentTrack) {
+			const response = await apiRequest("/api/playlist", "POST", {id: objectId, track: currentTrack, mode: "remove"});
 			if (response?.error) {
 				const songToAdd = document.getElementById("newSong") as HTMLInputElement;
 				console.error("Failed to update playlist:", response.error);
@@ -171,10 +174,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				}, 2000);
 			} else {
 				setIsVideoError(false);
-				const nextTrack = playlist.removeTrack(currentTrackRef.current?.id);
+				const nextTrack = removeTrack(currentTrack?.id);
 				if (nextTrack) {
-					currentTrackRef.current = nextTrack;
-					cueVideo(playlist.extractVideoId(nextTrack.url));
+					//currentTrackRef.current = nextTrack;
+					cueVideo(extractVideoId(nextTrack.url));
 					setShowStopIcon(false);
 					// playerRef.current.stopVideo();
 					// playerRef.current.loadVideoById(nextTrack);
@@ -202,8 +205,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		}
 		setShowStopIcon(false);
 		setIsPlay(false);
-		setTrackIndex("0 out of 0");
-		currentTrackRef.current = undefined;
+		//currentTrackRef.current = undefined;
 	};
 
 	const formatDate = (date: Date): string => {
@@ -247,7 +249,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 			}
 		};
 
-		if ((!window.YT?.Player || !playerRef.current) && playlist) {
+		if ((!window.YT?.Player || !playerRef.current) && objectId) {
 			loadYTScript();
 		}
 
@@ -255,21 +257,21 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 		function onYouTubeIframeAPIReady() {
 			console.log("API Ready - Initializing player");
-			const track = chosenTrack || currentTrackRef.current?.url || playlist.tracks[0]?.url;
-			if (track) initializePlayer(playlist.extractVideoId(track));
+			const track = chosenTrack || currentTrack?.url || tracks[0]?.url;
+			if (track) initializePlayer(extractVideoId(track));
 		}
 
 		window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-	}, [playlist]);
+	}, [objectId, tracks]);
 
 	useEffect(() => {
 		if (!playerRef.current && window.YT?.Player) {
 			// 보통 전원을 껐다킨 경우에 발동 되는데 chosenTrack은 빈 값일 것임
 			// 하지만 스페셜 트랙은 휘발성이라 다시 이어서 재생 되지 않아도 괜찮음
-			const initialTrack = currentTrackRef.current?.url || chosenTrack || playlist.getCurrentTrack()?.url;
-			if (initialTrack) initializePlayer(playlist.extractVideoId(initialTrack));
+			const initialTrack = currentTrack?.url || chosenTrack;
+			if (initialTrack) initializePlayer(extractVideoId(initialTrack));
 		}
-	}, [currentTrackRef, playerRef.current]);
+	}, [currentTrack, playerRef.current]);
 
 	const initializePlayer = (initialVideoId: string) => {
 		playerRef.current = new YT.Player("player", {
@@ -282,9 +284,9 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					var videoData = event.target.getVideoData();
 					var title = videoData.title;
 					if (!chosenTrack) {
-						playlist.updateTrackTitle(initialVideoId, title);
-						currentTrackRef.current = playlist.getCurrentTrack();
-						setTrackIndex(playlist.getTrackIndex());
+						updateTrackTitle(initialVideoId, title);
+						//currentTrackRef.current = playlist.getCurrentTrack();
+						//setTrackIndex(playlist.getTrackIndex());
 					} else {
 						// 이벤트 곡의 타이틀을 별도로 저장
 						setSpecialTrackInfo(title);
@@ -307,37 +309,37 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 					switch (event.data) {
 						//이전 곡 재생 완료 시 다음 곡 자동 재생
 						case YT.PlayerState.ENDED:
-							const isSpecialTrack = event.target.getVideoData()?.video_id === playlist.extractVideoId(chosenTrack);
-							const firstTrack = playlist.tracks[0];
+							const isSpecialTrack = event.target.getVideoData()?.video_id === extractVideoId(chosenTrack);
+							const firstTrack = tracks[0];
 							//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생
 							if (isSpecialTrack) {
 								setSpecialTrackInfo("");
 								if (firstTrack) {
-									currentTrackRef.current = firstTrack;
-									cueVideo(playlist.extractVideoId(firstTrack.url));
+									//currentTrackRef.current = firstTrack;
+									cueVideo(extractVideoId(firstTrack.url));
 								} else {
 									const container = document.getElementById("player");
 									if (container) container.style.display = "none";
 								}
 							} else {
-								if (!playlist.getNextTrackVideoId()) {
+								if (!getNextTrackVideoId()) {
 									setShowStopIcon(true);
 									return;
 								}
-								console.log("Playing next - ", playlist.getNextTrackVideoId());
+								console.log("Playing next - ", getNextTrackVideoId());
 								handlePlayNext();
 							}
 							break;
 						case YT.PlayerState.CUED:
 							var videoData = event.target.getVideoData();
 							var title = videoData.title;
-							const current = currentTrackRef.current;
-							if (current?.url) {
-								playlist.updateTrackTitle(playlist.extractVideoId(current.url), title);
-								currentTrackRef.current = {...current, title: title};
+							const current = usePlaylistStore.getState().currentTrack;
+							if (current) {
+								updateTrackTitle(extractVideoId(current.url), title);
+								//currentTrackRef.current = {...current, title: title};
 								setIsVideoError(false);
 								playerRef.current.playVideo();
-								setTrackIndex(playlist.getTrackIndexWithId(current.id));
+								//setTrackIndex(playlist.getTrackIndexWithId(current.id));
 							}
 							break;
 						case YT.PlayerState.PAUSED:
@@ -366,7 +368,7 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 		}, 1000);
 
 		return () => clearInterval(intervalId);
-	}, [playerRef.current, currentTrackRef.current]);
+	}, [playerRef.current, currentTrack]);
 
 	// useEffect(() => {
 	// 	const current = currentTrackRef.current;
@@ -433,22 +435,22 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	useEffect(() => {
 		if (shuffleMode) {
-			const current = currentTrackRef.current;
+			//const current = currentTrackRef.current;
 			if (showStopIcon) {
 				setShowStopIcon(false);
-				playlist.shuffleTracks(undefined);
+				shuffleTracks(undefined);
 				if (playerRef.current) {
 					playerRef.current.seekTo(0);
 					playerRef.current.playVideo();
 				}
 			} else {
-				const index = playlist.shuffleTracks(current?.id);
+				const index = shuffleTracks(currentTrack?.id);
 				//if (index) setTrackIndex(index);
 				//셔플 중에는 index 대신 셔플 메시지가 뜨는 것으로 변경
 			}
 		} else {
-			const newIndex = playlist.unshuffleTracks();
-			setTrackIndex(newIndex);
+			const newIndex = unshuffleTracks();
+			//setTrackIndex(newIndex);
 		}
 	}, [shuffleMode]);
 
@@ -469,11 +471,11 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 
 	const handleEmptyPlaylist = async () => {
 		try {
-			const response = await apiRequest("/api/playlist", "POST", {id: playlist.getObjectId(), track: undefined, mode: "empty"});
+			const response = await apiRequest("/api/playlist", "POST", {id: objectId, track: undefined, mode: "empty"});
 			if (response?.error) {
 				console.error("Failed to empty playlist:", response.error);
 			} else {
-				playlist.empty();
+				empty();
 				cleanUpPlaylist();
 				setShowPopup(false);
 				setShowStopIcon(false);
@@ -507,14 +509,14 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 	const getPopupMessage = () => {
 		if (modeValues[popupType] === "logout") return messages.logout;
 		if (modeValues[popupType] === "remove" && specialTrackInfo) return messages.special;
-		if (playlist.tracks?.length === 0) return messages.none;
+		if (tracks?.length === 0) return messages.none;
 		else return messages[modeValues[popupType]];
 	};
 
 	const showConfirm = () => {
 		const mode = modeValues[popupType];
 		if (mode === "logout") return true;
-		else if (playlist.tracks?.length === 0) return false;
+		else if (tracks?.length === 0) return false;
 		else if (specialTrackInfo && modeValues[popupType] === "remove") return false;
 		else return true;
 	};
@@ -552,10 +554,10 @@ export default function PlayScreen({playlist, triggers, chosenTrack, setIsLogin,
 				{isVideoError ? (
 					<p className="text-xs line-clamp-2 whitespace-pre-line">{`⚠️ Video not available:\n removing from playlist...`}</p>
 				) : (
-					<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrackRef.current?.title}</p>
+					<p className="text-xs line-clamp-2">{specialTrackInfo || currentTrack?.title}</p>
 				)}
 			</div>
-			<span className="text-xxs mt-auto">{shuffleMode ? "shuffle on" : specialTrackInfo ? "special track" : `track ${trackIndex}`}</span>
+			<span className="text-xxs mt-auto">{shuffleMode ? "shuffle on" : specialTrackInfo ? "special track" : `track ${trackIndexLabel}`}</span>
 			<div className="flex flex-row w-full justify-between items-center">
 				<button onClick={handlePlayPrev}>
 					<BackwardIcon className={defaultIconSize} />
