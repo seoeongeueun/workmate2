@@ -262,11 +262,9 @@ export default function Home() {
 						{/* 화면 영역 */}
 						<div className="pointer-events-auto bg-black border border-black px-spacing-4 py-spacing-8 w-fit z-30">
 							<div className="w-[32rem] h-[20rem] bg-off-screen">
-								<PlaylistProvider initialTitle="My Playlist">
-									<div className={`w-full h-full flex flex-col justify-center items-center ${loading ? "bg-gray-2 animate-fadeIn" : ""}`}>
-										{power && <MusicPlayer triggers={triggers} />}
-									</div>
-								</PlaylistProvider>
+								<div className={`w-full h-full flex flex-col justify-center items-center ${loading ? "bg-gray-2 animate-fadeIn" : ""}`}>
+									{power && <MusicPlayer triggers={triggers} />}
+								</div>
 							</div>
 						</div>
 						<div className="frame-side left">

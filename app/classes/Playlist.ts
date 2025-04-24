@@ -99,6 +99,8 @@ export default class Playlist {
 
 	playPrevious() {
 		if (!this.tracks.length) return;
+		console.log("SUSSU");
+
 		if (this.currentTrack) {
 			this.nextTrack = this.currentTrack; //현재 곡을 다음 곡으로 지정
 			const currentIndex = this.tracks.findIndex(track => track.id === this.currentTrack?.id);

@@ -4,21 +4,24 @@ import PlayScreen from "./playScreen";
 import {apiRequest} from "../lib/tools";
 import {useState, useEffect} from "react";
 import {Triggers} from "../page";
-import Playlist from "../classes/Playlist";
 import LuckyScreen from "./luckyScreen";
 import {MAX_AGE} from "@/app/lib/session";
+import {usePlaylistStore} from "@/app/stores/playlistStore";
 
 interface MusicPlayerProps {
 	triggers: Triggers;
 }
 
 export default function MusicPlayer({triggers}: MusicPlayerProps) {
-	const [playlist, setPlaylist] = useState<Playlist | undefined>(undefined);
 	const [isLogin, setIsLogin] = useState<boolean | undefined>(undefined);
 	const [username, setUsername] = useState<string>("user");
 	const [chosenTrack, setChosenTrack] = useState<string>("");
 	const [showLucky, setShowLucky] = useState<boolean>(false);
 	const [expiration, setExpiration] = useState<string>("");
+
+	const initialize = usePlaylistStore(s => s.initialize);
+	const reset = usePlaylistStore(s => s.reset);
+	const title = usePlaylistStore(s => s.title);
 
 	useEffect(() => {
 		const isOver = localStorage.getItem("interactionOver");
@@ -40,14 +43,13 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 				const loggedIn = data?.isValid;
 				if (!loggedIn) localStorage.removeItem("interactionOver");
 				setIsLogin(loggedIn);
-
 				if (id) fetchPlaylist(id);
-				else setPlaylist(undefined);
+				else reset();
 			}, 2000);
 		} catch (error) {
 			console.error("Error checking session:", error);
 			setIsLogin(false);
-			setPlaylist(undefined);
+			reset();
 		}
 	};
 
@@ -56,16 +58,17 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 			const response = await apiRequest(`/api/playlist/?id=${id}`, "GET");
 			const data = response?.data;
 			if (data?.title) {
-				setPlaylist(prevPlaylist => {
-					if (!prevPlaylist) {
-						return new Playlist(data.title, id, data.tracks);
-					} else {
-						prevPlaylist.title = data.title;
-						prevPlaylist.objectId = id;
-						prevPlaylist.tracks = data.tracks;
-						return prevPlaylist;
-					}
-				});
+				// setPlaylist(prevPlaylist => {
+				// 	if (!prevPlaylist) {
+				// 		return new Playlist(data.title, id, data.tracks);
+				// 	} else {
+				// 		prevPlaylist.title = data.title;
+				// 		prevPlaylist.objectId = id;
+				// 		prevPlaylist.tracks = data.tracks;
+				// 		return prevPlaylist;
+				// 	}
+				// });
+				initialize(data.title, id, data.tracks);
 			}
 		} catch (error) {
 			console.error("Error fetching playlist:", error);
@@ -85,11 +88,13 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 				checkSession();
 				break;
 			case undefined:
+				// 로그인 액션이 없었어도 유지된 세션이 있는지 확인
 				checkSession();
 				break;
 			case false:
 				setShowLucky(false);
-				setPlaylist(undefined);
+				reset();
+				break;
 			default:
 				break;
 		}
@@ -98,6 +103,6 @@ export default function MusicPlayer({triggers}: MusicPlayerProps) {
 	if (isLogin === false) return <LoginScreen setIsLogin={setIsLogin} />;
 	else if (isLogin && showLucky && username)
 		return <LuckyScreen triggers={triggers} username={username} setChosenTrack={setChosenTrack} setOpen={setShowLucky} />;
-	else if (playlist) return <PlayScreen playlist={playlist} triggers={triggers} chosenTrack={chosenTrack} setIsLogin={setIsLogin} expiration={expiration} />;
+	else if (title) return <PlayScreen triggers={triggers} chosenTrack={chosenTrack} setIsLogin={setIsLogin} expiration={expiration} />;
 	else return <LoadingScreen />;
 }
