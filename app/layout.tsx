@@ -1,4 +1,6 @@
 import type {Metadata} from "next";
+import {QueryProvider} from "@/app/providers/QueryProvider";
+import {dehydrate, QueryClient} from "@tanstack/react-query";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,9 +24,12 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({children}: Readonly<{children: React.ReactNode}>) {
+	const queryClient = new QueryClient();
 	return (
 		<html lang="en">
-			<body>{children}</body>
+			<body>
+				<QueryProvider>{children}</QueryProvider>
+			</body>
 		</html>
 	);
 }
