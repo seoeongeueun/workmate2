@@ -2,6 +2,7 @@
 import React, {useState, useEffect} from "react";
 import {Battery100Icon, PlayIcon, ExclamationTriangleIcon} from "@heroicons/react/24/solid";
 import {apiRequest} from "../lib/tools";
+import {useQueryClient} from "@tanstack/react-query";
 
 enum ErrorCodes {
 	MissingFields = 0,
@@ -12,14 +13,12 @@ enum ErrorCodes {
 	InvalidChars = 5,
 }
 
-interface LoginScreenProps {
-	setIsLogin: React.Dispatch<React.SetStateAction<boolean | undefined>>;
-}
-
-export default function LoginScreen({setIsLogin}: LoginScreenProps) {
+export default function LoginScreen() {
 	const [selectLogin, setSelectLogin] = useState<boolean>(true);
 	const [errorCode, setErrorCode] = useState<number | null>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
+
+	const queryClient = useQueryClient();
 
 	const errorMessages: Record<ErrorCodes, string> = {
 		[ErrorCodes.MissingFields]: "All fields are required",
@@ -91,14 +90,12 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 				if (match) setErrorCode(parseInt(match[1]));
 				else setErrorCode(3);
 				setIsLoading(false);
-				setIsLogin(false);
 				return;
 			}
-			setIsLogin(true);
+			queryClient.invalidateQueries({queryKey: ["session"]});
 		} catch (error) {
 			setIsLoading(false);
 			setErrorCode(3);
-			setIsLogin(false);
 			return;
 		}
 	};
@@ -140,15 +137,13 @@ export default function LoginScreen({setIsLogin}: LoginScreenProps) {
 				if (match) setErrorCode(parseInt(match[1]));
 				else setErrorCode(2);
 				setIsLoading(false);
-				setIsLogin(false);
 				return;
 			}
-			setIsLogin(true);
+			queryClient.invalidateQueries({queryKey: ["session"]});
 			setIsLoading(false);
 		} catch (error) {
 			setIsLoading(false);
 			setErrorCode(2);
-			setIsLogin(false);
 			return;
 		}
 	};

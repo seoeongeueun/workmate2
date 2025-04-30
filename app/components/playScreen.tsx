@@ -15,6 +15,7 @@ import Playlist, {Track} from "../classes/Playlist";
 import {apiRequest, extractVideoId} from "../lib/tools";
 import {Triggers} from "../page";
 import {usePlaylistStore} from "@/app/stores/playlistStore";
+import {useQueryClient} from "@tanstack/react-query";
 
 declare global {
 	interface Window {
@@ -58,6 +59,7 @@ export default function PlayScreen({triggers, chosenTrack, setIsLogin, expiratio
 	const [isMute, setIsMute] = useState<boolean>(false);
 	const [showStopIcon, setShowStopIcon] = useState<boolean>(false);
 	const playerRef = useRef<any>(null);
+	const queryClient = useQueryClient();
 	//const currentTrackRef = useRef<Track | undefined>(undefined);
 
 	const defaultIconSize = "size-6";
@@ -463,6 +465,7 @@ export default function PlayScreen({triggers, chosenTrack, setIsLogin, expiratio
 				//로그아웃 성공시 스페셜 이벤트 기록을 초기화
 				localStorage.removeItem("interactionOver");
 				setIsLogin(false);
+				queryClient.invalidateQueries({queryKey: ["session"]});
 			}
 		} catch (error) {
 			console.log("Error logging out");
