@@ -235,7 +235,7 @@ $transition: 0.5s ease-in-out;
 		background-color: var(--body);
 		position: relative;
 		bottom: 1.9rem;
-		left: 1.5rem;
+		left: 1.3rem;
 		border-top-left-radius: 100%;
 
 		&::before {
@@ -254,15 +254,15 @@ $transition: 0.5s ease-in-out;
 
 		&::after {
 			content: "";
-			width: 13rem;
+			width: 14rem;
 			height: 4rem;
 			background-color: var(--button);
 			position: absolute;
-			top: -2.5rem;
-			left: -0.1rem;
+			top: -2.6rem;
+			left: -0.3rem;
 			mix-blend-mode: darken;
 			//border-radius: 47% 0% 0% 8%;
-			border-radius: 6.11rem 0 0 1.04rem;
+			border-radius: 6.1rem 0 0 0.6rem;
 			border-top: 3px solid var(--button-light);
 			box-shadow:
 				inset -50px 4px 6px 0px rgba(95, 98, 109, 0.1),
@@ -314,7 +314,7 @@ $transition: 0.5s ease-in-out;
 			box-shadow:
 				3px 2px 3px -3px var(--body),
 				0px 3px 1px -1px var(--body-shadow),
-				0px 3px 3px -1px rgba(var(--body-light-rgb), 0.8),
+				1px 3px 3px -1px rgba(var(--body-light-rgb), 0.8),
 				0px 7px 0px -1px var(--body-shadow),
 				4px 8px 0px -1px var(--body);
 			transform: rotate(-15deg);
@@ -327,7 +327,7 @@ $transition: 0.5s ease-in-out;
 			height: 4rem;
 			left: -0rem;
 			border-radius: 20% 10% 39% 0%;
-			background-color: white;
+			background-color: var(--background);
 			box-shadow:
 				-2px 9px 1px -6px var(--body-dark),
 				-7px 11px 2px -9px rgba(var(--body-dark-rgb), 0.7),
@@ -392,7 +392,7 @@ $transition: 0.5s ease-in-out;
 				box-shadow:
 					3px 2px 3px -3px var(--body),
 					0px 3px 1px -1px var(--body-shadow),
-					0px 3px 3px -1px rgba(var(--body-light-rgb), 0.8),
+					1px 3px 3px -1px rgba(var(--body-light-rgb), 0.8),
 					0px 7px 0px -1px var(--body-shadow),
 					4px 8px 0px -1px var(--body);
 				transform: rotate(-18deg);
