@@ -103,31 +103,34 @@ export default function PlayScreen({triggers, chosenTrack, setIsLogin, expiratio
 		const url = songToAdd.value;
 		if (url) {
 			//연달아 더하기를 누른 경우는 무시
-			if (muiscAddMessages.includes(url)) return;
+			const id = extractVideoId(url);
+			if (muiscAddMessages.includes(url) || !id) {
+				songToAdd.value = "Not a valid Youtube url";
+			} else {
+				songToAdd.value = "Music Added!";
 
-			songToAdd.value = "Music Added!";
+				const newTrack = addTrack(url);
+				setShowStopIcon(false);
 
-			const newTrack = addTrack(url);
-			setShowStopIcon(false);
+				const container = document.getElementById("player");
+				if (container) container.style.display = "block";
 
-			const container = document.getElementById("player");
-			if (container) container.style.display = "block";
+				//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
+				if ((!currentTrack && !specialTrackInfo) || showStopIcon) {
+					if (playerRef.current) {
+						//currentTrackRef.current = newTrack;
+						playerRef.current.cueVideoById(id);
+					} else initializePlayer(id);
+				}
 
-			//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
-			if ((!currentTrack && !specialTrackInfo) || showStopIcon) {
-				if (playerRef.current) {
-					//currentTrackRef.current = newTrack;
-					playerRef.current.cueVideoById(extractVideoId(url));
-				} else initializePlayer(extractVideoId(newTrack?.url));
-			}
-
-			const response = await apiRequest("/api/playlist", "POST", {id: objectId, track: newTrack, mode: "add"});
-			if (response?.error) {
-				console.error("Failed to update playlist:", response.error);
-				songToAdd.value = "Error saving changes";
+				const response = await apiRequest("/api/playlist", "POST", {id: objectId, track: newTrack, mode: "add"});
+				if (response?.error) {
+					console.error("Failed to update playlist:", response.error);
+					songToAdd.value = "Error saving changes";
+				}
 			}
 		} else {
-			songToAdd.value = "Enter a valid URL";
+			songToAdd.value = "Entered url is empty";
 		}
 		setTimeout(() => {
 			songToAdd.value = "";
