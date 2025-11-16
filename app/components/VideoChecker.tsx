@@ -41,7 +41,7 @@ export default function VideoChecker() {
 	const fetchVideoData = async () => {
 		try {
 			const response = await apiRequest("/api/lucky");
-			const data = response?.data;
+			const data = response?.data?.data;
 
 			if (data) {
 				setVideoData(data);
