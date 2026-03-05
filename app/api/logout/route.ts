@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {getIronSession} from "iron-session";
 import {sessionOptions} from "@/lib";
-import type {SessionData} from "@/lib";
+import type {SessionData} from "@/types";
 
 export async function POST(request: Request) {
 	try {

@@ -3,7 +3,7 @@ import {User, Playlist} from "@/models";
 import {dbConnect, sessionOptions, MAX_AGE} from "@/lib";
 import bcrypt from "bcrypt";
 import {getIronSession} from "iron-session";
-import type {SessionData} from "@/lib";
+import type {SessionData} from "@/types";
 
 export async function POST(request: Request) {
 	try {
