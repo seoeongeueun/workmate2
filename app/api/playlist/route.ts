@@ -1,19 +1,19 @@
 import {NextResponse} from "next/server";
-import {Playlist as PlaylistModel} from "@/app/models/Playlist";
 import mongoose from "mongoose";
-import Playlist, {Track} from "@/app/classes/Playlist";
-import dbConnect from "@/app/lib/dbConnect";
+import type {Track} from "@/types";
+import {dbConnect} from "@/lib";
+import {Playlist} from "@/models";
 
 const handleAdd = async (id: string, track: Track) => {
-	return await PlaylistModel.findByIdAndUpdate(id, {$addToSet: {tracks: track}}, {new: true});
+	return await Playlist.findByIdAndUpdate(id, {$addToSet: {tracks: track}}, {new: true});
 };
 
 const handleRemove = async (id: string, trackId: string) => {
-	return await PlaylistModel.findByIdAndUpdate(id, {$pull: {tracks: {id: trackId}}}, {new: true});
+	return await Playlist.findByIdAndUpdate(id, {$pull: {tracks: {id: trackId}}}, {new: true});
 };
 
 const handleEmptyTracks = async (id: string) => {
-	return await PlaylistModel.findByIdAndUpdate(id, {$set: {tracks: []}}, {new: true});
+	return await Playlist.findByIdAndUpdate(id, {$set: {tracks: []}}, {new: true});
 };
 
 export async function POST(request: Request) {
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
 			return NextResponse.json({error: "Invalid playlist id"}, {status: 400});
 		}
 
-		const item = await PlaylistModel.findById(id);
+		const item = await Playlist.findById(id);
 
 		if (!item) {
 			return NextResponse.json({error: "No matching playlist was found"}, {status: 404});

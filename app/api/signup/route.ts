@@ -1,10 +1,9 @@
 import {NextResponse} from "next/server";
-import dbConnect from "@/app/lib/dbConnect";
-import {User} from "@/app/models/User";
-import {Playlist} from "@/app/models/Playlist";
+import {User, Playlist} from "@/models";
+import {dbConnect, sessionOptions, MAX_AGE} from "@/lib";
 import bcrypt from "bcrypt";
 import {getIronSession} from "iron-session";
-import {sessionOptions, MAX_AGE, SessionData} from "@/app/lib/session";
+import type {SessionData} from "@/lib";
 
 export async function POST(request: Request) {
 	try {
