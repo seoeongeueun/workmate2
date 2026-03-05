@@ -1,9 +1,9 @@
 import {NextResponse} from "next/server";
-import dbConnect from "@/app/lib/dbConnect";
-import {User} from "@/app/models/User";
+import {User} from "@//models";
 import bcrypt from "bcrypt";
 import {getIronSession} from "iron-session";
-import {sessionOptions, SessionData, MAX_AGE} from "@/app/lib/session";
+import type {SessionData} from "@/lib";
+import {sessionOptions, MAX_AGE, dbConnect} from "@/lib";
 import mongoose from "mongoose";
 
 export async function POST(request: Request) {
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 		if (!user) {
 			return NextResponse.json({error: "Username does not exist"}, {status: 401});
 		}
-
+/
 		const isMatch = await bcrypt.compare(password, user.password);
 		if (!isMatch) {
 			return NextResponse.json({error: "Password does not match"}, {status: 401});
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 		return response;
 	} catch (error: any) {
 		console.error("Login error:", error);
-		return NextResponse.json({error: "Internal Server Error"}, {status: 500});
+		return NextResponse.json({error: error}, {status: 500});
 	}
 }
 
