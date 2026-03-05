@@ -1,6 +1,5 @@
 import mongoose, {ConnectOptions} from "mongoose";
-
-const MONGODB_URI = process.env.MONGODB_URI as string;
+import {MONGODB_URI} from "./index";
 
 if (!MONGODB_URI) {
 	throw new Error("Missing Mongodb_uri env variable");
@@ -18,7 +17,7 @@ declare global {
 const cached = global.mongooseCache ?? {conn: null, promise: null};
 global.mongooseCache = cached;
 
-export default async function dbConnect(): Promise<typeof mongoose> {
+export async function dbConnect(): Promise<typeof mongoose> {
 	if (cached.conn) {
 		return cached.conn;
 	}
