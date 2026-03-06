@@ -10,9 +10,8 @@ export interface SessionData {
 	};
 }
 
-// 세션 응답 구조 -> sessiondata에서 필요한 정보만 추출하여 반환
-// 정보가 없는 경우는 isvalid: false로 반환하고, 해당 정보는 undefined로 처리
-export type SessionResponse =
+// 세션 정보 구조 -> sessiondata에서 필요한 정보만 추출하여 반환
+export type SessionInfo =
 	| {
 			isValid: true;
 			userId: NonNullable<SessionData["user"]>["id"];
@@ -25,3 +24,9 @@ export type SessionResponse =
 			username?: undefined;
 			playlistId?: undefined;
 	  };
+
+// 세션 만료 응답 구조
+export interface SessionExpirationResponse {
+	timeLeft: number; //세션이 만료되기까지 남은 시간 (ms)
+	expired: boolean; //세션이 이미 만료되었는지 여부
+}
