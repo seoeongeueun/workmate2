@@ -1,5 +1,5 @@
 import mongoose, {ConnectOptions} from "mongoose";
-import {MONGODB_URI} from "./index";
+import {MONGODB_URI} from "./api";
 
 if (!MONGODB_URI) {
 	throw new Error("Missing Mongodb_uri env variable");

@@ -21,8 +21,8 @@ export default function Manage() {
 				inputKey: value,
 			});
 
-			if (response?.error) {
-				console.log(response.error);
+			if (!response.success) {
+				console.log(response.error.message);
 				setMessage("This is a restricted page. Redirecting to main page...");
 				setAuthenticated(false);
 				return;
