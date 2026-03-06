@@ -1,20 +1,36 @@
 import {create} from "zustand";
-import {extractVideoId} from "../lib/tools";
+import {extractVideoId} from "@/lib";
+import type {Track, Playlist} from "@/types";
 
-export interface Track {
-	id: string; //videoid를 기반으로 생성되는 곡 전용 id
-	url: string;
-	title?: string;
-}
+/**
+ * 플레이리스트 상태 관리를 위한 zustand 스토어
+ * - objectId: 데이터베이스에 저장된 플레이리스트의 고유 ID
+ * - title: 플레이리스트 제목
+ * - tracks: 플레이리스트에 포함된 트랙들의 배열
+ * - backup: 플레이리스트 셔플 시 원본 트랙 순서를 보존하기 위한 배열
+ * - currentTrack: 현재 재생 중인 트랙
+ * - nextTrack: 다음에 재생될 트랙 (playPrevious 기능에서 사용)
+ *
+ * 주요 메서드:
+ * - initialize: 플레이리스트 초기화 (제목, ID, 트랙 목록 설정)
+ * - reset: 플레이리스트 상태 초기화
+ * - setTitle: 플레이리스트 제목 설정
+ * - setObjectId: 플레이리스트 ID 설정
+ * - addTrack: 새로운 트랙 추가 (URL과 선택적 제목)
+ * - removeTrack: 특정 트랙 제거 (ID로 식별)
+ * - playNext: 다음 트랙으로 이동 (특수 트랙 재생 중일 때는 현재 트랙 유지)
+ * - playPrevious: 이전 트랙으로 이동 (현재 트랙이 없을 때는 nextTrack 재생)
+ * - shuffleTracks: 트랙 순서 섞기 (현재 트랙을 첫 번째로 유지)
+ * - unshuffleTracks: 원래 트랙 순서로 복원 (셔플 중 추가/삭제된 곡 반영)
+ * - updateTrackTitle: 특정 트랙의 제목 업데이트 (videoId로 식별)
+ * - getTrackIndex: 현재 트랙의 인덱스와 전체 트랙 수 반환
+ * - getTrackIndexWithId: 특정 트랙 ID의 인덱스와 전체 트랙 수 반환
+ * - getVideoIdFromUrl: YouTube URL에서 videoId 추출
+ * - getNextTrackVideoId: 다음 트랙의 videoId 반환
+ * - empty: 플레이리스트 완전히 비우기
+ */
 
-interface PlaylistState {
-	objectId?: string;
-	title: string;
-	tracks: Track[];
-	backup: Track[]; //플레이리스트 셔플시 원본 플레이리스트 저장용
-	currentTrack?: Track;
-	nextTrack?: Track;
-
+interface PlaylistState extends Playlist {
 	initialize: (title: string, objectId: string, tracks: Track[]) => void;
 	reset: () => void;
 	setTitle: (title: string) => void;
