@@ -12,3 +12,5 @@ export interface Playlist {
 	currentTrack?: Track;
 	nextTrack?: Track;
 }
+
+export type PlaylistInfo = Pick<Playlist, "title" | "tracks">;
