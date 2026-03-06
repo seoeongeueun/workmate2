@@ -16,7 +16,7 @@ const handleEmptyTracks = async (id: string) => {
 	return await Playlist.findByIdAndUpdate(id, {$set: {tracks: []}}, {new: true});
 };
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
 	try {
 		const {id, track, mode} = (await request.json()) as {
 			id: string;
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
 		//플레이리스트를 완전히 비우는 경우만 track이 없어도 된다
 		if (mode !== "empty" && !track) {
-			return NextResponse.json({error: "Track not provided"}, {status: 404});
+			return NextResponse.json({success: false, error: {message: "Track not provided", code: "TRACK_NOT_PROVIDED"}}, {status: 404});
 		}
 
 		let updatedPlaylist;
@@ -46,13 +46,13 @@ export async function POST(request: Request) {
 		}
 
 		if (!updatedPlaylist) {
-			return NextResponse.json({error: "Playlist not found"}, {status: 404});
+			return NextResponse.json({success: false, error: {message: "Playlist not found", code: "PLAYLIST_NOT_FOUND"}}, {status: 404});
 		}
 
-		return NextResponse.json(updatedPlaylist);
+		return NextResponse.json({success: true, data: updatedPlaylist});
 	} catch (error) {
 		console.error("Error handling playlist:", error);
-		return NextResponse.json({error: "Internal server error"}, {status: 500});
+		return NextResponse.json({success: false, error: {message: "Internal server error", code: "INTERNAL"}}, {status: 500});
 	}
 }
 
@@ -63,21 +63,21 @@ export async function GET(request: Request) {
 		const id = searchParams.get("id");
 
 		if (!id) {
-			return NextResponse.json({error: "Playlist id is needed"}, {status: 400});
+			return NextResponse.json({success: false, error: {message: "Playlist id is needed", code: "MISSING_ID"}}, {status: 400});
 		}
 
 		if (!mongoose.Types.ObjectId.isValid(id)) {
-			return NextResponse.json({error: "Invalid playlist id"}, {status: 400});
+			return NextResponse.json({success: false, error: {message: "Invalid playlist id", code: "INVALID_ID"}}, {status: 400});
 		}
 
 		const item = await Playlist.findById(id);
 
 		if (!item) {
-			return NextResponse.json({error: "No matching playlist was found"}, {status: 404});
+			return NextResponse.json({success: false, error: {message: "No matching playlist was found", code: "PLAYLIST_NOT_FOUND"}}, {status: 404});
 		}
-		return NextResponse.json({title: item.title, tracks: item.tracks});
+		return NextResponse.json({success: true, data: {title: item.title, tracks: item.tracks}});
 	} catch (error) {
 		console.error("Error fetching playlist:", error);
-		return NextResponse.json({error: "Internal server error"}, {status: 500});
+		return NextResponse.json({success: false, error: {message: "Internal server error", code: "INTERNAL"}}, {status: 500});
 	}
 }

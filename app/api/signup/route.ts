@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import {getIronSession} from "iron-session";
 import type {SessionData} from "@/types";
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
 	try {
 		const {username, password} = (await request.json()) as {
 			username: string;
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 		};
 
 		if (!username || !password) {
-			return NextResponse.json({error: "ErrorCode: 0 - Missing input"}, {status: 400});
+			return NextResponse.json({success: false, error: {message: "Missing input", code: "MISSING_INPUT"}}, {status: 400});
 		}
 
 		await dbConnect();
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 		//중복 이름 확인 (대소문자 무시)
 		const exists = await User.findOne({username: {$regex: new RegExp(`^${username}$`, "i")}}).lean();
 		if (exists) {
-			return NextResponse.json({error: "ErrorCode: 1 - Username taken"}, {status: 409});
+			return NextResponse.json({success: false, error: {message: "Username taken", code: "USERNAME_TAKEN"}}, {status: 409});
 		}
 
 		//플레이리스트 먼저 생성
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 		});
 
 		//유저 생성 후 바로 로그인 처리
-		const response = NextResponse.json({success: true}, {status: 201});
+		const response = NextResponse.json({success: true, data: {}}, {status: 201});
 		const session = await getIronSession<SessionData>(request, response, sessionOptions);
 
 		//대표 플레이리스트의 object id를 같이 저장
@@ -54,11 +54,6 @@ export async function POST(request: Request) {
 
 		return response;
 	} catch (error: any) {
-		return NextResponse.json({error: error?.message}, {status: 500});
+		return NextResponse.json({success: false, error: {message: "Internal server error", code: "INTERNAL"}}, {status: 500});
 	}
-}
-
-export async function GET(request: Request) {
-	try {
-	} catch (error: any) {}
 }
