@@ -1,10 +1,6 @@
-interface APIResponse<T = any> {
-	error?: string;
-	data?: T;
-	[key: string]: any;
-}
+import type {ApiResponse} from "@/types";
 
-export async function apiRequest<T = any>(url: string, method: string = "GET", data?: unknown): Promise<APIResponse<T>> {
+export async function apiRequest<T = any>(url: string, method: string = "GET", data?: unknown): Promise<ApiResponse<T>> {
 	const options: RequestInit = {
 		method,
 		headers: {
@@ -19,13 +15,13 @@ export async function apiRequest<T = any>(url: string, method: string = "GET", d
 
 	try {
 		const response = await fetch(url, options);
+		const responseData = await response.json().catch(() => undefined);
+
 		if (!response.ok) {
-			const errorData = await response.json();
-			console.log(`Error with ${method} request to ${url}:`, errorData);
-			return {error: errorData.error};
+			return (responseData ?? {success: false, error: {message: "Request failed"}}) as ApiResponse<T>;
 		}
-		const responseData = await response.json();
-		return {data: responseData};
+
+		return (responseData ?? {success: false, error: {message: "Empty response"}}) as ApiResponse<T>;
 	} catch (error) {
 		console.error("Error during fetch:", error);
 		throw error;
