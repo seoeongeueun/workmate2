@@ -8,5 +8,3 @@ export const QUERY_CLIENT_DEFAULT_OPTIONS: DefaultOptions = {
 		retry: 1,
 	},
 };
-
-export const MONGODB_URI = process.env.MONGODB_URI as string;

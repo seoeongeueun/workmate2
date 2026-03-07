@@ -1,5 +1,6 @@
 import mongoose, {ConnectOptions} from "mongoose";
-import {MONGODB_URI} from "./api";
+
+const MONGODB_URI = process.env.MONGODB_URI as string;
 
 if (!MONGODB_URI) {
 	throw new Error("Missing Mongodb_uri env variable");

@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {User, Playlist} from "@/models";
-import {dbConnect, sessionOptions, MAX_AGE} from "@/lib";
+import {sessionOptions, MAX_AGE} from "@/lib";
+import {dbConnect} from "@/providers/dbConnect";
 import bcrypt from "bcrypt";
 import {getIronSession} from "iron-session";
 import type {SessionData} from "@/types";

@@ -2,8 +2,9 @@ import {NextResponse} from "next/server";
 import {User} from "@//models";
 import bcrypt from "bcrypt";
 import {getIronSession} from "iron-session";
-import type {SessionData, SessionInfo, ApiResponse} from "@/types";
-import {sessionOptions, MAX_AGE, dbConnect} from "@/lib";
+import type {SessionData, SessionInfo} from "@/types";
+import {sessionOptions, MAX_AGE} from "@/lib";
+import {dbConnect} from "@/providers/dbConnect";
 import mongoose from "mongoose";
 
 export async function POST(request: Request): Promise<Response> {

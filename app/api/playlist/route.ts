@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import mongoose from "mongoose";
 import type {Track} from "@/types";
-import {dbConnect} from "@/lib";
+import {dbConnect} from "@/providers/dbConnect";
 import {Playlist} from "@/models";
 
 const handleAdd = async (id: string, track: Track) => {

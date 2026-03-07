@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {dbConnect} from "@/lib";
+import {dbConnect} from "@/providers/dbConnect";
 import {Lucky} from "@/models";
 
 export async function GET() {
