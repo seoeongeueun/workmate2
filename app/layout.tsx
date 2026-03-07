@@ -1,4 +1,5 @@
 import type {Metadata} from "next";
+import {SettingsButton} from "./ui";
 import {QueryProvider} from "@/query";
 import "./globals.css";
 
@@ -26,6 +27,7 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
 	return (
 		<html lang="en">
 			<body>
+				<SettingsButton />
 				<QueryProvider>{children}</QueryProvider>
 			</body>
 		</html>
