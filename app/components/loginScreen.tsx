@@ -83,12 +83,20 @@ export default function LoginScreen() {
 		}
 
 		try {
-			const response = await apiRequest<{success: boolean}>("/api/auth", "POST", {username, password});
+			const response = await apiRequest("/api/auth", "POST", {username, password});
 
-			if (response?.error) {
-				const match = response.error.match(/ErrorCode:\s*(\d+)/);
-				if (match) setErrorCode(parseInt(match[1]));
-				else setErrorCode(3);
+			if (!response.success) {
+				switch (response.error.code) {
+					case "MISSING_INPUT":
+						setErrorCode(ErrorCodes.MissingFields);
+						break;
+					case "PASSWORD_MISMATCH":
+					case "USER_NOT_FOUND":
+						setErrorCode(ErrorCodes.LoginError);
+						break;
+					default:
+						setErrorCode(ErrorCodes.LoginError);
+				}
 				setIsLoading(false);
 				return;
 			}
@@ -130,12 +138,19 @@ export default function LoginScreen() {
 
 		try {
 			setIsLoading(true);
-			const response = await apiRequest<{success: boolean}>("/api/signup", "POST", {username, password});
+			const response = await apiRequest("/api/signup", "POST", {username, password});
 
-			if (response?.error) {
-				const match = response.error.match(/ErrorCode:\s*(\d+)/);
-				if (match) setErrorCode(parseInt(match[1]));
-				else setErrorCode(2);
+			if (!response.success) {
+				switch (response.error.code) {
+					case "MISSING_INPUT":
+						setErrorCode(ErrorCodes.MissingFields);
+						break;
+					case "USERNAME_TAKEN":
+						setErrorCode(ErrorCodes.UsernameTaken);
+						break;
+					default:
+						setErrorCode(ErrorCodes.SignupFail);
+				}
 				setIsLoading(false);
 				return;
 			}
@@ -149,7 +164,7 @@ export default function LoginScreen() {
 	};
 
 	return (
-		<div className="font-galmuri flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black">
+		<section className="font-galmuri flex flex-col items-center w-full h-full justify-between gap-spacing-10 bg-gray-2 p-spacing-10 text-black">
 			<div className="battery flex flex-row w-fit items-center ml-auto mb-px">
 				<div className="relative border border-px border-black w-[1.7rem] h-[0.9rem] bg-transparent rounded-[0.2rem]">
 					<div className="absolute rounded-xs max-w-[1.2rem] max-h-[0.4rem] w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -180,6 +195,6 @@ export default function LoginScreen() {
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 	);
 }

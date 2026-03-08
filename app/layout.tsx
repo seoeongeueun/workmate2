@@ -172,7 +172,7 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
 							<QueryProvider>
 								<div className="pointer-events-auto bg-black border border-black px-spacing-4 py-spacing-8 w-fit z-30">
 									<div className="w-[32rem] h-[20rem] bg-off-screen">
-										<div className="w-full h-full flex flex-col justify-center items-center ">{children}</div>
+										<div className="w-full h-full flex flex-col justify-center items-center [&>section]:bg-gray-2">{children}</div>
 									</div>
 								</div>
 							</QueryProvider>
