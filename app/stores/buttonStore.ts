@@ -1,5 +1,6 @@
 import {create} from "zustand";
 import type {ButtonValue} from "@/types";
+import {play} from "@/lib";
 
 // 작동하는 게임보이의 버튼 종류와 키보드 매핑
 // export const KEY_TO_BUTTON: Record<string, ButtonValue> = {
@@ -13,20 +14,30 @@ import type {ButtonValue} from "@/types";
 
 interface ButtonState {
 	isPowerOn: boolean;
-	pressedButton: ButtonValue | null;
+	togglePower: () => void;
+	pressedButton: {prev: ButtonValue | null; current: ButtonValue | null};
 	pressButton: (button: ButtonValue) => void;
 	resetButtons: () => void;
 }
 
-export const useButtonStore = create<ButtonState>(set => ({
+export const useButtonStore = create<ButtonState>((set, get) => ({
 	isPowerOn: false,
-	pressedButton: null,
-	pressButton: button =>
+	pressedButton: {prev: null, current: null},
+	togglePower: () =>
 		set(state => {
-			if (button === "power") {
-				return {isPowerOn: !state.isPowerOn, pressedButton: button};
-			}
-			return {pressedButton: button};
+			// 전원이 켜지면 효과음 재생
+			const next = !state.isPowerOn;
+			if (next) play("power");
+			return {isPowerOn: next};
 		}),
-	resetButtons: () => set({pressedButton: null}),
+	pressButton: button => {
+		if (button === "power") {
+			const next = !get().isPowerOn;
+			if (next) play("power");
+			set({isPowerOn: next, pressedButton: {prev: get().pressedButton.current, current: button}});
+			return;
+		}
+		set({pressedButton: {prev: get().pressedButton.current, current: button}});
+	},
+	resetButtons: () => set({pressedButton: {prev: null, current: null}}),
 }));
