@@ -1,6 +1,6 @@
 "use client";
 import React, {useState, useEffect} from "react";
-import {Battery100Icon, PlayIcon, ExclamationTriangleIcon} from "@heroicons/react/24/solid";
+import {PlayIcon, ExclamationTriangleIcon} from "@heroicons/react/24/solid";
 import {apiRequest} from "../lib/tools";
 import {useQueryClient} from "@tanstack/react-query";
 
@@ -11,6 +11,7 @@ enum ErrorCodes {
 	LoginError = 3,
 	PasswordLength = 4,
 	InvalidChars = 5,
+	UserNotFound = 6,
 }
 
 export default function LoginScreen() {
@@ -27,6 +28,7 @@ export default function LoginScreen() {
 		[ErrorCodes.LoginError]: "Log in failed, please check the fields again",
 		[ErrorCodes.PasswordLength]: "Password should be at least 6 characters long",
 		[ErrorCodes.InvalidChars]: "Username can only contain letters and nums",
+		[ErrorCodes.UserNotFound]: "Username not found",
 	};
 
 	const handleKeyDown = (event: KeyboardEvent) => {
@@ -90,9 +92,11 @@ export default function LoginScreen() {
 					case "MISSING_INPUT":
 						setErrorCode(ErrorCodes.MissingFields);
 						break;
-					case "PASSWORD_MISMATCH":
 					case "USER_NOT_FOUND":
-						setErrorCode(ErrorCodes.LoginError);
+						setErrorCode(ErrorCodes.UserNotFound);
+						break;
+					case "USERNAME_TAKEN":
+						setErrorCode(ErrorCodes.UsernameTaken);
 						break;
 					default:
 						setErrorCode(ErrorCodes.LoginError);
@@ -103,7 +107,7 @@ export default function LoginScreen() {
 			queryClient.invalidateQueries({queryKey: ["session"]});
 		} catch (error) {
 			setIsLoading(false);
-			setErrorCode(3);
+			setErrorCode(ErrorCodes.LoginError);
 			return;
 		}
 	};
