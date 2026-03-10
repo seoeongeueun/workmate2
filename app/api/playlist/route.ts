@@ -3,6 +3,9 @@ import mongoose from "mongoose";
 import type {Track} from "@/types";
 import {dbConnect} from "@/providers/dbConnect";
 import {Playlist} from "@/models";
+import {getIronSession} from "iron-session";
+import {sessionOptions} from "@/lib";
+import type {SessionData} from "@/types";
 
 const handleAdd = async (id: string, track: Track) => {
 	return await Playlist.findByIdAndUpdate(id, {$addToSet: {tracks: track}}, {new: true});
@@ -18,6 +21,15 @@ const handleEmptyTracks = async (id: string) => {
 
 export async function POST(request: Request): Promise<Response> {
 	try {
+		const response = new Response();
+		const session = await getIronSession<SessionData>(request, response, sessionOptions);
+
+		if (!session.user?.id) {
+			return NextResponse.json({success: false, error: {message: "Unauthorized", code: "UNAUTHORIZED"}}, {status: 401});
+		}
+
+		await dbConnect();
+
 		const {id, track, mode} = (await request.json()) as {
 			id: string;
 			track: Track | undefined;
