@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@heroicons/react": "^2.2.0",
 		"@tanstack/react-query": "^5.74.4",
+		"@tanstack/react-query-devtools": "^5.91.3",
 		"@types/youtube": "^0.1.0",
 		"bcrypt": "^5.1.1",
 		"iron-session": "^8.0.4",
