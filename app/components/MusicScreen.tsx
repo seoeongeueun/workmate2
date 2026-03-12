@@ -18,6 +18,11 @@ import {useQueryClient} from "@tanstack/react-query";
 import {useQuery} from "@tanstack/react-query";
 import {playlistQueries, sessionQueries} from "@/query";
 import {useLuckyTrackStore, useButtonStore} from "@/stores";
+declare global {
+	interface Window {
+		onYouTubeIframeAPIReady: () => void;
+	}
+}
 
 type PlaylistAction =
 	| {type: "INIT"; payload: PlaylistInfo}
@@ -294,7 +299,6 @@ export default function MusicScreen() {
 	const reset = useLuckyTrackStore(state => state.reset);
 
 	const pressedButton = useButtonStore(state => state.pressedButton);
-	const resetButtons = useButtonStore(state => state.reset);
 
 	//세션 만료 시간 계산
 	const {data: expirationData} = useQuery(sessionQueries.expiration());
