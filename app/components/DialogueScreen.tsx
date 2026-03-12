@@ -11,6 +11,10 @@ import type {LuckyTracks} from "@/types";
 
 type DialogueKeys = keyof typeof dialogue;
 
+type DialogueScreenProps = {
+	setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
 /*
 	Dialogue 설명
 	000: 기본 인사말
@@ -23,7 +27,7 @@ type DialogueKeys = keyof typeof dialogue;
 	013: 새해 전날
 */
 
-export default function DialogueScreen() {
+export default function DialogueScreen({setOpen}: DialogueScreenProps) {
 	const [choices] = useState(() => [
 		DIALOGUE_CHOICES[0][Math.floor(Math.random() * DIALOGUE_CHOICES[0].length)],
 		DIALOGUE_CHOICES[1][Math.floor(Math.random() * DIALOGUE_CHOICES[1].length)],
@@ -142,6 +146,7 @@ export default function DialogueScreen() {
 			setDisplayLineRow("005"); //재생 거절에 대한 고정 대사
 		}
 		setDisplayChoice(null);
+		setOpen(false); //대화창 닫기
 	};
 
 	//대사에 ${user}, ${month}이 포함된 경우 실제 값으로 치환
@@ -176,7 +181,7 @@ export default function DialogueScreen() {
 				nextLineTimerRef.current = setTimeout(() => {
 					if (runId !== runIdRef.current) return;
 					setLineIndex(prev => prev + 1);
-				}, 700);
+				}, 300);
 				return;
 			}
 
