@@ -13,4 +13,4 @@ export interface Playlist {
 	nextTrack?: Track;
 }
 
-export type PlaylistInfo = Pick<Playlist, "title" | "tracks">;
+export type PlaylistInfo = Pick<Playlist, "title" | "tracks" | "objectId">;
