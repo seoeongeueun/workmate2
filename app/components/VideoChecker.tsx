@@ -41,14 +41,12 @@ export default function VideoChecker() {
 	const fetchVideoData = async () => {
 		try {
 			const response = await apiRequest("/api/lucky");
-			const data = response?.data?.data;
+			if (!response.success) return;
+			const data = response.data;
+			setVideoData(data);
 
-			if (data) {
-				setVideoData(data);
-
-				const validKeys = Object.keys(data).filter(k => Array.isArray(data[k]));
-				setCategoryKeys(validKeys);
-			}
+			const validKeys = Object.keys(data).filter(k => Array.isArray(data[k]));
+			setCategoryKeys(validKeys);
 		} catch (error) {
 			console.log(error);
 		}
@@ -137,7 +135,7 @@ export default function VideoChecker() {
 				unavailableVideos,
 			});
 
-			if (response?.error) throw new Error("Failed to update JSON");
+			if (!response.success) throw new Error("Failed to update JSON");
 			setVideoStatuses(prev => {
 				const updatedCategory = {...prev[categoryKey]};
 				unavailableVideos.forEach(url => {

@@ -163,10 +163,8 @@ export default function LuckyScreen({triggers, username, setChosenTrack, setOpen
 	const fetchVideoData = async () => {
 		try {
 			const response = await apiRequest("/api/lucky");
-			const data = response?.data;
-
-			if (data?.data) {
-				setVideoData(data.data);
+			if (response.success) {
+				setVideoData(response.data);
 			}
 		} catch (error) {
 			console.log(error);
