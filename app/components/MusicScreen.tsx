@@ -69,22 +69,27 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 			const newTrack: Track = {id, url: action.payload.url, title: action.payload.title};
 			// 신규 트랙 추가시 항상 플레이리스트의 마지막에 추가
 			const tracks = [...state.tracks, newTrack];
+
 			return {
 				...state,
 				tracks,
-				currentTrack: state.currentTrack ?? newTrack,
+				currentTrack: state.currentTrack || state.nextTrack || newTrack,
 				nextTrack: state.nextTrack,
 			};
 		}
 		//id를 가지고 업데이트할 트랙을 찾아 제목 업데이트 (굳이 currentTrack일 필요 없다)
 		case "UPDATE_TRACK_TITLE": {
-			const updatedTracks = state.tracks.map(track => (track.url.includes(action.payload.videoId) ? {...track, title: action.payload.title} : track));
+			const updatedTracks = state.tracks.map(track => (extractVideoId(track.url) === action.payload.videoId ? {...track, title: action.payload.title} : track));
+
+			//get the updated track
+			const newTrack = updatedTracks.find(t => extractVideoId(t.url) === action.payload.videoId);
 			console.log("Updating track title - ", updatedTracks);
 
 			return {
 				...state,
 				tracks: updatedTracks,
 				currentTrack: state.currentTrack ? {...state.currentTrack, title: action.payload.title} : undefined,
+				nextTrack: !state.currentTrack ? newTrack : state.nextTrack,
 			};
 		}
 		case "PLAY_NEXT": {
@@ -262,13 +267,11 @@ export default function MusicScreen() {
 
 	//플레이리스트 상태 관리
 	const [playlist, dispatchPlaylist] = useReducer(playlistReducer, initialPlaylist);
+	const {data: playlistInfo} = useQuery(playlistQueries.detail());
 
 	const queryClient = useQueryClient();
 
-	const {data: playlistInfo} = useQuery(playlistQueries.detail());
-
 	const playerRef = useRef<any>(null);
-	const lastCuedVideoIdRef = useRef<string | null>(null);
 
 	// 현재 시간 업데이트용 타이머
 	useEffect(() => {
@@ -288,7 +291,9 @@ export default function MusicScreen() {
 	const trackIndexLabel = useMemo(() => {
 		if (playlist.tracks.length === 0) return "0 out of 0";
 		const idx = playlist.tracks.findIndex(t => t.id === playlist.currentTrack?.id);
-		return `${idx + 1} out of ${playlist.tracks.length}`;
+
+		//tracks 길이가 0이 아니면 최소 1부터 시작하도록
+		return `${Math.max(1, idx + 1)} out of ${playlist.tracks.length}`;
 	}, [playlist]);
 
 	//유저가 직접 재생/일시중지를 트리거 할 때만 사용하지만
@@ -426,7 +431,6 @@ export default function MusicScreen() {
 		console.log("Current Track Updated - ", playlist.currentTrack?.title);
 
 		if (!playlist.currentTrack || !currentVideoId) return;
-		//console.log("Current Track Updated - ", playlist.currentTrack);
 
 		cueVideo(currentVideoId);
 	}, [currentVideoId]);
@@ -509,7 +513,7 @@ export default function MusicScreen() {
 						data: {id: playlist.objectId, track: newTrack, mode: "add"},
 					});
 					// *중요* reducer로 트랙을 ui에 반영하고 있기 때문에 굳이 mutation 후 서버에서 다시 플레이리스트 정보를 가져올 필요 없이, 쿼리 무효화로 다른 컴포넌트에서 최신 정보가 반영되도록 처리
-					await queryClient.invalidateQueries({queryKey: ["playlist"]});
+					await queryClient.invalidateQueries({queryKey: ["playlist"], refetchType: "none"});
 				} catch (error) {
 					console.error("Failed to update playlist:", error);
 					trackToAdd.value = "Error saving changes";
@@ -533,7 +537,7 @@ export default function MusicScreen() {
 					method: "POST",
 					data: {id: playlist.objectId, track: currentTrack, mode: "remove"},
 				});
-				await queryClient.invalidateQueries({queryKey: ["playlist"]});
+				await queryClient.invalidateQueries({queryKey: ["playlist"], refetchType: "none"});
 
 				setIsVideoError(false);
 				dispatchPlaylist({type: "REMOVE_TRACK", payload: {id: currentTrack.id}});
@@ -611,7 +615,7 @@ export default function MusicScreen() {
 				{isVideoError ? (
 					<p className="text-xs line-clamp-2 whitespace-pre-line">{`⚠️ Video not available:\n removing from playlist...`}</p>
 				) : (
-					<p className="text-xs line-clamp-2">{luckyTrack?.title || playlist.currentTrack?.title}</p>
+					<p className="text-xs line-clamp-2">{luckyTrack?.title || playlist.currentTrack?.title || playlist.nextTrack?.title}</p>
 				)}
 			</div>
 			<span className="text-xxs mt-auto">{shuffleMode ? "shuffle on" : luckyTrack ? "special track" : `track ${trackIndexLabel}`}</span>
