@@ -209,7 +209,7 @@ export default function DialogueScreen({setOpen}: DialogueScreenProps) {
 	}, [displayLineRow, lineIndex, isFirstDay, monthInEng, session?.username]);
 
 	return (
-		<section className="animate-fadeIn flex flex-col w-full h-full justify-end items-center">
+		<section className="flex flex-col w-full h-full justify-end items-center">
 			<div className="mb-[5.5rem] max-h-full flex flex-col w-full justify-end items-center gap-4">
 				{displayText && (
 					<div className="text-box relative w-fit max-w-[26rem] h-fit min-h-12 py-spacing-10 px-spacing-12 max-h-2/3 bg-black border border-px border-white rounded-md text-white flex flex-col items-start gap-spacing-4">
