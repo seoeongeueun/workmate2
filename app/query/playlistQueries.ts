@@ -1,17 +1,22 @@
 import {queryOptions} from "@tanstack/react-query";
-import {fetchPlaylist} from "@/actions";
+import {apiRequest} from "@/lib";
+import {PlaylistInfo, ApiResponse} from "@/types";
 
 const playlistKeys = {
 	all: ["playlist"] as const,
-	detail: (id: string, userId: string) => [...playlistKeys.all, userId, id] as const,
+	detail: () => [...playlistKeys.all] as const,
 };
 
 export const playlistQueries = {
-	detail: (id: string, userId: string) =>
+	detail: () =>
 		queryOptions({
-			queryKey: playlistKeys.detail(id, userId),
-			queryFn: async () => fetchPlaylist(id),
-			refetchOnWindowFocus: true,
-			enabled: !!id,
+			queryKey: playlistKeys.detail(),
+			queryFn: async () => {
+				const res = await apiRequest<ApiResponse<PlaylistInfo>>("/api/playlist");
+				if (!res.success) {
+					throw new Error(res.error.message);
+				}
+				return res.data as PlaylistInfo;
+			},
 		}),
 };
