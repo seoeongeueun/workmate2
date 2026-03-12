@@ -104,7 +104,11 @@ export default function LoginScreen() {
 				setIsLoading(false);
 				return;
 			}
-			queryClient.invalidateQueries({queryKey: ["session"]});
+			queryClient.invalidateQueries({queryKey: ["session"]}); //최신 세션 반영
+
+			//로그인 성공 후 /play로 이동
+			window.location.href = "/play";
+			return;
 		} catch (error) {
 			setIsLoading(false);
 			setErrorCode(ErrorCodes.LoginError);
@@ -160,9 +164,13 @@ export default function LoginScreen() {
 			}
 			queryClient.invalidateQueries({queryKey: ["session"]});
 			setIsLoading(false);
+
+			//로그인 성공 후 /play로 이동
+			window.location.href = "/play";
+			return;
 		} catch (error) {
 			setIsLoading(false);
-			setErrorCode(2);
+			setErrorCode(ErrorCodes.LoginError);
 			return;
 		}
 	};
