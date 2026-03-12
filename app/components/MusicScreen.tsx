@@ -605,6 +605,7 @@ export default function MusicScreen() {
 			} else {
 				trackToAdd.value = "Adding track...";
 
+				//lucky track이 있는 경우는 현재 재생 곡을 방해하지 않게 따로 플래그 추가
 				dispatchPlaylist({type: "ADD_TRACK", payload: {url, title: "", isLucky: !!luckyTrack}});
 				setShowStopIcon(false);
 
