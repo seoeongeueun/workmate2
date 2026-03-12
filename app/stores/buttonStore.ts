@@ -14,7 +14,7 @@ import {play} from "@/lib";
 
 interface ButtonState {
 	isPowerOn: boolean;
-	togglePower: () => void;
+	togglePower: (forceOn?: boolean) => void;
 	pressedButton: {prev: ButtonValue | null; current: ButtonValue | null};
 	pressButton: (button: ButtonValue) => void;
 	resetButtons: () => void;
@@ -23,10 +23,10 @@ interface ButtonState {
 export const useButtonStore = create<ButtonState>((set, get) => ({
 	isPowerOn: false,
 	pressedButton: {prev: null, current: null},
-	togglePower: () =>
+	togglePower: (forceOn = false) =>
 		set(state => {
 			// 전원이 켜지면 효과음 재생
-			const next = !state.isPowerOn;
+			const next = forceOn ? true : !state.isPowerOn;
 			if (next) play("power");
 			return {isPowerOn: next};
 		}),

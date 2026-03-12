@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useCallback, useMemo, useReducer} from "react";
+import React, {useState, useEffect, useRef, useCallback, useMemo, useReducer, use} from "react";
 import {
 	PlayIcon,
 	PauseCircleIcon,
@@ -299,6 +299,7 @@ export default function MusicScreen() {
 	const reset = useLuckyTrackStore(state => state.reset);
 
 	const pressedButton = useButtonStore(state => state.pressedButton);
+	const isPowerOn = useButtonStore(state => state.isPowerOn);
 
 	//세션 만료 시간 계산
 	const {data: expirationData} = useQuery(sessionQueries.expiration());
@@ -319,6 +320,10 @@ export default function MusicScreen() {
 		}, 1000);
 		return () => clearInterval(timer);
 	}, []);
+
+	useEffect(() => {
+		if (!isPowerOn) playerRef.current?.pauseVideo();
+	}, [isPowerOn]);
 
 	useEffect(() => {
 		if (playlistInfo) {
