@@ -1,5 +1,5 @@
 import mongoose, {Schema, Model, Document} from "mongoose";
-import {Track} from "../classes/Playlist";
+import type {Track} from "@/types";
 
 export interface IPlaylist extends Document {
 	_id: mongoose.Types.ObjectId;
