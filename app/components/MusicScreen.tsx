@@ -22,9 +22,10 @@ import {useLuckyTrackStore, useButtonStore} from "@/stores";
 type PlaylistAction =
 	| {type: "INIT"; payload: PlaylistInfo}
 	| {type: "RESET"}
+	| {type: "SET_AS_FIRST"}
 	| {type: "SET_TITLE"; payload: {title: string}}
 	| {type: "SET_OBJECT_ID"; payload: {id: string}}
-	| {type: "ADD_TRACK"; payload: {url: string; title?: string}}
+	| {type: "ADD_TRACK"; payload: {url: string; title?: string; isLucky?: boolean}}
 	| {type: "UPDATE_TRACK_TITLE"; payload: {videoId: string; title: string}}
 	| {type: "PLAY_NEXT"}
 	| {type: "PLAY_PREVIOUS"}
@@ -58,6 +59,15 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 		case "RESET": {
 			return initialPlaylist;
 		}
+		// lucky가 없는 경우 특수한 케이스에서만 쓰는 첫번째 지정 리듀서
+		case "SET_AS_FIRST": {
+			console.log("Setting first track as current - no lucky track");
+			return {
+				...state,
+				currentTrack: state.tracks[0],
+				nextTrack: state.tracks[1] ?? undefined,
+			};
+		}
 		case "SET_TITLE": {
 			return {...state, title: action.payload.title};
 		}
@@ -69,11 +79,10 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 			const newTrack: Track = {id, url: action.payload.url, title: action.payload.title};
 			// 신규 트랙 추가시 항상 플레이리스트의 마지막에 추가
 			const tracks = [...state.tracks, newTrack];
-
 			return {
 				...state,
 				tracks,
-				currentTrack: state.currentTrack || state.nextTrack || newTrack,
+				currentTrack: action.payload.isLucky ? state.currentTrack : state.currentTrack || state.nextTrack || newTrack,
 				nextTrack: state.nextTrack,
 			};
 		}
@@ -95,30 +104,51 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 		case "PLAY_NEXT": {
 			if (!state.tracks.length) return state;
 
-			let currentTrack = state.currentTrack;
-			if (!state.currentTrack) {
-				// currentTrack이 없다는 것은 플레이리스트 실행 전인 것으로 판단해, 리스트의 첫곡을 현재곡으로 지정
-				console.log("no current track - setting first track as current");
+			const nextTrack = state.nextTrack;
+			console.log("Playing next track - ", nextTrack);
+			const currentTrack = state.currentTrack;
+
+			if (!nextTrack)
 				return {
 					...state,
-					currentTrack: state.tracks[0],
-					nextTrack: state.tracks[1],
+					currentTrack: undefined,
+					nextTrack: currentTrack,
 				};
-			}
 
-			const idx = state.tracks.findIndex(t => t.id === state.currentTrack?.id);
-			//현재 트랙이 마지막 트랙이 아닌 경우 다음 트랙을 현재 트랙으로 지정
-			if (idx >= 0 && idx < state.tracks.length - 1) currentTrack = state.tracks[idx + 1];
-			else return {...state, nextTrack: undefined};
-
+			const idx = state.tracks.findIndex(t => t.id === nextTrack?.id);
 			return {
 				...state,
-				currentTrack,
+				currentTrack: nextTrack,
 				nextTrack: state.tracks[idx + 1],
 			};
+			// if (!nextTrack) {
+			// 	// currentTrack이 없다는 것은 플레이리스트 실행 전인 것으로 판단해, 리스트의 첫곡을 현재곡으로 지정
+			// 	console.log("no current track - setting first track as current");
+			// 	return {
+			// 		...state,
+			// 		currentTrack: state.tracks[0],
+			// 		nextTrack: state.tracks[1],
+			// 	};
+			// }
+			// if (nextTrack) {
+
+			// } else {
+
+			// }
+
+			// const idx = state.tracks.findIndex(t => t.id === state.currentTrack?.id);
+			// //현재 트랙이 마지막 트랙이 아닌 경우 다음 트랙을 현재 트랙으로 지정
+			// if (idx >= 0 && idx < state.tracks.length - 1) currentTrack = state.tracks[idx + 1];
+			// else return {...state, nextTrack: undefined};
+
+			// return {
+			// 	...state,
+			// 	currentTrack,
+			// 	nextTrack: state.tracks[idx + 1],
+			// };
 		}
 		case "PLAY_PREVIOUS": {
-			if (!state.tracks.length) return state;
+			if (state.tracks.length <= 0) return state;
 
 			let currentTrack = state.currentTrack;
 			if (state.currentTrack) {
@@ -137,6 +167,7 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 					2. 첫 곡이다 => 첫 곡을 다시 재생
 				*/
 			const fallbackCurrent = state.nextTrack ?? state.tracks[0];
+
 			return {
 				...state,
 				currentTrack: fallbackCurrent,
@@ -146,7 +177,7 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 		case "SHUFFLE_TRACKS": {
 			const copy = [...state.tracks];
 			//Fisher-Yates 셔플
-			const currentIndex = copy.findIndex(t => t.id === action.payload?.currentTrackId);
+			const currentIndex = copy.findIndex(t => t.id === state.currentTrack?.id);
 			const current = currentIndex !== -1 ? copy.splice(currentIndex, 1)[0] : undefined;
 
 			for (let i = copy.length - 1; i > 0; i--) {
@@ -164,6 +195,7 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 				nextTrack: tracks[1],
 			};
 		}
+		//TODO: 셔플 해제시 다른 제목이 보여지는 문제 수정 필요
 		case "UNSHUFFLE_TRACKS": {
 			const backupIds = new Set(state.backup.map(t => t.id));
 			const tracksIds = new Set(state.tracks.map(t => t.id));
@@ -366,7 +398,7 @@ export default function MusicScreen() {
 	/* cue 과정은 동영상의 제목을 가져오기 위해 거쳐가는 필수 단계
 	cue 상태만 트리거하고 여기서 재생에는 관여하지 않는다 */
 	const cueVideo = (id: string) => {
-		if (!playerRef.current || !(playerRef.current instanceof YT.Player)) return;
+		if (!playerRef.current || !(playerRef.current instanceof YT.Player) || typeof playerRef.current.cueVideoById !== "function") return;
 		playerRef.current.cueVideoById(id); //yt api의 method를 통해 cued 상태로 전환
 	};
 
@@ -378,6 +410,13 @@ export default function MusicScreen() {
 		else playerRef.current.unMute();
 		setIsMute(prev => !prev);
 	};
+
+	// stop 아이콘인 경우 강제로 플레이 중지
+	useEffect(() => {
+		if (showStopIcon) {
+			if (playerRef.current) playerRef.current.pauseVideo();
+		}
+	}, [showStopIcon]);
 
 	useEffect(() => {
 		const loadYTScript = () => {
@@ -400,6 +439,8 @@ export default function MusicScreen() {
 		function onYouTubeIframeAPIReady() {
 			console.log("API Ready - Initializing player");
 			const track = luckyTrack?.url || playlist.currentTrack?.url || playlist.tracks[0]?.url;
+			if (!luckyTrack && !playlist.currentTrack) dispatchPlaylist({type: "SET_AS_FIRST"});
+
 			if (track) initializePlayer(extractVideoId(track));
 		}
 
@@ -501,6 +542,25 @@ export default function MusicScreen() {
 		return () => clearInterval(intervalId);
 	}, [playerRef.current, currentVideoId]);
 
+	useEffect(() => {
+		if (shuffleMode) {
+			//const current = currentTrackRef.current;
+
+			dispatchPlaylist({type: "SHUFFLE_TRACKS"});
+
+			if (showStopIcon) {
+				setShowStopIcon(false);
+
+				if (playerRef.current) {
+					playerRef.current.seekTo(0);
+					playerRef.current.playVideo();
+				}
+			}
+		} else {
+			dispatchPlaylist({type: "UNSHUFFLE_TRACKS"});
+		}
+	}, [shuffleMode]);
+
 	const handlePlayNext = () => {
 		if (showStopIcon) return;
 
@@ -510,15 +570,9 @@ export default function MusicScreen() {
 		const nextTrack = playlist.nextTrack;
 		if (!nextTrack) {
 			console.log("✋ End of playlist");
+			setShowStopIcon(true);
 
-			//스페셜 트랙이 재생 중이지 않은 경우에만 조기 종료
-			//스페셜 트랙이 재생중인데 다음 곡이 없는 경우는 플레이리스트에 곡이 하나도 없는 상태기 때문에 그걸 보여주는 것이 나음
-			if (!luckyTrack) {
-				setShowStopIcon(true);
-				return;
-			} else {
-				cleanUpPlaylist();
-			}
+			if (playlist.tracks.length === 0) cleanUpPlaylist();
 		}
 
 		dispatchPlaylist({type: "PLAY_NEXT"});
@@ -527,15 +581,15 @@ export default function MusicScreen() {
 
 	const handlePlayPrev = () => {
 		setShowStopIcon(false);
+		console.log("Playing previous track - button clicked");
 
 		//스페셜 곡은 항상 첫번째 곡이기 때문에 이전으로 넘길 수 없음
-		if (luckyTrack) return;
-
-		if (isVideoError) return;
+		if (luckyTrack || isVideoError) return;
 
 		dispatchPlaylist({type: "PLAY_PREVIOUS"});
 	};
 
+	//TODO: luckytrack 재생 중에 곡이 추가되면 다음 곡이 재생되는 문제
 	const handleAddTrack = async (): Promise<void> => {
 		const trackToAdd = document.getElementById("newSong") as HTMLInputElement;
 		const url = trackToAdd.value;
@@ -551,7 +605,7 @@ export default function MusicScreen() {
 			} else {
 				trackToAdd.value = "Adding track...";
 
-				dispatchPlaylist({type: "ADD_TRACK", payload: {url, title: ""}});
+				dispatchPlaylist({type: "ADD_TRACK", payload: {url, title: "", isLucky: !!luckyTrack}});
 				setShowStopIcon(false);
 
 				const container = document.getElementById("player");
@@ -565,6 +619,7 @@ export default function MusicScreen() {
 					});
 					// *중요* reducer로 트랙을 ui에 반영하고 있기 때문에 굳이 mutation 후 서버에서 다시 플레이리스트 정보를 가져올 필요 없이, 쿼리 무효화로 다른 컴포넌트에서 최신 정보가 반영되도록 처리
 					await queryClient.invalidateQueries({queryKey: ["playlist"], refetchType: "none"});
+					trackToAdd.value = "Track added!";
 				} catch (error) {
 					console.error("Failed to update playlist:", error);
 					trackToAdd.value = "Error saving changes";
@@ -656,6 +711,8 @@ export default function MusicScreen() {
 			await apiRequest("/api/logout", {method: "POST"});
 			localStorage.removeItem("interactionOver");
 			await queryClient.invalidateQueries({queryKey: ["session"], refetchType: "none"});
+
+			window.location.href = "/";
 		} catch (error) {
 			console.log("Error logging out", error);
 		}
@@ -732,7 +789,9 @@ export default function MusicScreen() {
 					<p className="text-xs line-clamp-2">{luckyTrack?.title || playlist.currentTrack?.title || playlist.nextTrack?.title}</p>
 				)}
 			</div>
-			<span className="text-xxs mt-auto">{shuffleMode ? "shuffle on" : luckyTrack ? "special track" : `track ${trackIndexLabel}`}</span>
+			<span className="text-xxs mt-auto">
+				{shuffleMode ? "shuffle on" : luckyTrack ? "special track" : showStopIcon ? "end of playlist" : `track ${trackIndexLabel}`}
+			</span>
 			<div className="flex flex-row w-full justify-between items-center">
 				<button onClick={handlePlayPrev}>
 					<BackwardIcon className={DEFAULT_ICON_SIZE} />
