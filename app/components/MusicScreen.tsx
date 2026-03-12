@@ -17,7 +17,7 @@ import {calcExpiration} from "@/lib/tools";
 import {useQueryClient} from "@tanstack/react-query";
 import {useQuery} from "@tanstack/react-query";
 import {playlistQueries, sessionQueries} from "@/query";
-import {useLuckyTrackStore} from "@/stores";
+import {useLuckyTrackStore, useButtonStore} from "@/stores";
 
 type PlaylistAction =
 	| {type: "INIT"; payload: PlaylistInfo}
@@ -261,6 +261,9 @@ export default function MusicScreen() {
 	const updateLuckyTrackTitle = useLuckyTrackStore(state => state.updateLuckyTrackTitle);
 	const reset = useLuckyTrackStore(state => state.reset);
 
+	const pressedButton = useButtonStore(state => state.pressedButton);
+	const resetButtons = useButtonStore(state => state.reset);
+
 	//세션 만료 시간 계산
 	const {data: expirationData} = useQuery(sessionQueries.expiration());
 	const expiration = useMemo(() => (expirationData ? calcExpiration(expirationData.timeLeft) : ""), [expirationData]);
@@ -286,6 +289,56 @@ export default function MusicScreen() {
 			dispatchPlaylist({type: "INIT", payload: playlistInfo});
 		}
 	}, [playlistInfo]);
+
+	useEffect(() => {
+		const {prev, current} = pressedButton;
+
+		if (current === "select") {
+			setShowPopup(true);
+			return;
+		}
+
+		const isSecondPopup = mode === popupType;
+
+		if (showPopup) {
+			if (isSecondPopup) {
+				// 두번 째 메뉴창이 켜진 경우 a/b 버튼 외는 기능 없음
+				if (current === "a") handlePopAction(current);
+				else if (current === "b") setPopupType(-1);
+				return;
+				/* 1depth 기본 메뉴창이 켜진 경우
+					유효한 기능은 a => 2depth 메뉴 오픈 (셔플 모드 제외)
+					b => 메뉴창 닫기
+					up => 상단 선택지로 이동
+					down => 하단 선택지로 이동
+				*/
+			} else {
+				switch (current) {
+					case "a":
+						if (modeValues[mode] === "shuffle") setShuffleMode(prev => !prev);
+						else setPopupType(mode);
+						break;
+					case "b":
+						setShowPopup(false);
+						break;
+					case "up":
+						setMode(mode === 0 ? modeValues.length - 1 : mode - 1);
+						break;
+					case "down":
+						setMode(mode === modeValues.length - 1 ? 0 : mode + 1);
+						break;
+					default:
+						break;
+				}
+				return;
+			}
+		} else {
+			if (typeof playerRef.current?.cueVideoById !== "function") return;
+
+			if (current === "left") handlePlayPrev();
+			else if (current === "right") handlePlayNext();
+		}
+	}, [showPopup, pressedButton, playerRef]);
 
 	//현재 재생 중인 트랙의 번호
 	const trackIndexLabel = useMemo(() => {
@@ -428,8 +481,6 @@ export default function MusicScreen() {
 	const currentVideoId = useMemo(() => extractVideoId(playlist.currentTrack?.url ?? ""), [playlist.currentTrack?.url]);
 
 	useEffect(() => {
-		console.log("Current Track Updated - ", playlist.currentTrack?.title);
-
 		if (!playlist.currentTrack || !currentVideoId) return;
 
 		cueVideo(currentVideoId);
@@ -564,6 +615,24 @@ export default function MusicScreen() {
 		setShowPopup(false);
 	};
 
+	const handleEmptyPlaylist = async () => {
+		try {
+			await apiRequest("/api/playlist", {
+				method: "POST",
+				data: {id: playlist.objectId, track: undefined, mode: "empty"},
+			});
+			await queryClient.invalidateQueries({queryKey: ["playlist"], refetchType: "none"});
+
+			dispatchPlaylist({type: "EMPTY"});
+			cleanUpPlaylist();
+			setShowPopup(false);
+			setShowStopIcon(false);
+			setIsPlay(true);
+		} catch (error) {
+			console.error("Failed to empty playlist:", error);
+		}
+	};
+
 	const cleanUpPlaylist = () => {
 		console.log("🧹 Cleaning up the playlist");
 
@@ -580,6 +649,51 @@ export default function MusicScreen() {
 		setShowStopIcon(false);
 		setIsPlay(false);
 		//currentTrackRef.current = undefined;
+	};
+
+	const handleLogout = async () => {
+		try {
+			await apiRequest("/api/logout", {method: "POST"});
+			localStorage.removeItem("interactionOver");
+			await queryClient.invalidateQueries({queryKey: ["session"], refetchType: "none"});
+		} catch (error) {
+			console.log("Error logging out", error);
+		}
+	};
+
+	const handlePopAction = (type: "a" | "b") => {
+		if (type === "a") {
+			switch (modeValues[popupType]) {
+				case "remove":
+					if (!luckyTrack) handleRemoveTrack();
+					break;
+				case "empty":
+					handleEmptyPlaylist();
+					break;
+				case "logout":
+					handleLogout();
+					break;
+				default:
+					break;
+			}
+		} else {
+			setPopupType(-1);
+		}
+	};
+
+	const getPopupMessage = () => {
+		if (modeValues[popupType] === "logout") return messages.logout;
+		if (modeValues[popupType] === "remove" && luckyTrack) return messages.special;
+		if (playlist.tracks?.length === 0) return messages.none;
+		else return messages[modeValues[popupType]];
+	};
+
+	const showConfirm = () => {
+		const mode = modeValues[popupType];
+		if (mode === "logout") return true;
+		else if (playlist.tracks?.length === 0) return false;
+		else if (luckyTrack && modeValues[popupType] === "remove") return false;
+		else return true;
 	};
 
 	return (
