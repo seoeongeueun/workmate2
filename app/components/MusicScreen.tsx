@@ -13,9 +13,10 @@ import {
 } from "@heroicons/react/16/solid";
 import type {Track, Playlist, PlaylistInfo} from "@/types";
 import {apiRequest, extractVideoId, DEFAULT_ICON_SIZE, formatDate, formatTime} from "@/lib";
+import {calcExpiration} from "@/lib/tools";
 import {useQueryClient} from "@tanstack/react-query";
 import {useQuery} from "@tanstack/react-query";
-import {playlistQueries} from "@/query";
+import {playlistQueries, sessionQueries} from "@/query";
 import {useLuckyTrackStore} from "@/stores";
 
 type PlaylistAction =
@@ -255,6 +256,10 @@ export default function MusicScreen() {
 	const updateLuckyTrackTitle = useLuckyTrackStore(state => state.updateLuckyTrackTitle);
 	const reset = useLuckyTrackStore(state => state.reset);
 
+	//세션 만료 시간 계산
+	const {data: expirationData} = useQuery(sessionQueries.expiration());
+	const expiration = useMemo(() => (expirationData ? calcExpiration(expirationData.timeLeft) : ""), [expirationData]);
+
 	//플레이리스트 상태 관리
 	const [playlist, dispatchPlaylist] = useReducer(playlistReducer, initialPlaylist);
 
@@ -286,13 +291,13 @@ export default function MusicScreen() {
 		return `${idx + 1} out of ${playlist.tracks.length}`;
 	}, [playlist]);
 
-	const getNextTrackVideoId = useCallback(() => {
-		if (playlist.nextTrack?.url) return extractVideoId(playlist.nextTrack.url);
-		const idx = playlist.tracks.findIndex(t => t.id === playlist.currentTrack?.id);
-		const next = playlist.tracks[idx + 1];
-		if (next?.url) return extractVideoId(next.url);
-		return undefined;
-	}, [playlist]);
+	// const getNextTrackVideoId = useCallback(() => {
+	// 	if (playlist.nextTrack?.url) return extractVideoId(playlist.nextTrack.url);
+	// 	const idx = playlist.tracks.findIndex(t => t.id === playlist.currentTrack?.id);
+	// 	const next = playlist.tracks[idx + 1];
+	// 	if (next?.url) return extractVideoId(next.url);
+	// 	return undefined;
+	// }, [playlist]);
 
 	//유저가 직접 재생/일시중지를 트리거 할 때만 사용하지만
 	//player를 initialize할 때 자동 재생 효과를 주기 위해 예외로 사용
@@ -388,30 +393,24 @@ export default function MusicScreen() {
 					switch (event.data) {
 						//이전 곡 재생 완료 시 다음 곡 자동 재생
 						case YT.PlayerState.ENDED:
-							const firstTrack = playlist.tracks[0];
+							dispatchPlaylist({type: "PLAY_NEXT"});
 
-							//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생하고 스페셜 곡 정보 초기화
+							//스페셜 곡이 재생 완료 된 경우 원래 플레이리스트의 첫 곡을 재생하고 스페셜 곡 정보 초기화
 							if (luckyTrack) {
 								reset();
-								if (firstTrack) {
-									cueVideo(extractVideoId(firstTrack.url));
-								} else {
+
+								//만약 플레이리스트에 곡이 하나도 없는 상태였다면 플레이어 숨김 처리
+								if (!playlist.tracks[0]) {
 									const container = document.getElementById("player");
 									if (container) container.style.display = "none";
 								}
-							} else {
-								if (!getNextTrackVideoId()) {
-									setShowStopIcon(true);
-									return;
-								}
-								dispatchPlaylist({type: "PLAY_NEXT"});
 							}
+
+							if (!playlist.currentTrack && !playlist.nextTrack) setShowStopIcon(true);
 							break;
 						case YT.PlayerState.CUED:
 							var videoData = event.target.getVideoData();
 							var title = videoData.title;
-
-							console.log("!!!", title, playlist);
 
 							const current = playlist.currentTrack || playlist.nextTrack;
 							if (current) dispatchPlaylist({type: "UPDATE_TRACK_TITLE", payload: {videoId: extractVideoId(current.url), title}});
@@ -484,23 +483,31 @@ export default function MusicScreen() {
 		cueVideo(currentVideoId);
 	}, [currentVideoId]);
 
+	//곡 재생 중 progress bar 업데이트를 위한 타이머
+	useEffect(() => {
+		if (!playerRef.current || !(playerRef.current instanceof YT.Player)) return;
+
+		const intervalId = setInterval(() => {
+			if (playerRef.current && typeof playerRef.current.getDuration === "function") {
+				const duration = playerRef.current.getDuration();
+				const currentTime = playerRef.current.getCurrentTime();
+				setProgressTime(Math.min((currentTime / duration) * 100, 100));
+			}
+		}, 1000);
+
+		return () => clearInterval(intervalId);
+	}, [playerRef.current, currentVideoId]);
+
 	const handlePlayNext = () => {
 		if (showStopIcon) return;
 
 		// 에러난 동영상을 처리 중인 경우는 스킵 조작을 무시
 		if (!luckyTrack && isVideoError) return;
 
-		// //스페셜 곡을 재생 중이지 않을때만 다음 곡으로 넘긴다
-		// if (!luckyTrack) {
-		// 	console.log("Playing next track");
-		// 	dispatchPlaylist({type: "PLAY_NEXT"});
-		// } else {
-		// 	dispatchPlaylist({type: "PLAY_NEXT"});
-		// }
-
 		const nextTrack = playlist.nextTrack;
 		if (!nextTrack) {
 			console.log("✋ End of playlist");
+			setShowStopIcon(true);
 			return;
 		}
 
@@ -588,10 +595,10 @@ export default function MusicScreen() {
 					<div id="battery" className="flex flex-row w-fit items-center">
 						<div className="relative border border-px border-black w-[1.6rem] h-[0.8rem] bg-transparent rounded-[0.2rem]">
 							<div className="absolute rounded-xs max-w-[1.2rem] max-h-[0.4rem] w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-								{/* <div
+								<div
 									className={`h-full ${parseFloat(expiration) <= 15 ? (parseFloat(expiration) <= 5 ? "bg-red-700 animate-blink" : "bg-red-700") : "bg-black"}`}
 									style={{width: expiration || "100%"}}
-								></div> */}
+								></div>
 							</div>
 						</div>
 						<div className="w-[0.15rem] h-[0.5rem] bg-black rounded-r-sm"></div>
