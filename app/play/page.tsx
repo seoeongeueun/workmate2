@@ -29,9 +29,7 @@ export default function Page() {
 
 	if (isOpenLucky === undefined) return null;
 	return (
-		<section
-			className={`${isPowerOn ? "animate-fadeIn" : "hidden"} relative w-full h-full flex items-center justify-center overflow-hidden bg-black text-white select-none`}
-		>
+		<section className={`${isPowerOn ? "animate-fadeIn" : "hidden"} relative w-full h-full flex items-center justify-center overflow-hidden`}>
 			{isOpenLucky ? <DialogueScreen setOpen={setIsOpenLucky} /> : <MusicScreen />}
 		</section>
 	);
