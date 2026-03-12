@@ -66,7 +66,6 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 		}
 		// lucky가 없는 경우 특수한 케이스에서만 쓰는 첫번째 지정 리듀서
 		case "SET_AS_FIRST": {
-			console.log("Setting first track as current - no lucky track");
 			return {
 				...state,
 				currentTrack: state.tracks[0],
@@ -97,7 +96,6 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 
 			//get the updated track
 			const newTrack = updatedTracks.find(t => extractVideoId(t.url) === action.payload.videoId);
-			console.log("Updating track title - ", updatedTracks);
 
 			return {
 				...state,
@@ -110,7 +108,6 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 			if (!state.tracks.length) return state;
 
 			const nextTrack = state.nextTrack;
-			console.log("Playing next track - ", nextTrack);
 			const currentTrack = state.currentTrack;
 
 			if (!nextTrack)
@@ -590,7 +587,6 @@ export default function MusicScreen() {
 
 	const handlePlayPrev = () => {
 		setShowStopIcon(false);
-		console.log("Playing previous track - button clicked");
 
 		//스페셜 곡은 항상 첫번째 곡이기 때문에 이전으로 넘길 수 없음
 		if (luckyTrack || isVideoError) return;
