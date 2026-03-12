@@ -1,5 +1,4 @@
 import {NextResponse} from "next/server";
-import mongoose from "mongoose";
 import type {Track} from "@/types";
 import {dbConnect} from "@/providers/dbConnect";
 import {Playlist} from "@/models";
@@ -24,17 +23,24 @@ export async function POST(request: Request): Promise<Response> {
 		const response = new Response();
 		const session = await getIronSession<SessionData>(request, response, sessionOptions);
 
-		if (!session.user?.id) {
+		if (!session.user?.id || !session.user?.playlistId) {
 			return NextResponse.json({success: false, error: {message: "Unauthorized", code: "UNAUTHORIZED"}}, {status: 401});
 		}
 
 		await dbConnect();
+		const sessionPlaylistId = session.user.playlistId.toString();
 
 		const {id, track, mode} = (await request.json()) as {
-			id: string;
+			id?: string;
 			track: Track | undefined;
 			mode: "add" | "remove" | "empty";
 		};
+
+		if (id && id !== sessionPlaylistId) {
+			return NextResponse.json({success: false, error: {message: "Forbidden playlist access", code: "FORBIDDEN"}}, {status: 403});
+		}
+
+		const targetPlaylistId = id ?? sessionPlaylistId;
 
 		//플레이리스트를 완전히 비우는 경우만 track이 없어도 된다
 		if (mode !== "empty" && !track) {
@@ -45,13 +51,13 @@ export async function POST(request: Request): Promise<Response> {
 
 		switch (mode) {
 			case "remove":
-				updatedPlaylist = await handleRemove(id, track!.id);
+				updatedPlaylist = await handleRemove(targetPlaylistId, track!.id);
 				break;
 			case "add":
-				updatedPlaylist = await handleAdd(id, track!);
+				updatedPlaylist = await handleAdd(targetPlaylistId, track!);
 				break;
 			case "empty":
-				updatedPlaylist = await handleEmptyTracks(id);
+				updatedPlaylist = await handleEmptyTracks(targetPlaylistId);
 				break;
 			default:
 				break;
@@ -70,24 +76,20 @@ export async function POST(request: Request): Promise<Response> {
 
 export async function GET(request: Request) {
 	try {
+		const response = new Response();
+		const session = await getIronSession<SessionData>(request, response, sessionOptions);
+
+		if (!session.user?.id || !session.user?.playlistId) {
+			return NextResponse.json({success: false, error: {message: "Unauthorized", code: "UNAUTHORIZED"}}, {status: 401});
+		}
+
 		await dbConnect();
-		const {searchParams} = new URL(request.url);
-		const id = searchParams.get("id");
-
-		if (!id) {
-			return NextResponse.json({success: false, error: {message: "Playlist id is needed", code: "MISSING_ID"}}, {status: 400});
-		}
-
-		if (!mongoose.Types.ObjectId.isValid(id)) {
-			return NextResponse.json({success: false, error: {message: "Invalid playlist id", code: "INVALID_ID"}}, {status: 400});
-		}
-
-		const item = await Playlist.findById(id);
+		const item = await Playlist.findById(session.user.playlistId);
 
 		if (!item) {
 			return NextResponse.json({success: false, error: {message: "No matching playlist was found", code: "PLAYLIST_NOT_FOUND"}}, {status: 404});
 		}
-		return NextResponse.json({success: true, data: {title: item.title, tracks: item.tracks}});
+		return NextResponse.json({success: true, data: {title: item.title, tracks: item.tracks, objectId: item._id}});
 	} catch (error) {
 		console.error("Error fetching playlist:", error);
 		return NextResponse.json({success: false, error: {message: "Internal server error", code: "INTERNAL"}}, {status: 500});
