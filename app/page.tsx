@@ -12,7 +12,7 @@ export default function Page() {
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			setShowLoading(false);
-		}, 3000);
+		}, 3500);
 
 		return () => clearTimeout(timer);
 	}, []);
