@@ -3,6 +3,7 @@ import React, {useState, useEffect} from "react";
 import {PlayIcon, ExclamationTriangleIcon} from "@heroicons/react/24/solid";
 import {apiRequest} from "../lib/tools";
 import {useQueryClient} from "@tanstack/react-query";
+import {useRouter} from "next/navigation";
 
 enum ErrorCodes {
 	MissingFields = 0,
@@ -20,6 +21,7 @@ export default function LoginScreen() {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	const queryClient = useQueryClient();
+	const router = useRouter();
 
 	const errorMessages: Record<ErrorCodes, string> = {
 		[ErrorCodes.MissingFields]: "All fields are required",
@@ -107,7 +109,7 @@ export default function LoginScreen() {
 			queryClient.invalidateQueries({queryKey: ["session"]}); //최신 세션 반영
 
 			//로그인 성공 후 /play로 이동
-			window.location.href = "/play";
+			router.push("/play");
 			return;
 		} catch (error) {
 			setIsLoading(false);
@@ -166,7 +168,7 @@ export default function LoginScreen() {
 			setIsLoading(false);
 
 			//로그인 성공 후 /play로 이동
-			window.location.href = "/play";
+			router.push("/play");
 			return;
 		} catch (error) {
 			setIsLoading(false);
