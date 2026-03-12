@@ -8,7 +8,7 @@ import {usePlaylistStore} from "@/stores";
 import MusicScreen from "@/components/MusicScreen";
 
 export default function Page() {
-	const [isOpenLucky, setIsOpenLucky] = useState<boolean>(false);
+	const [isOpenLucky, setIsOpenLucky] = useState<boolean | undefined>(undefined);
 	const queryClient = useQueryClient();
 	const initializePlaylist = usePlaylistStore(state => state.initialize);
 
@@ -16,7 +16,7 @@ export default function Page() {
 
 	useEffect(() => {
 		//sessionstorage에 interactionover가 true로 설정되어 있으면 openLucky는 스킵한다
-		const interactionOver = sessionStorage.getItem("interactionover");
+		const interactionOver = sessionStorage.getItem("interactionOver");
 		setIsOpenLucky(interactionOver !== "true");
 	}, []);
 
@@ -31,5 +31,6 @@ export default function Page() {
 		initializePlaylist(playlistData.title, String(playlistData.objectId), playlistData.tracks);
 	}, [playlistData, initializePlaylist]);
 
+	if (isOpenLucky === undefined) return null;
 	return isOpenLucky ? <DialogueScreen setOpen={setIsOpenLucky} /> : <MusicScreen />;
 }

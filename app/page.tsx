@@ -10,13 +10,15 @@ export default function Page() {
 	const [showLoading, setShowLoading] = useState(true);
 
 	useEffect(() => {
-		const timer = setTimeout(() => {
-			setShowLoading(false);
-		}, 3500);
+		if (isPowerOn) {
+			const timer = setTimeout(() => {
+				setShowLoading(false);
+			}, 3000);
 
-		return () => clearTimeout(timer);
-	}, []);
+			return () => clearTimeout(timer);
+		}
+	}, [isPowerOn]);
 
-	if (!isPowerOn) return;
+	if (!isPowerOn) return <></>;
 	return <>{showLoading ? <LoadingScreen /> : <LoginScreen />}</>;
 }
