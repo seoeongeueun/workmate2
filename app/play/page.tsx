@@ -4,13 +4,14 @@ import {useEffect, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import DialogueScreen from "@/components/DialogueScreen";
 import {luckyQueries, playlistQueries} from "@/query";
-import {usePlaylistStore} from "@/stores";
+import {usePlaylistStore, useButtonStore} from "@/stores";
 import MusicScreen from "@/components/MusicScreen";
 
 export default function Page() {
 	const [isOpenLucky, setIsOpenLucky] = useState<boolean | undefined>(undefined);
 	const queryClient = useQueryClient();
 	const initializePlaylist = usePlaylistStore(state => state.initialize);
+	const isPowerOn = useButtonStore(state => state.isPowerOn);
 
 	const {data: playlistData} = useQuery(playlistQueries.detail());
 
@@ -31,6 +32,6 @@ export default function Page() {
 		initializePlaylist(playlistData.title, String(playlistData.objectId), playlistData.tracks);
 	}, [playlistData, initializePlaylist]);
 
-	if (isOpenLucky === undefined) return null;
+	if (isOpenLucky === undefined || !isPowerOn) return null;
 	return isOpenLucky ? <DialogueScreen setOpen={setIsOpenLucky} /> : <MusicScreen />;
 }
