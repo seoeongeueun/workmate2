@@ -1,6 +1,5 @@
 import type {SessionOptions} from "iron-session";
-import mongoose from "mongoose";
-import {MAX_AGE} from "./index";
+import {MAX_AGE} from "./constants";
 
 export const sessionOptions: SessionOptions = {
 	password: process.env.IRON_SESSION_PASSWORD as string,

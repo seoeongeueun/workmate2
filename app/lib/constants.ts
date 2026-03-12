@@ -7,3 +7,5 @@ const choice3 = ["🥀", "❤️‍🩹", "🕳️", "🪫"];
 const choice4 = ["🎰", "🎲", "🧩", "🪤"];
 
 export const DIALOGUE_CHOICES = [choice1, choice2, choice3, choice4];
+
+export const DEFAULT_ICON_SIZE = "size-6";
