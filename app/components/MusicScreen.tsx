@@ -50,7 +50,8 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 				title: action.payload.title ?? "",
 				tracks,
 				backup: tracks,
-				currentTrack: tracks[0], // *중요* 첫 곡은 무조건 첫번째 트랙으로 설정
+				currentTrack: undefined,
+				nextTrack: tracks[0],
 			};
 		}
 		case "RESET": {
@@ -71,15 +72,18 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 				...state,
 				tracks,
 				currentTrack: state.currentTrack ?? newTrack,
+				nextTrack: state.nextTrack,
 			};
 		}
+		//id를 가지고 업데이트할 트랙을 찾아 제목 업데이트 (굳이 currentTrack일 필요 없다)
 		case "UPDATE_TRACK_TITLE": {
 			const updatedTracks = state.tracks.map(track => (track.url.includes(action.payload.videoId) ? {...track, title: action.payload.title} : track));
-			const updatedCurrent = updatedTracks.find(t => t.id === state.currentTrack?.id);
+			console.log("Updating track title - ", updatedTracks);
+
 			return {
 				...state,
 				tracks: updatedTracks,
-				currentTrack: updatedCurrent,
+				currentTrack: state.currentTrack ? {...state.currentTrack, title: action.payload.title} : undefined,
 			};
 		}
 		case "PLAY_NEXT": {
@@ -88,9 +92,11 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 			let currentTrack = state.currentTrack;
 			if (!state.currentTrack) {
 				// currentTrack이 없다는 것은 플레이리스트 실행 전인 것으로 판단해, 리스트의 첫곡을 현재곡으로 지정
+				console.log("no current track - setting first track as current");
 				return {
 					...state,
 					currentTrack: state.tracks[0],
+					nextTrack: state.tracks[1],
 				};
 			}
 
@@ -102,6 +108,7 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 			return {
 				...state,
 				currentTrack,
+				nextTrack: state.tracks[idx + 1],
 			};
 		}
 		case "PLAY_PREVIOUS": {
@@ -219,6 +226,16 @@ const messages: Partial<Record<(typeof modeValues)[number], string>> = {
 
 const muiscAddMessages = ["Music added!", "Error saving changes"];
 
+/**
+ * MusicScreen 컴포넌트는 플레이리스트의 트랙을 관리하고 유튜브 플레이어를 제어하는 역할을 담당한다.
+ *
+ * 플로우
+ * 1. 플레이리스트 초기화: 컴포넌트가 마운트될 때 서버에서 플레이리스트 정보를 가져와 상태를 지정한다.
+ * 2. lucky 곡 재생: 기존 dialogue에서 선택된 스페셜 곡이 있으면 그걸 먼저 재생한다 (유저 플레이리스트에 추가하지 않고 일회성)
+ * 3. 플레이리스트 곡을 재생 대기: 플레이리스트의 곡을 cue 하고 cue 정보로 title을 업데이트한다
+ * 4. 곡 재생: cue 된 곡을 재생한다.
+ * 5. 에러 처리: 에러시 isVideoError 상태를 업데이트해서 처리
+ */
 export default function MusicScreen() {
 	const [isPlay, setIsPlay] = useState<boolean>(false); //재생 상태
 	const [isMute, setIsMute] = useState<boolean>(false); //음소거 상태
@@ -244,9 +261,9 @@ export default function MusicScreen() {
 	const queryClient = useQueryClient();
 
 	const {data: playlistInfo} = useQuery(playlistQueries.detail());
-	const {objectId, tracks, currentTrack} = playlist;
 
 	const playerRef = useRef<any>(null);
+	const lastCuedVideoIdRef = useRef<string | null>(null);
 
 	// 현재 시간 업데이트용 타이머
 	useEffect(() => {
@@ -303,6 +320,7 @@ export default function MusicScreen() {
 		playerRef.current.cueVideoById(id); //yt api의 method를 통해 cued 상태로 전환
 	};
 
+	//음소거 토글 함수
 	const handleMute = () => {
 		if (!playerRef.current) return;
 
@@ -323,7 +341,7 @@ export default function MusicScreen() {
 			}
 		};
 
-		if ((!window.YT?.Player || !playerRef.current) && objectId) {
+		if ((!window.YT?.Player || !playerRef.current) && playlist.objectId) {
 			loadYTScript();
 		}
 
@@ -331,12 +349,12 @@ export default function MusicScreen() {
 
 		function onYouTubeIframeAPIReady() {
 			console.log("API Ready - Initializing player");
-			const track = luckyTrack?.url || currentTrack?.url || tracks[0]?.url;
+			const track = luckyTrack?.url || playlist.currentTrack?.url || playlist.tracks[0]?.url;
 			if (track) initializePlayer(extractVideoId(track));
 		}
 
 		window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-	}, [currentTrack?.url, objectId, tracks]);
+	}, [playlist]);
 
 	const initializePlayer = (initialVideoId: string) => {
 		playerRef.current = new YT.Player("player", {
@@ -370,8 +388,7 @@ export default function MusicScreen() {
 					switch (event.data) {
 						//이전 곡 재생 완료 시 다음 곡 자동 재생
 						case YT.PlayerState.ENDED:
-							const isSpecialTrack = event.target.getVideoData()?.video_id === luckyTrack?.id;
-							const firstTrack = tracks[0];
+							const firstTrack = playlist.tracks[0];
 
 							//스페셜 곡이 재생 완료 된 것을 확인 후 원래 플레이리스트의 첫 곡을 재생하고 스페셜 곡 정보 초기화
 							if (luckyTrack) {
@@ -387,21 +404,20 @@ export default function MusicScreen() {
 									setShowStopIcon(true);
 									return;
 								}
-								console.log("Playing next - ", getNextTrackVideoId());
 								dispatchPlaylist({type: "PLAY_NEXT"});
 							}
 							break;
 						case YT.PlayerState.CUED:
 							var videoData = event.target.getVideoData();
 							var title = videoData.title;
-							const current = playlist.currentTrack;
-							if (current) {
-								dispatchPlaylist({type: "UPDATE_TRACK_TITLE", payload: {videoId: extractVideoId(current.url), title}});
-								//currentTrackRef.current = {...current, title: title};
-								setIsVideoError(false);
-								playerRef.current.playVideo();
-								//setTrackIndex(playlist.getTrackIndexWithId(current.id));
-							}
+
+							console.log("!!!", title, playlist);
+
+							const current = playlist.currentTrack || playlist.nextTrack;
+							if (current) dispatchPlaylist({type: "UPDATE_TRACK_TITLE", payload: {videoId: extractVideoId(current.url), title}});
+
+							setIsVideoError(false);
+							playerRef.current.playVideo();
 							break;
 						case YT.PlayerState.PAUSED:
 							setIsPlay(false);
@@ -456,26 +472,44 @@ export default function MusicScreen() {
 		}, 1500);
 	};
 
-	const handlePlayNext = (wasSpecialTrack: boolean = false) => {
+	// 현재 재생 중인 곡의 url이 업데이트될때마다 재생 큐 (제목 업데이트 시에는 트리거 되지 않게 dependency를 세분화함)
+	const currentVideoId = useMemo(() => extractVideoId(playlist.currentTrack?.url ?? ""), [playlist.currentTrack?.url]);
+
+	useEffect(() => {
+		console.log("Current Track Updated - ", playlist.currentTrack?.title);
+
+		if (!playlist.currentTrack || !currentVideoId) return;
+		//console.log("Current Track Updated - ", playlist.currentTrack);
+
+		cueVideo(currentVideoId);
+	}, [currentVideoId]);
+
+	const handlePlayNext = () => {
 		if (showStopIcon) return;
 
 		// 에러난 동영상을 처리 중인 경우는 스킵 조작을 무시
-		if (!wasSpecialTrack && isVideoError) return;
+		if (!luckyTrack && isVideoError) return;
 
-		//스페셜 곡을 재생 중인 경우는 다음 곡을 재생하는게 아니라 플레이리스트의 첫 곡을 재생한다
-		if (!luckyTrack) {
-			dispatchPlaylist({type: "PLAY_NEXT"});
-		}
-		const nextTrack = luckyTrack ? currentTrack : playlist.currentTrack;
+		// //스페셜 곡을 재생 중이지 않을때만 다음 곡으로 넘긴다
+		// if (!luckyTrack) {
+		// 	console.log("Playing next track");
+		// 	dispatchPlaylist({type: "PLAY_NEXT"});
+		// } else {
+		// 	dispatchPlaylist({type: "PLAY_NEXT"});
+		// }
+
+		const nextTrack = playlist.nextTrack;
 		if (!nextTrack) {
 			console.log("✋ End of playlist");
 			return;
 		}
 
+		dispatchPlaylist({type: "PLAY_NEXT"});
+
 		reset(); //다음 곡 재생인 경우 스페셜 트랙 정보 초기화
 
 		//currentTrackRef.current = nextTrack;
-		cueVideo(extractVideoId(nextTrack.url));
+		//cueVideo(extractVideoId(nextTrack.url));
 	};
 
 	const handlePlayPrev = () => {
@@ -488,11 +522,11 @@ export default function MusicScreen() {
 
 		dispatchPlaylist({type: "PLAY_PREVIOUS"});
 
-		const prevTrack = playlist.currentTrack;
-		if (prevTrack) {
-			//currentTrackRef.current = prevTrack;
-			cueVideo(extractVideoId(prevTrack.url));
-		}
+		// const prevTrack = playlist.currentTrack;
+		// if (prevTrack) {
+		// 	//currentTrackRef.current = prevTrack;
+		// 	cueVideo(extractVideoId(prevTrack.url));
+		// }
 	};
 
 	const handleRemoveTrack = async (isRemove: boolean = true) => {
@@ -575,7 +609,7 @@ export default function MusicScreen() {
 				{isVideoError ? (
 					<p className="text-xs line-clamp-2 whitespace-pre-line">{`⚠️ Video not available:\n removing from playlist...`}</p>
 				) : (
-					<p className="text-xs line-clamp-2">{luckyTrack?.title || currentTrack?.title}</p>
+					<p className="text-xs line-clamp-2">{luckyTrack?.title || playlist.currentTrack?.title}</p>
 				)}
 			</div>
 			<span className="text-xxs mt-auto">{shuffleMode ? "shuffle on" : luckyTrack ? "special track" : `track ${trackIndexLabel}`}</span>
