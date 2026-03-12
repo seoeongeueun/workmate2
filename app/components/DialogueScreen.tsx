@@ -12,7 +12,7 @@ import type {LuckyTracks} from "@/types";
 type DialogueKeys = keyof typeof dialogue;
 
 type DialogueScreenProps = {
-	setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	setOpen: React.Dispatch<React.SetStateAction<boolean | undefined>>;
 };
 
 /*
