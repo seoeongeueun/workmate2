@@ -291,14 +291,6 @@ export default function MusicScreen() {
 		return `${idx + 1} out of ${playlist.tracks.length}`;
 	}, [playlist]);
 
-	// const getNextTrackVideoId = useCallback(() => {
-	// 	if (playlist.nextTrack?.url) return extractVideoId(playlist.nextTrack.url);
-	// 	const idx = playlist.tracks.findIndex(t => t.id === playlist.currentTrack?.id);
-	// 	const next = playlist.tracks[idx + 1];
-	// 	if (next?.url) return extractVideoId(next.url);
-	// 	return undefined;
-	// }, [playlist]);
-
 	//유저가 직접 재생/일시중지를 트리거 할 때만 사용하지만
 	//player를 initialize할 때 자동 재생 효과를 주기 위해 예외로 사용
 	const playVideo = useCallback(() => {
@@ -312,11 +304,6 @@ export default function MusicScreen() {
 		}
 		//setIsPlay(!isPlay);
 	}, [isPlay]);
-
-	const removeCurrentTrack = () => {
-		if (!playlist.currentTrack?.id) return;
-		dispatchPlaylist({type: "REMOVE_TRACK", payload: {id: playlist.currentTrack.id}});
-	};
 
 	/* cue 과정은 동영상의 제목을 가져오기 위해 거쳐가는 필수 단계
 	cue 상태만 트리거하고 여기서 재생에는 관여하지 않는다 */
@@ -386,7 +373,7 @@ export default function MusicScreen() {
 
 					//에러난 곡을 삭제 시도
 					setTimeout(() => {
-						removeCurrentTrack();
+						handleRemoveTrack();
 					}, 1700);
 				},
 				onStateChange: (event: YT.OnStateChangeEvent) => {
@@ -432,45 +419,6 @@ export default function MusicScreen() {
 		});
 	};
 
-	const handleAddSong = async (): Promise<void> => {
-		const songToAdd = document.getElementById("newSong") as HTMLInputElement;
-		const url = songToAdd.value;
-		if (url) {
-			//연달아 더하기를 누른 경우는 무시
-			const id = extractVideoId(url);
-			if (muiscAddMessages.includes(url) || !id) {
-				songToAdd.value = "Not a valid Youtube url";
-			} else {
-				songToAdd.value = "Music Added!";
-
-				const newTrack = addTrack(url);
-				setShowStopIcon(false);
-
-				const container = document.getElementById("player");
-				if (container) container.style.display = "block";
-
-				//재생 중인 곡이 없다면 바로 새로 추가된 곡을 재생
-				if ((!currentTrack && !specialTrackInfo) || showStopIcon) {
-					if (playerRef.current) {
-						//currentTrackRef.current = newTrack;
-						playerRef.current.cueVideoById(id);
-					} else initializePlayer(id);
-				}
-
-				const response = await apiRequest("/api/playlist", "POST", {id: objectId, track: newTrack, mode: "add"});
-				if (!response.success) {
-					console.error("Failed to update playlist:", response.error.message);
-					songToAdd.value = "Error saving changes";
-				}
-			}
-		} else {
-			songToAdd.value = "Entered url is empty";
-		}
-		setTimeout(() => {
-			songToAdd.value = "";
-		}, 1500);
-	};
-
 	// 현재 재생 중인 곡의 url이 업데이트될때마다 재생 큐 (제목 업데이트 시에는 트리거 되지 않게 dependency를 세분화함)
 	const currentVideoId = useMemo(() => extractVideoId(playlist.currentTrack?.url ?? ""), [playlist.currentTrack?.url]);
 
@@ -507,16 +455,19 @@ export default function MusicScreen() {
 		const nextTrack = playlist.nextTrack;
 		if (!nextTrack) {
 			console.log("✋ End of playlist");
-			setShowStopIcon(true);
-			return;
+
+			//스페셜 트랙이 재생 중이지 않은 경우에만 조기 종료
+			//스페셜 트랙이 재생중인데 다음 곡이 없는 경우는 플레이리스트에 곡이 하나도 없는 상태기 때문에 그걸 보여주는 것이 나음
+			if (!luckyTrack) {
+				setShowStopIcon(true);
+				return;
+			} else {
+				cleanUpPlaylist();
+			}
 		}
 
 		dispatchPlaylist({type: "PLAY_NEXT"});
-
 		reset(); //다음 곡 재생인 경우 스페셜 트랙 정보 초기화
-
-		//currentTrackRef.current = nextTrack;
-		//cueVideo(extractVideoId(nextTrack.url));
 	};
 
 	const handlePlayPrev = () => {
@@ -528,38 +479,82 @@ export default function MusicScreen() {
 		if (isVideoError) return;
 
 		dispatchPlaylist({type: "PLAY_PREVIOUS"});
-
-		// const prevTrack = playlist.currentTrack;
-		// if (prevTrack) {
-		// 	//currentTrackRef.current = prevTrack;
-		// 	cueVideo(extractVideoId(prevTrack.url));
-		// }
 	};
 
-	const handleRemoveTrack = async (isRemove: boolean = true) => {
-		if (isRemove && currentTrack) {
-			const response = await apiRequest("/api/playlist", "POST", {id: objectId, track: currentTrack, mode: "remove"});
-			if (!response.success) {
-				const songToAdd = document.getElementById("newSong") as HTMLInputElement;
-				console.error("Failed to update playlist:", response.error.message);
-				songToAdd.value = "Error saving changes";
+	const handleAddTrack = async (): Promise<void> => {
+		const trackToAdd = document.getElementById("newSong") as HTMLInputElement;
+		const url = trackToAdd.value;
 
-				setTimeout(() => {
-					songToAdd.value = "";
-				}, 2000);
+		if (url) {
+			//연달아 더하기를 누른 경우는 무시
+			const id = extractVideoId(url);
+
+			//url에서 id가 추출되지 않거나 유튜브 url이 아닌 경우는 에러 메시지 출력
+			const youtubeUrlPattern = /^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$/;
+			if (!id || !youtubeUrlPattern.test(url)) {
+				trackToAdd.value = "Not a valid Youtube url";
 			} else {
+				trackToAdd.value = "Adding track...";
+
+				dispatchPlaylist({type: "ADD_TRACK", payload: {url, title: ""}});
+				setShowStopIcon(false);
+
+				const container = document.getElementById("player");
+				if (container) container.style.display = "block";
+
+				const newTrack = {id: extractVideoId(url) + playlist.tracks.length + new Date().getSeconds(), url, title: ""};
+				try {
+					await apiRequest("/api/playlist", {
+						method: "POST",
+						data: {id: playlist.objectId, track: newTrack, mode: "add"},
+					});
+					// *중요* reducer로 트랙을 ui에 반영하고 있기 때문에 굳이 mutation 후 서버에서 다시 플레이리스트 정보를 가져올 필요 없이, 쿼리 무효화로 다른 컴포넌트에서 최신 정보가 반영되도록 처리
+					await queryClient.invalidateQueries({queryKey: ["playlist"]});
+				} catch (error) {
+					console.error("Failed to update playlist:", error);
+					trackToAdd.value = "Error saving changes";
+				}
+			}
+		} else {
+			trackToAdd.value = "Entered url is empty";
+		}
+
+		setTimeout(() => {
+			trackToAdd.value = "";
+		}, 1500);
+	};
+
+	const handleRemoveTrack = async () => {
+		const currentTrack = playlist.currentTrack;
+
+		if (currentTrack) {
+			try {
+				await apiRequest("/api/playlist", {
+					method: "POST",
+					data: {id: playlist.objectId, track: currentTrack, mode: "remove"},
+				});
+				await queryClient.invalidateQueries({queryKey: ["playlist"]});
+
 				setIsVideoError(false);
-				const nextTrack = removeTrack(currentTrack?.id);
+				dispatchPlaylist({type: "REMOVE_TRACK", payload: {id: currentTrack.id}});
+
+				//곡이 제거된 후 다음 곡이 있으면 재생, 없으면 플레이어 초기화
+				const nextTrack = playlist.nextTrack;
 				if (nextTrack) {
-					//currentTrackRef.current = nextTrack;
 					cueVideo(extractVideoId(nextTrack.url));
 					setShowStopIcon(false);
-					// playerRef.current.stopVideo();
-					// playerRef.current.loadVideoById(nextTrack);
 				} else {
 					// 남은 곡이 없는 경우: player 삭제 + 재생 상태 변경 + index를 0으로 재지정 + currenttrack 초기화
 					cleanUpPlaylist();
 				}
+			} catch (error) {
+				const trackToAdd = document.getElementById("newSong") as HTMLInputElement;
+				console.error("Failed to update playlist:", error);
+				trackToAdd.value = "Error removing track";
+
+				setTimeout(() => {
+					trackToAdd.value = "";
+				}, 2000);
 			}
 		}
 		setShowPopup(false);
@@ -607,7 +602,7 @@ export default function MusicScreen() {
 			</div>
 			<div className="flex flex-row w-full text-s gap-spacing-4">
 				<input id="newSong" type="text" placeholder="Enter a Youtube Url" className="w-full text-xs bg-gray-1 border border-black rounded-[1px] px-3" />
-				<button onClick={handleAddSong}>
+				<button onClick={handleAddTrack}>
 					<PlusCircleIcon className={DEFAULT_ICON_SIZE} />
 				</button>
 			</div>
