@@ -30,7 +30,7 @@ type PlaylistAction =
 	| {type: "SET_AS_FIRST"}
 	| {type: "SET_TITLE"; payload: {title: string}}
 	| {type: "SET_OBJECT_ID"; payload: {id: string}}
-	| {type: "ADD_TRACK"; payload: {url: string; title?: string; isLucky?: boolean}}
+	| {type: "ADD_TRACK"; payload: {track: Track; isLucky?: boolean}}
 	| {type: "UPDATE_TRACK_TITLE"; payload: {videoId: string; title: string}}
 	| {type: "PLAY_NEXT"}
 	| {type: "PLAY_PREVIOUS"}
@@ -79,16 +79,13 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 			return {...state, objectId: action.payload.id};
 		}
 		case "ADD_TRACK": {
-			const id = extractVideoId(action.payload.url) + state.tracks.length + new Date().getSeconds();
-			const newTrack: Track = {id, url: action.payload.url, title: action.payload.title};
+			const newTrack = action.payload.track;
 			// 신규 트랙 추가시 항상 플레이리스트의 마지막에 추가
 			const tracks = [...state.tracks, newTrack];
-			return {
-				...state,
-				tracks,
-				currentTrack: action.payload.isLucky ? state.currentTrack : state.currentTrack || state.nextTrack || newTrack,
-				nextTrack: state.nextTrack,
-			};
+			// 재생 중인 곡이 없으면 (빈 플레이리스트 / 재생 종료) 새 곡을 바로 재생
+			if (!state.currentTrack && !action.payload.isLucky) return {...state, tracks, currentTrack: newTrack, nextTrack: undefined};
+			// 마지막 곡 재생 중이었다면 새 곡을 다음 곡으로 지정
+			return {...state, tracks, nextTrack: state.nextTrack ?? newTrack};
 		}
 		//id를 가지고 업데이트할 트랙을 찾아 제목 업데이트 (굳이 currentTrack일 필요 없다)
 		case "UPDATE_TRACK_TITLE": {
@@ -100,7 +97,8 @@ function playlistReducer(state: Playlist, action: PlaylistAction): Playlist {
 			return {
 				...state,
 				tracks: updatedTracks,
-				currentTrack: state.currentTrack ? {...state.currentTrack, title: action.payload.title} : undefined,
+				currentTrack:
+					state.currentTrack && extractVideoId(state.currentTrack.url) === action.payload.videoId ? {...state.currentTrack, title: action.payload.title} : state.currentTrack,
 				nextTrack: !state.currentTrack ? newTrack : state.nextTrack,
 			};
 		}
@@ -504,8 +502,8 @@ export default function MusicScreen() {
 							var videoData = event.target.getVideoData();
 							var title = videoData.title;
 
-							const current = playlist.currentTrack || playlist.nextTrack;
-							if (current) dispatchPlaylist({type: "UPDATE_TRACK_TITLE", payload: {videoId: extractVideoId(current.url), title}});
+							// playlist는 player 생성 시점의 값으로 고정되어 있으므로 cue된 영상의 id를 직접 사용
+							if (videoData.video_id) dispatchPlaylist({type: "UPDATE_TRACK_TITLE", payload: {videoId: videoData.video_id, title}});
 
 							setIsVideoError(false);
 							playerRef.current.playVideo();
@@ -597,27 +595,33 @@ export default function MusicScreen() {
 	//TODO: luckytrack 재생 중에 곡이 추가되면 다음 곡이 재생되는 문제
 	const handleAddTrack = async (): Promise<void> => {
 		const trackToAdd = document.getElementById("newSong") as HTMLInputElement;
-		const url = trackToAdd.value;
+		//연달아 더하기를 누른 경우는 무시 (input에 표시된 상태 메시지를 url로 읽지 않도록)
+		if (trackToAdd.readOnly) return;
+		trackToAdd.readOnly = true;
+		const url = trackToAdd.value.trim();
 
 		if (url) {
-			//연달아 더하기를 누른 경우는 무시
 			const id = extractVideoId(url);
 
 			//url에서 id가 추출되지 않거나 유튜브 url이 아닌 경우는 에러 메시지 출력
-			const youtubeUrlPattern = /^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$/;
+			const youtubeUrlPattern = /^(https?:\/\/)?((www|m|music)\.)?(youtube\.com|youtu\.be)\/.+$/;
 			if (!id || !youtubeUrlPattern.test(url)) {
 				trackToAdd.value = "Not a valid Youtube url";
 			} else {
 				trackToAdd.value = "Adding track...";
 
+				// 로컬과 서버가 같은 id를 쓰도록 트랙은 한 번만 생성
+				const newTrack: Track = {id: id + playlist.tracks.length + Date.now(), url, title: ""};
 				//lucky track이 있는 경우는 현재 재생 곡을 방해하지 않게 따로 플래그 추가
-				dispatchPlaylist({type: "ADD_TRACK", payload: {url, title: "", isLucky: !!luckyTrack}});
+				dispatchPlaylist({type: "ADD_TRACK", payload: {track: newTrack, isLucky: !!luckyTrack}});
 				setShowStopIcon(false);
 
 				const container = document.getElementById("player");
 				if (container) container.style.display = "block";
 
-				const newTrack = {id: extractVideoId(url) + playlist.tracks.length + new Date().getSeconds(), url, title: ""};
+				// 빈 플레이리스트로 시작한 경우 player가 생성되지 않았으므로 여기서 생성
+				if (!playerRef.current && window.YT?.Player && !luckyTrack) initializePlayer(id);
+
 				try {
 					await apiRequest("/api/playlist", {
 						method: "POST",
@@ -629,6 +633,8 @@ export default function MusicScreen() {
 				} catch (error) {
 					console.error("Failed to update playlist:", error);
 					trackToAdd.value = "Error saving changes";
+					// 서버 저장 실패 시 UI에서도 되돌림
+					dispatchPlaylist({type: "REMOVE_TRACK", payload: {id: newTrack.id}});
 				}
 			}
 		} else {
@@ -637,6 +643,7 @@ export default function MusicScreen() {
 
 		setTimeout(() => {
 			trackToAdd.value = "";
+			trackToAdd.readOnly = false;
 		}, 1500);
 	};
 
